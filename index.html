@@ -299,7 +299,10 @@
       <h1 class="shop-name" id="shopName">代購牌告板</h1>
       <div class="shop-tag">Daigou Exchange Board</div>
     </div>
-    <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong); color:var(--paper);">查詢訂單</button>
+      <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
+    </div>
   </div>
   <div class="board">
     <div class="board-panel">
@@ -371,7 +374,25 @@
       <div>請依下方金額匯款「訂金」,老闆確認到款後將盡快回覆您</div>
       <div class="big" id="confirmDeposit">NT$0</div>
       <div class="notice-box" id="confirmPayment" style="text-align:left;"></div>
+      <div style="margin-top:14px;">
+        <div style="font-size:12px; color:#6B7686;">您的訂單編碼(請截圖保存,之後可用來查詢訂單狀態)</div>
+        <div class="big" id="confirmOrderCode" style="font-size:22px; color:var(--ink);"></div>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- Order lookup overlay -->
+<div class="overlay" id="lookupOverlay">
+  <div class="sheet" style="max-width:420px;">
+    <div class="sheet-head">
+      <h2>查詢訂單</h2>
+      <button class="close-x" id="closeLookup">✕</button>
+    </div>
+    <label>訂單編碼</label>
+    <input type="text" id="lookupCodeInput" placeholder="例如:SG4K92" style="text-transform:uppercase;">
+    <button class="primary-btn" id="lookupSubmitBtn">查詢</button>
+    <div id="lookupResult" style="margin-top:14px;"></div>
   </div>
 </div>
 
@@ -843,6 +864,20 @@ function removeLine(key){
   renderCartBar();
 }
 
+// 訂單編碼:排除容易看錯的字元(0/O、1/I/L),並檢查跟目前現有訂單有沒有撞碼
+const ORDER_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function generateOrderCode(existingOrders){
+  const existingCodes = new Set(existingOrders.map(o => o.code).filter(Boolean));
+  let code;
+  do {
+    code = '';
+    for(let i = 0; i < 6; i++){
+      code += ORDER_CODE_CHARS[Math.floor(Math.random() * ORDER_CODE_CHARS.length)];
+    }
+  } while(existingCodes.has(code));
+  return code;
+}
+
 document.getElementById('submitOrderBtn').onclick = async () => {
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
@@ -851,6 +886,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   const { lines, subtotal, shipping, total, deposit } = computeTotals();
   const order = {
     id: 'ord_' + Date.now(),
+    code: generateOrderCode(orders),
     time: Date.now(),
     name, phone, note,
     items: lines.map(l => ({ name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP' })),
@@ -865,12 +901,43 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   document.getElementById('cartOverlay').classList.remove('open');
   document.getElementById('confirmDeposit').textContent = fmtMoney(deposit);
   document.getElementById('confirmPayment').innerHTML = escapeHtml(settings.payment).replace(/\n/g,'<br>');
+  document.getElementById('confirmOrderCode').textContent = order.code;
   document.getElementById('confirmOverlay').classList.add('open');
   document.getElementById('custName').value = '';
   document.getElementById('custPhone').value = '';
   document.getElementById('custNote').value = '';
 };
 document.getElementById('closeConfirm').onclick = () => document.getElementById('confirmOverlay').classList.remove('open');
+
+// ===== Order lookup (客人查詢訂單狀態) =====
+document.getElementById('orderLookupBtn').onclick = () => {
+  document.getElementById('lookupCodeInput').value = '';
+  document.getElementById('lookupResult').innerHTML = '';
+  document.getElementById('lookupOverlay').classList.add('open');
+};
+document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
+document.getElementById('lookupSubmitBtn').onclick = async () => {
+  const code = document.getElementById('lookupCodeInput').value.trim().toUpperCase();
+  const resultBox = document.getElementById('lookupResult');
+  if(!code){ toast('請輸入訂單編碼'); return; }
+  resultBox.innerHTML = '<div class="empty-note">查詢中...</div>';
+  const latestOrders = await storageGet(ORDERS_KEY) || [];
+  const found = latestOrders.find(o => o.code === code);
+  if(!found){
+    resultBox.innerHTML = '<div class="empty-note">查無此訂單編碼,請確認輸入是否正確。</div>';
+    return;
+  }
+  resultBox.innerHTML = `
+    <div class="order-card">
+      <div class="order-top">
+        <span>${new Date(found.time).toLocaleString('zh-TW')}</span>
+        <span class="status-chip" style="cursor:default;">${escapeHtml(found.status)}</span>
+      </div>
+      <div class="order-items">${found.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(found.total)}　訂金 ${fmtMoney(found.deposit)}</div>
+    </div>
+  `;
+};
 
 // ===== Owner PIN flow =====
 document.getElementById('gearBtn').onclick = () => {
@@ -1240,7 +1307,7 @@ function renderOrdersAdminList(){
           <button class="row-actions del" style="background:none; border:none; cursor:pointer; font-size:13px; color:var(--stamp);" onclick="deleteOrder('${o.id}')">刪除</button>
         </div>
       </div>
-      <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}</div>
+      <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}${o.code ? `　<span class="cart-item-sub">編碼:${escapeHtml(o.code)}</span>` : ''}</div>
       <div class="order-items">${o.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}</div>
       ${o.note ? `<div class="cart-item-sub">備註:${escapeHtml(o.note)}</div>` : ''}
