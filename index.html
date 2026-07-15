@@ -343,7 +343,8 @@
   <h2 class="section-title">本期商品 <span>價格已依即時匯率換算,重量為預估空運/海運重量</span></h2>
   <input type="text" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;">
   <div class="cat-tabs" id="countryTabs"></div>
-  <div class="cat-tabs subcat" id="catTabs"></div>
+  <div class="cat-tabs subcat" id="brandTabs"></div>
+  <div class="cat-tabs subcat" id="subtypeTabs"></div>
   <div class="grid" id="productGrid"></div>
   <div class="pagination" id="paginationBar"></div>
 </div>
@@ -457,9 +458,10 @@
       <div style="font-weight:700; margin-bottom:8px; font-size:14px;">批次匯入商品(貼上 JSON)</div>
       <div class="notice-box">
         一次貼上一整批商品,不用一件一件新增。格式是一個陣列,每個商品至少要有 name、jpy、weight,
-        其他欄位(category、country、link、image、desc)都選填。country 沒填預設是 JP(日本代購)。
+        其他欄位(brand、subtype、country、link、image、desc、note)都選填。country 沒填預設是 JP(日本代購)。
+        brand 是品牌(第二層分類),subtype 是同品牌底下再細分的種類(第三層分類,例如長袖/短袖上衣)。
       </div>
-      <textarea id="bulkImportInput" style="min-height:120px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder='[{"name":"商品名稱","jpy":9900,"weight":0.3,"category":"AAPE","country":"JP","link":"https://...","image":"https://..."}]'></textarea>
+      <textarea id="bulkImportInput" style="min-height:120px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder='[{"name":"商品名稱","jpy":9900,"weight":0.3,"brand":"AAPE","subtype":"短袖上衣","country":"JP","link":"https://...","image":"https://..."}]'></textarea>
       <button type="button" class="ghost-btn" id="bulkImportBtn" style="margin-top:8px;">批次匯入</button>
       <hr class="divider">
       <div id="productFormTitle" style="font-weight:700; margin-bottom:8px; font-size:14px;">新增商品</div>
@@ -475,14 +477,14 @@
         <div><label>重量(公斤)</label><input type="number" step="0.01" id="newProdWeight" placeholder="0.15"></div>
       </div>
       <div class="field-row">
-        <div><label>小項目 / 品牌(選填)</label><input type="text" id="newProdCategory" placeholder="例如:UNIQLO、美妝保養"></div>
-        <div><label>現貨 / 預購</label>
-          <select id="newProdSaleType">
-            <option value="instock">現貨</option>
-            <option value="preorder">預購</option>
-          </select>
-        </div>
+        <div><label>品牌(選填)</label><input type="text" id="newProdBrand" placeholder="例如:UNIQLO、美妝保養"></div>
+        <div><label>種類(選填,同品牌底下再細分)</label><input type="text" id="newProdSubtype" placeholder="例如:長袖上衣、短袖上衣"></div>
       </div>
+      <label>現貨 / 預購</label>
+      <select id="newProdSaleType">
+        <option value="instock">現貨</option>
+        <option value="preorder">預購</option>
+      </select>
       <label>尺寸(選填,逗號分隔;若下方有加顏色,以顏色內設定的尺寸為主)</label>
       <input type="text" id="newProdSizes" placeholder="例如:S,M,L">
 
@@ -550,19 +552,19 @@ const DEFAULT_SETTINGS = {
 // 注意:欄位名稱 "jpy" 是早期只做日本代購時取的名字,現在其實代表「原幣價格」的數字,
 // 實際幣別由每個商品的 country('JP' 或 'KR')決定,不要被名字誤導。
 const DEFAULT_PRODUCTS = [
-  { id: 'p1', name: '資生堂 ANESSA 金鑽防曬乳 60ml', jpy: 2200, weight: 0.15, desc: '現貨 5 件', category: '美妝保養', country: 'JP' },
-  { id: 'p2', name: 'ROYCE 生巧克力 大盒', jpy: 1200, weight: 0.30, desc: '需 7-10 天代購', category: '零食伴手禮', country: 'JP' },
-  { id: 'p3', name: '無印良品 香氛噴霧 藺草', jpy: 1500, weight: 0.25, desc: '', category: '生活雜貨', country: 'JP' },
-  { id: 'p4', name: 'BAKE 起司塔 6 入禮盒', jpy: 1600, weight: 0.50, desc: '易碎品,加強包裝', category: '零食伴手禮', country: 'JP' },
-  { id: 'p5', name: '白色戀人 12 入', jpy: 1200, weight: 0.40, desc: '', category: '零食伴手禮', country: 'JP' },
-  { id: 'p6', name: 'UNIQLO 刷毛連帽外套', jpy: 3900, weight: 0.45, desc: '', category: '服飾-UNIQLO', country: 'JP', saleType: 'instock',
+  { id: 'p1', name: '資生堂 ANESSA 金鑽防曬乳 60ml', jpy: 2200, weight: 0.15, desc: '現貨 5 件', brand: '美妝保養', country: 'JP' },
+  { id: 'p2', name: 'ROYCE 生巧克力 大盒', jpy: 1200, weight: 0.30, desc: '需 7-10 天代購', brand: '零食伴手禮', country: 'JP' },
+  { id: 'p3', name: '無印良品 香氛噴霧 藺草', jpy: 1500, weight: 0.25, desc: '', brand: '生活雜貨', country: 'JP' },
+  { id: 'p4', name: 'BAKE 起司塔 6 入禮盒', jpy: 1600, weight: 0.50, desc: '易碎品,加強包裝', brand: '零食伴手禮', country: 'JP' },
+  { id: 'p5', name: '白色戀人 12 入', jpy: 1200, weight: 0.40, desc: '', brand: '零食伴手禮', country: 'JP' },
+  { id: 'p6', name: 'UNIQLO 刷毛連帽外套', jpy: 3900, weight: 0.45, desc: '', brand: 'UNIQLO', subtype: '連帽外套', country: 'JP', saleType: 'instock',
     colors: [
       { name: '黑色', sizes: ['S','M','L','XL'], stock: { S: 4, M: 6, L: 2, XL: 0 } },
       { name: '卡其色', sizes: ['M','L'], stock: { M: 3, L: 3 } }
     ] },
-  { id: 'p7', name: 'Nike 運動短袖 T-Shirt', jpy: 2900, weight: 0.20, desc: '', category: '服飾-Nike', country: 'JP', sizes: ['S','M','L'] },
-  { id: 'p8', name: 'innisfree 綠茶籽精華', jpy: 18000, weight: 0.20, desc: '', category: '美妝保養', country: 'KR' },
-  { id: 'p9', name: 'MUSINSA 寬版襯衫', jpy: 39000, weight: 0.35, desc: '', category: '服飾-MUSINSA', country: 'KR', sizes: ['S','M','L'] }
+  { id: 'p7', name: 'Nike 運動短袖 T-Shirt', jpy: 2900, weight: 0.20, desc: '', brand: 'Nike', subtype: '短袖上衣', country: 'JP', sizes: ['S','M','L'] },
+  { id: 'p8', name: 'innisfree 綠茶籽精華', jpy: 18000, weight: 0.20, desc: '', brand: '美妝保養', country: 'KR' },
+  { id: 'p9', name: 'MUSINSA 寬版襯衫', jpy: 39000, weight: 0.35, desc: '', brand: 'MUSINSA', subtype: '上衣', country: 'KR', sizes: ['S','M','L'] }
 ];
 
 const COUNTRY_LABELS = { JP: '日本代購', KR: '韓國代購' };
@@ -576,7 +578,8 @@ let orders = [];
 let cart = {}; // { 'productId::size': { productId, size, qty } }
 let isOwner = false;
 let currentCountry = 'all'; // 'all' | 'JP' | 'KR'
-let currentCategory = 'all';
+let currentBrand = 'all';
+let currentSubtype = 'all';
 let searchQuery = '';
 let currentPage = 1;
 const PAGE_SIZE = 20;
@@ -669,6 +672,10 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
+// 商品的「品牌」欄位是新格式,舊資料如果還沒轉檔、只有 category 欄位,
+// 就先拿 category 頂著用,畫面上才不會整排商品都掉進「其他」。
+function productBrand(p){ return p.brand || p.category || '其他'; }
+
 function renderCountryTabs(){
   const wrap = document.getElementById('countryTabs');
   const countries = Array.from(new Set(products.map(p => p.country || 'JP')));
@@ -677,25 +684,46 @@ function renderCountryTabs(){
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       currentCountry = btn.dataset.country;
-      currentCategory = 'all'; // 換大分類時,小分類篩選重設
+      currentBrand = 'all'; // 換大分類時,底下的品牌/種類篩選重設
+      currentSubtype = 'all';
       currentPage = 1;
       renderProducts();
     });
   });
 }
 
-function renderCategoryTabs(){
-  const wrap = document.getElementById('catTabs');
-  // 只有選定某個大分類(不是「全部」)時,才顯示底下的小分類標籤
+function renderBrandTabs(){
+  const wrap = document.getElementById('brandTabs');
+  // 只有選定某個國家(不是「全部」)時,才顯示底下的品牌標籤
   if(currentCountry === 'all'){ wrap.innerHTML = ''; return; }
   const scoped = products.filter(p => (p.country || 'JP') === currentCountry);
-  const cats = Array.from(new Set(scoped.map(p => p.category).filter(Boolean)));
-  if(cats.length === 0){ wrap.innerHTML = ''; return; }
-  const all = ['all', ...cats];
-  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentCategory===c?'active':''}" data-cat="${escapeHtml(c)}">${c==='all' ? '全部種類' : escapeHtml(c)}</button>`).join('');
+  const brands = Array.from(new Set(scoped.map(productBrand).filter(Boolean)));
+  if(brands.length === 0){ wrap.innerHTML = ''; return; }
+  const all = ['all', ...brands];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentBrand===c?'active':''}" data-brand="${escapeHtml(c)}">${c==='all' ? '全部品牌' : escapeHtml(c)}</button>`).join('');
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
-      currentCategory = btn.dataset.cat;
+      currentBrand = btn.dataset.brand;
+      currentSubtype = 'all'; // 換品牌時,種類篩選重設
+      currentPage = 1;
+      renderProducts();
+    });
+  });
+}
+
+function renderSubtypeTabs(){
+  const wrap = document.getElementById('subtypeTabs');
+  // 只有選定某個品牌(不是「全部」)時,才顯示底下的種類標籤
+  if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
+  const scoped = products.filter(p => (p.country || 'JP') === currentCountry && productBrand(p) === currentBrand);
+  const subtypes = Array.from(new Set(scoped.map(p => p.subtype).filter(Boolean)));
+  // 這個品牌底下的商品種類都一樣(或沒填),沒必要多一排只有一個選項的標籤
+  if(subtypes.length < 2){ wrap.innerHTML = ''; return; }
+  const all = ['all', ...subtypes];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentSubtype===c?'active':''}" data-subtype="${escapeHtml(c)}">${c==='all' ? '全部種類' : escapeHtml(c)}</button>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentSubtype = btn.dataset.subtype;
       currentPage = 1;
       renderProducts();
     });
@@ -704,7 +732,8 @@ function renderCategoryTabs(){
 
 function renderProducts(){
   renderCountryTabs();
-  renderCategoryTabs();
+  renderBrandTabs();
+  renderSubtypeTabs();
   const grid = document.getElementById('productGrid');
   if(products.length === 0){
     grid.innerHTML = '<div class="empty-note">目前尚未上架商品,請點右上角齒輪進入老闆模式新增。</div>';
@@ -713,8 +742,11 @@ function renderProducts(){
   let list = products;
   if(currentCountry !== 'all'){
     list = list.filter(p => (p.country || 'JP') === currentCountry);
-    if(currentCategory !== 'all'){
-      list = list.filter(p => p.category === currentCategory);
+    if(currentBrand !== 'all'){
+      list = list.filter(p => productBrand(p) === currentBrand);
+      if(currentSubtype !== 'all'){
+        list = list.filter(p => p.subtype === currentSubtype);
+      }
     }
   }
   const q = searchQuery.trim().toLowerCase();
@@ -738,13 +770,14 @@ function renderProducts(){
     const saleType = p.saleType || 'instock';
     const hasColors = p.colors && p.colors.length > 0;
 
-    let chosenColor = null, sizesForChoice = [], stockForColor = null;
+    let chosenColor = null, sizesForChoice = [], stockForColor = null, colorImage = null;
     if(hasColors){
       chosenColor = selectedColor[p.id] || p.colors[0].name;
       const colorObj = p.colors.find(c => c.name === chosenColor) || p.colors[0];
       chosenColor = colorObj.name;
       sizesForChoice = colorObj.sizes || [];
       stockForColor = colorObj.stock || null;
+      colorImage = colorObj.image || null;
     } else if(p.sizes && p.sizes.length > 0){
       sizesForChoice = p.sizes;
     }
@@ -754,12 +787,14 @@ function renderProducts(){
     const key = cartKey(p.id, chosenColor, chosenSize);
     const qty = (cart[key] && cart[key].qty) || 0;
     const soldOut = saleType !== 'preorder' && stockForColor && chosenSize && (stockForColor[chosenSize] || 0) <= 0;
+    const displayImage = colorImage || p.image;
+    const badgeParts = [COUNTRY_LABELS[country] || country, productBrand(p), p.subtype].filter(Boolean);
 
     return `
     <div class="card">
-      ${p.image ? `<img class="prod-image" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">` : ''}
+      ${displayImage ? `<img class="prod-image" id="prodImg-${p.id}" src="${escapeHtml(displayImage)}" alt="${escapeHtml(p.name)}">` : ''}
       <div class="stamp">${p.weight}<small>KG</small></div>
-      <div class="cat-badge">${escapeHtml(COUNTRY_LABELS[country] || country)}${p.category ? ' · ' + escapeHtml(p.category) : ''}</div>
+      <div class="cat-badge">${badgeParts.map(escapeHtml).join(' · ')}</div>
       <span class="sale-badge ${saleType}">${saleType === 'preorder' ? '預購' : '現貨'}</span>
       <h3>${escapeHtml(p.name)}</h3>
       <div class="price-row">
@@ -767,6 +802,7 @@ function renderProducts(){
         <span class="price-twd">${fmtMoney(twd)}</span>
       </div>
       ${p.desc ? `<div class="desc">${escapeHtml(p.desc)}</div>` : ''}
+      ${p.note ? `<div class="notice-box" style="margin-top:0;">⚠ ${escapeHtml(p.note)}</div>` : ''}
       ${p.link ? `<a href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer" class="link-btn">查看官網介紹 ↗</a>` : ''}
       ${hasColors ? `<div class="size-pills">${p.colors.map(c => `<button type="button" class="size-pill ${c.name===chosenColor?'active':''}" data-id="${p.id}" data-color="${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>`).join('')}</div>` : ''}
       ${hasSizes ? `<div class="size-pills">${sizesForChoice.map(s => {
@@ -945,7 +981,8 @@ document.getElementById('submitOrderBtn').onclick = async () => {
     name, phone, note,
     items: lines.map(l => ({ name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP' })),
     subtotal, shipping, total, deposit,
-    status: '待確認訂金'
+    status: '待確認訂金',
+    statusTimestamps: { '待確認訂金': Date.now() }
   };
   orders = [order, ...orders];
   await storageSet(ORDERS_KEY, orders, true);
@@ -981,14 +1018,24 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
     resultBox.innerHTML = '<div class="empty-note">查無此訂單編碼,請確認輸入是否正確。</div>';
     return;
   }
+  const ts = found.statusTimestamps || {};
+  const timelineRows = [
+    ['接到訂單', found.time],
+    ['確認訂金', ts['已收訂金']],
+    ['已出貨', ts['已出貨']],
+  ].filter(([, t]) => t);
   resultBox.innerHTML = `
     <div class="order-card">
       <div class="order-top">
-        <span>${new Date(found.time).toLocaleString('zh-TW')}</span>
+        <span>訂購人:${escapeHtml(found.name)}</span>
         <span class="status-chip" style="cursor:default;">${escapeHtml(found.status)}</span>
       </div>
       <div class="order-items">${found.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(found.total)}　訂金 ${fmtMoney(found.deposit)}</div>
+      <div style="margin-top:8px; font-size:12px; color:#6B7686;">
+        ${timelineRows.map(([label, t]) => `<div>${label}:${new Date(t).toLocaleString('zh-TW')}</div>`).join('')}
+      </div>
+      ${found.status === '無法完成' ? `<div class="notice-box" style="margin-top:10px; color:var(--stamp); border-color:var(--stamp);">此訂單無法完成${found.cancelReason ? '(' + escapeHtml(found.cancelReason) + ')' : ''},請與老闆聯繫確認後續處理。</div>` : ''}
     </div>
   `;
 };
@@ -1110,7 +1157,7 @@ function renderProductAdminList(){
         ${p.image ? `<img class="admin-thumb" src="${escapeHtml(p.image)}" alt="">` : ''}
         <div>
           <div class="prod-row-name">${escapeHtml(p.name)}</div>
-          <div class="prod-row-meta">${escapeHtml(COUNTRY_LABELS[p.country || 'JP'])} ・ ${currencySymbol(p.country || 'JP')}${p.jpy.toLocaleString('en-US')} ・ ${p.weight}kg ・ ${(p.saleType || 'instock') === 'preorder' ? '預購' : '現貨'} ${p.category ? '・ ' + escapeHtml(p.category) : ''}${p.colors && p.colors.length ? '・ 顏色 ' + p.colors.map(c => escapeHtml(c.name) + '(' + (c.sizes||[]).map(s=>escapeHtml(s)).join('/') + ')').join('、') : (p.sizes && p.sizes.length ? '・ 尺寸 ' + p.sizes.map(s=>escapeHtml(s)).join('/') : '')} ${p.desc ? '・ ' + escapeHtml(p.desc) : ''}</div>
+          <div class="prod-row-meta">${escapeHtml(COUNTRY_LABELS[p.country || 'JP'])} ・ ${currencySymbol(p.country || 'JP')}${p.jpy.toLocaleString('en-US')} ・ ${p.weight}kg ・ ${(p.saleType || 'instock') === 'preorder' ? '預購' : '現貨'} ${productBrand(p) ? '・ ' + escapeHtml(productBrand(p)) : ''}${p.subtype ? '・ ' + escapeHtml(p.subtype) : ''}${p.colors && p.colors.length ? '・ 顏色 ' + p.colors.map(c => escapeHtml(c.name) + '(' + (c.sizes||[]).map(s=>escapeHtml(s)).join('/') + ')').join('、') : (p.sizes && p.sizes.length ? '・ 尺寸 ' + p.sizes.map(s=>escapeHtml(s)).join('/') : '')} ${p.desc ? '・ ' + escapeHtml(p.desc) : ''}</div>
         </div>
       </div>
       <div class="row-actions">
@@ -1203,7 +1250,8 @@ function resetProductForm(){
   document.getElementById('newProdWeight').value = '';
   document.getElementById('newProdDesc').value = '';
   document.getElementById('newProdLink').value = '';
-  document.getElementById('newProdCategory').value = '';
+  document.getElementById('newProdBrand').value = '';
+  document.getElementById('newProdSubtype').value = '';
   document.getElementById('newProdSaleType').value = 'instock';
   document.getElementById('newProdSizes').value = '';
   clearColorRows();
@@ -1224,7 +1272,8 @@ window.startEditProduct = function(id){
   document.getElementById('newProdName').value = p.name;
   document.getElementById('newProdPrice').value = p.jpy;
   document.getElementById('newProdWeight').value = p.weight;
-  document.getElementById('newProdCategory').value = p.category || '';
+  document.getElementById('newProdBrand').value = p.brand || p.category || '';
+  document.getElementById('newProdSubtype').value = p.subtype || '';
   document.getElementById('newProdSaleType').value = p.saleType || 'instock';
   document.getElementById('newProdSizes').value = (p.sizes || []).join(',');
   clearColorRows();
@@ -1270,7 +1319,10 @@ document.getElementById('bulkImportBtn').onclick = async () => {
       saleType: it.saleType === 'preorder' ? 'preorder' : 'instock',
       desc: it.desc || ''
     };
-    if(it.category) prod.category = it.category;
+    if(it.brand) prod.brand = it.brand;
+    else if(it.category) prod.brand = it.category; // 舊格式相容:沒有 brand 欄位就拿 category 頂著用
+    if(it.subtype) prod.subtype = it.subtype;
+    if(it.note) prod.note = it.note;
     if(it.image) prod.image = it.image;
     if(it.link) prod.link = it.link;
     if(Array.isArray(it.sizes) && it.sizes.length) prod.sizes = it.sizes;
@@ -1294,7 +1346,8 @@ document.getElementById('addProdBtn').onclick = async () => {
   const weight = parseFloat(document.getElementById('newProdWeight').value);
   const desc = document.getElementById('newProdDesc').value.trim();
   const link = document.getElementById('newProdLink').value.trim();
-  const category = document.getElementById('newProdCategory').value.trim();
+  const brand = document.getElementById('newProdBrand').value.trim();
+  const subtype = document.getElementById('newProdSubtype').value.trim();
   const saleType = document.getElementById('newProdSaleType').value;
   const sizesRaw = document.getElementById('newProdSizes').value.trim();
   const sizes = sizesRaw ? sizesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -1315,7 +1368,8 @@ document.getElementById('addProdBtn').onclick = async () => {
       return;
     }
     const updated = { id: editingProductId, name, country, jpy: price, weight, desc, saleType };
-    if(category) updated.category = category;
+    if(brand) updated.brand = brand;
+    if(subtype) updated.subtype = subtype;
     if(colors.length) updated.colors = colors;
     else if(sizes.length) updated.sizes = sizes;
     if(image) updated.image = image;
@@ -1326,7 +1380,8 @@ document.getElementById('addProdBtn').onclick = async () => {
     else { toast('商品已更新'); }
   } else {
     const newProd = { id: 'p_' + Date.now(), name, country, jpy: price, weight, desc, saleType };
-    if(category) newProd.category = category;
+    if(brand) newProd.brand = brand;
+    if(subtype) newProd.subtype = subtype;
     if(colors.length) newProd.colors = colors;
     else if(sizes.length) newProd.sizes = sizes;
     if(image) newProd.image = image;
@@ -1351,28 +1406,46 @@ function renderOrdersAdminList(){
     return;
   }
   empty.style.display = 'none';
-  const statuses = ['待確認訂金', '已收訂金', '已出貨'];
-  box.innerHTML = orders.map(o => `
+  const statuses = ['待確認訂金', '已收訂金', '已出貨', '無法完成'];
+  box.innerHTML = orders.map(o => {
+    const ts = o.statusTimestamps || {};
+    const timeline = statuses
+      .filter(s => s !== '無法完成' && ts[s])
+      .map(s => `${s}:${new Date(ts[s]).toLocaleString('zh-TW')}`)
+      .join('　');
+    return `
     <div class="order-card">
       <div class="order-top">
         <span>${new Date(o.time).toLocaleString('zh-TW')}</span>
         <div style="display:flex; align-items:center; gap:8px;">
-          <button class="status-chip" onclick="cycleStatus('${o.id}')">${o.status}</button>
+          <select class="status-chip" style="cursor:pointer;" onchange="setOrderStatus('${o.id}', this.value)">
+            ${statuses.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
           <button class="row-actions del" style="background:none; border:none; cursor:pointer; font-size:13px; color:var(--stamp);" onclick="deleteOrder('${o.id}')">刪除</button>
         </div>
       </div>
       <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}${o.code ? `　<span class="cart-item-sub">編碼:${escapeHtml(o.code)}</span>` : ''}</div>
       <div class="order-items">${o.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}</div>
+      ${timeline ? `<div class="cart-item-sub">${timeline}</div>` : ''}
+      ${o.status === '無法完成' && o.cancelReason ? `<div class="cart-item-sub" style="color:var(--stamp);">無法完成原因:${escapeHtml(o.cancelReason)}</div>` : ''}
       ${o.note ? `<div class="cart-item-sub">備註:${escapeHtml(o.note)}</div>` : ''}
     </div>
-  `).join('');
-  window.cycleStatus = async function(id){
+  `;
+  }).join('');
+  window.setOrderStatus = async function(id, newStatus){
     const o = orders.find(x => x.id === id);
-    const idx = statuses.indexOf(o.status);
-    o.status = statuses[(idx + 1) % statuses.length];
+    if(newStatus === '無法完成'){
+      const reason = prompt('請簡短說明無法完成的原因(例如:沒貨、運輸問題),可留空:', o.cancelReason || '');
+      if(reason === null){ renderOrdersAdminList(); return; } // 按取消就還原下拉選單,不變更狀態
+      o.cancelReason = reason.trim();
+    }
+    o.status = newStatus;
+    o.statusTimestamps = o.statusTimestamps || {};
+    o.statusTimestamps[newStatus] = Date.now();
     await storageSet(ORDERS_KEY, orders, true);
     renderOrdersAdminList();
+    toast('訂單狀態已更新');
   };
   window.deleteOrder = async function(id){
     if(!confirm('確定要刪除這筆訂單嗎?這個動作無法復原。')) return;
