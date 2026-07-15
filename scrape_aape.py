@@ -126,20 +126,39 @@ def guess_weight(name):
     return DEFAULT_WEIGHT
 
 
-def guess_category(name):
-    if re.search(r"TEE|POLO|SHIRT", name, re.IGNORECASE):
-        return "AAPE-上衣"
-    if re.search(r"PANTS|DENIM|CARGO|SHORTS", name, re.IGNORECASE):
-        return "AAPE-褲裝"
-    if re.search(r"JACKET|HOODIE|SWEAT", name, re.IGNORECASE):
-        return "AAPE-外套"
-    if re.search(r"BAG|SUITCASE|BACKPACK", name, re.IGNORECASE):
-        return "AAPE-包款"
-    if re.search(r"CAP|HAT", name, re.IGNORECASE):
-        return "AAPE-帽子"
-    if re.search(r"SLIDER|SHOES", name, re.IGNORECASE):
-        return "AAPE-鞋類"
-    return "AAPE-其他"
+BRAND = "AAPE"
+
+# 三層分類的第三層(種類),依序比對、第一個命中的規則就決定分類。
+# 順序很重要:例如「長袖」要在「TEE/SHIRT」這種泛用規則之前判斷,
+# 不然長袖 T 恤會被籠統的「短袖上衣」規則搶先吃掉。
+SUBTYPE_RULES = [
+    (r"SOCKS", "襪子"),
+    (r"CAP|HAT|BUCKET", "帽子"),
+    (r"SLIDER|SHOES", "鞋類"),
+    (r"BAG|SUITCASE|BACKPACK|TOTE|SACOCHE|POUCH", "包款"),
+    (r"SKIRT", "裙裝"),
+    (r"DRESS", "洋裝"),
+    (r"SHORTS", "短褲"),
+    (r"PANTS|DENIM|CARGO|JOGGER", "長褲"),
+    (r"HOODIE", "連帽外套"),
+    (r"CARDIGAN|KNIT", "針織衫"),
+    (r"JACKET|COAT", "外套"),
+    (r"LONG\s*SLEEVE|LONG\s*SLLEVE", "長袖上衣"),  # 官網商品名偶爾把 SLEEVE 拼成 SLLEVE
+    (r"CREW\s*NECK\s*SWEAT|RAGLAN.*SWEAT|SWEAT\b", "長袖上衣"),
+    (r"TANKTOP|TANK TOP", "背心"),
+    (r"TEE|POLO|SHIRT", "短袖上衣"),
+]
+
+
+def guess_subtype(name):
+    for pattern, subtype in SUBTYPE_RULES:
+        if re.search(pattern, name, re.IGNORECASE):
+            return subtype
+    return "其他"
+
+
+def is_reversible(name):
+    return bool(re.search(r"REVERSIBLE", name, re.IGNORECASE))
 
 
 def fetch_soup(url):
@@ -265,6 +284,12 @@ def fetch_product_detail(link):
             continue
         color_name = translate_color(color_name_ja)
 
+        # 縮圖網址是 xxx_d_125.jpg 這種低解析度版本,換成 _d_240 跟商品列表圖片同等級
+        img_el = row.select_one(".variation-row-thumbnail .image img")
+        color_image = None
+        if img_el and img_el.get("src"):
+            color_image = urljoin(BASE_URL, img_el["src"]).replace("_d_125.jpg", "_d_240.jpg")
+
         sizes = []
         stock = {}
         for item_el in row.select(".variation-col-item"):
@@ -283,7 +308,10 @@ def fetch_product_detail(link):
             stock[size_name] = 0 if is_out else (qty if qty is not None else 1)
 
         if sizes:
-            colors.append({"name": color_name, "sizes": sizes, "stock": stock})
+            color_entry = {"name": color_name, "sizes": sizes, "stock": stock}
+            if color_image:
+                color_entry["image"] = color_image
+            colors.append(color_entry)
 
     return {"colors": colors}
 
@@ -327,11 +355,14 @@ def main():
             "name": name,
             "jpy": p["jpy"],
             "weight": guess_weight(name),
-            "category": guess_category(name),
+            "brand": BRAND,
+            "subtype": guess_subtype(name),
             "country": "JP",
             "saleType": "instock",
             "link": p["link"],
         }
+        if is_reversible(name):
+            entry["note"] = "雙面穿商品,實際兩面顏色請以官網介紹連結的照片為準"
         if p.get("image"):
             entry["image"] = p["image"]
 
