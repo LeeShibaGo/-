@@ -1022,6 +1022,7 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
   const timelineRows = [
     ['接到訂單', found.time],
     ['確認訂金', ts['已收訂金']],
+    ['採購中', ts['採購中']],
     ['已出貨', ts['已出貨']],
   ].filter(([, t]) => t);
   resultBox.innerHTML = `
@@ -1406,7 +1407,7 @@ function renderOrdersAdminList(){
     return;
   }
   empty.style.display = 'none';
-  const statuses = ['待確認訂金', '已收訂金', '已出貨', '無法完成'];
+  const statuses = ['待確認訂金', '已收訂金', '採購中', '已出貨', '無法完成'];
   box.innerHTML = orders.map(o => {
     const ts = o.statusTimestamps || {};
     const timeline = statuses
