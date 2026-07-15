@@ -182,6 +182,9 @@
   .page-btn:hover:not(:disabled){ color:var(--paper); border-color:var(--gold); }
   .page-btn.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
   .page-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  /* 後台是淺色底,分頁按鈕要換成深色文字/邊框才看得清楚 */
+  #tab-products .page-btn{ border-color:#D8D2C3; color:#6B7686; }
+  #tab-products .page-btn:hover:not(:disabled){ color:var(--ink); border-color:var(--stamp); }
 
   .size-pills{ display:flex; flex-wrap:wrap; gap:6px; }
   .size-pill{
@@ -455,16 +458,20 @@
     </div>
 
     <div class="tab-panel" id="tab-products" style="display:none;">
+      <input type="text" id="adminProductSearch" placeholder="搜尋商品名稱..." style="margin-bottom:10px;">
       <div id="productList"></div>
+      <div class="pagination" id="adminPaginationBar"></div>
       <hr class="divider">
-      <div style="font-weight:700; margin-bottom:8px; font-size:14px;">批次匯入商品(貼上 JSON)</div>
-      <div class="notice-box">
-        一次貼上一整批商品,不用一件一件新增。格式是一個陣列,每個商品至少要有 name、jpy、weight,
-        其他欄位(brand、subtype、country、link、image、desc、note)都選填。country 沒填預設是 JP(日本代購)。
-        brand 是品牌(第二層分類),subtype 是同品牌底下再細分的種類(第三層分類,例如長袖/短袖上衣)。
-      </div>
-      <textarea id="bulkImportInput" style="min-height:120px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder='[{"name":"商品名稱","jpy":9900,"weight":0.3,"brand":"AAPE","subtype":"短袖上衣","country":"JP","link":"https://...","image":"https://..."}]'></textarea>
-      <button type="button" class="ghost-btn" id="bulkImportBtn" style="margin-top:8px;">批次匯入</button>
+      <details>
+        <summary style="cursor:pointer; font-weight:700; font-size:14px; padding:4px 0;">批次匯入商品(貼上 JSON)</summary>
+        <div class="notice-box">
+          一次貼上一整批商品,不用一件一件新增。格式是一個陣列,每個商品至少要有 name、jpy、weight,
+          其他欄位(brand、subtype、country、link、image、desc、note)都選填。country 沒填預設是 JP(日本代購)。
+          brand 是品牌(第二層分類),subtype 是同品牌底下再細分的種類(第三層分類,例如長袖/短袖上衣)。
+        </div>
+        <textarea id="bulkImportInput" style="min-height:120px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder='[{"name":"商品名稱","jpy":9900,"weight":0.3,"brand":"AAPE","subtype":"短袖上衣","country":"JP","link":"https://...","image":"https://..."}]'></textarea>
+        <button type="button" class="ghost-btn" id="bulkImportBtn" style="margin-top:8px;">批次匯入</button>
+      </details>
       <hr class="divider">
       <div id="productFormTitle" style="font-weight:700; margin-bottom:8px; font-size:14px;">新增商品</div>
       <label>大項目(國家)</label>
@@ -585,6 +592,9 @@ let currentSubtype = 'all';
 let searchQuery = '';
 let currentPage = 1;
 const PAGE_SIZE = 20;
+let adminSearchQuery = '';
+let adminCurrentPage = 1;
+const ADMIN_PAGE_SIZE = 20;
 let selectedSize = {}; // { 'productId::color': chosenSize } - just for browsing UI, not persisted
 let selectedColor = {}; // { productId: chosenColor } - just for browsing UI, not persisted
 let pendingProductImage = null; // holds compressed base64 image before product is saved
@@ -1165,17 +1175,34 @@ document.getElementById('saveShopBtn').onclick = async () => {
 
 function renderProductAdminList(){
   const box = document.getElementById('productList');
-  if(products.length === 0){
-    box.innerHTML = '<div class="empty-note">尚無商品</div>';
+  const q = adminSearchQuery.trim().toLowerCase();
+  const list = q ? products.filter(p => p.name.toLowerCase().includes(q)) : products;
+
+  if(list.length === 0){
+    box.innerHTML = `<div class="empty-note">${q ? '找不到符合「' + escapeHtml(adminSearchQuery.trim()) + '」的商品。' : '尚無商品'}</div>`;
+    document.getElementById('adminPaginationBar').innerHTML = '';
     return;
   }
-  box.innerHTML = products.map(p => `
+
+  const totalPages = Math.max(1, Math.ceil(list.length / ADMIN_PAGE_SIZE));
+  if(adminCurrentPage > totalPages) adminCurrentPage = totalPages;
+  if(adminCurrentPage < 1) adminCurrentPage = 1;
+  const pageList = list.slice((adminCurrentPage - 1) * ADMIN_PAGE_SIZE, adminCurrentPage * ADMIN_PAGE_SIZE);
+  renderAdminPagination(totalPages);
+
+  box.innerHTML = `<div style="font-size:12px; color:#6B7686; margin-bottom:6px;">共 ${list.length} 件${q ? '(符合搜尋)' : ''}</div>` +
+    pageList.map(p => {
+      const variantDetail = p.colors && p.colors.length
+        ? p.colors.map(c => escapeHtml(c.name) + '(' + (c.sizes||[]).map(s=>escapeHtml(s)).join('/') + ')').join('、')
+        : (p.sizes && p.sizes.length ? '尺寸 ' + p.sizes.map(s=>escapeHtml(s)).join('/') : '');
+      return `
     <div class="prod-row">
       <div style="display:flex; align-items:center; gap:10px;">
         ${p.image ? `<img class="admin-thumb" src="${escapeHtml(p.image)}" alt="">` : ''}
         <div>
           <div class="prod-row-name">${escapeHtml(p.name)}</div>
-          <div class="prod-row-meta">${escapeHtml(COUNTRY_LABELS[p.country || 'JP'])} ・ ${currencySymbol(p.country || 'JP')}${p.jpy.toLocaleString('en-US')} ・ ${p.weight}kg ・ ${(p.saleType || 'instock') === 'preorder' ? '預購' : '現貨'} ${productBrand(p) ? '・ ' + escapeHtml(productBrand(p)) : ''}${p.subtype ? '・ ' + escapeHtml(p.subtype) : ''}${p.colors && p.colors.length ? '・ 顏色 ' + p.colors.map(c => escapeHtml(c.name) + '(' + (c.sizes||[]).map(s=>escapeHtml(s)).join('/') + ')').join('、') : (p.sizes && p.sizes.length ? '・ 尺寸 ' + p.sizes.map(s=>escapeHtml(s)).join('/') : '')} ${p.desc ? '・ ' + escapeHtml(p.desc) : ''}</div>
+          <div class="prod-row-meta">${escapeHtml(COUNTRY_LABELS[p.country || 'JP'])} ・ ${currencySymbol(p.country || 'JP')}${p.jpy.toLocaleString('en-US')} ・ ${p.weight}kg ・ ${(p.saleType || 'instock') === 'preorder' ? '預購' : '現貨'}${productBrand(p) ? ' ・ ' + escapeHtml(productBrand(p)) : ''}${p.subtype ? ' ・ ' + escapeHtml(p.subtype) : ''}${p.desc ? ' ・ ' + escapeHtml(p.desc) : ''}</div>
+          ${variantDetail ? `<details><summary style="cursor:pointer; font-size:12px; color:#6B7686;">顏色/尺寸</summary><div class="prod-row-meta">${variantDetail}</div></details>` : ''}
         </div>
       </div>
       <div class="row-actions">
@@ -1183,7 +1210,28 @@ function renderProductAdminList(){
         <button onclick="deleteProduct('${p.id}')" class="del">刪除</button>
       </div>
     </div>
-  `).join('');
+  `;
+    }).join('');
+}
+
+function renderAdminPagination(totalPages){
+  const bar = document.getElementById('adminPaginationBar');
+  if(totalPages <= 1){ bar.innerHTML = ''; return; }
+  window.__adminGoToPage = (p) => { adminCurrentPage = p; renderProductAdminList(); };
+
+  const pages = [];
+  for(let p = 1; p <= totalPages; p++){
+    if(p === 1 || p === totalPages || Math.abs(p - adminCurrentPage) <= 1) pages.push(p);
+    else if(pages[pages.length - 1] !== '...') pages.push('...');
+  }
+  bar.innerHTML = `
+    <button class="page-btn" ${adminCurrentPage === 1 ? 'disabled' : ''} onclick="__adminGoToPage(${adminCurrentPage - 1})">‹ 上一頁</button>
+    ${pages.map(p => p === '...'
+      ? `<span style="color:var(--muted);">…</span>`
+      : `<button class="page-btn ${p === adminCurrentPage ? 'active' : ''}" onclick="__adminGoToPage(${p})">${p}</button>`
+    ).join('')}
+    <button class="page-btn" ${adminCurrentPage === totalPages ? 'disabled' : ''} onclick="__adminGoToPage(${adminCurrentPage + 1})">下一頁 ›</button>
+  `;
 }
 
 window.deleteProduct = async function(id){
@@ -1545,6 +1593,18 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     searchQuery = value;
     currentPage = 1;
     renderProducts();
+  }, 200);
+});
+
+// ===== 後台商品管理搜尋 =====
+let adminSearchDebounceTimer = null;
+document.getElementById('adminProductSearch').addEventListener('input', (e) => {
+  clearTimeout(adminSearchDebounceTimer);
+  const value = e.target.value;
+  adminSearchDebounceTimer = setTimeout(() => {
+    adminSearchQuery = value;
+    adminCurrentPage = 1;
+    renderProductAdminList();
   }, 200);
 });
 
