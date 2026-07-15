@@ -1235,7 +1235,10 @@ function renderOrdersAdminList(){
     <div class="order-card">
       <div class="order-top">
         <span>${new Date(o.time).toLocaleString('zh-TW')}</span>
-        <button class="status-chip" onclick="cycleStatus('${o.id}')">${o.status}</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="status-chip" onclick="cycleStatus('${o.id}')">${o.status}</button>
+          <button class="row-actions del" style="background:none; border:none; cursor:pointer; font-size:13px; color:var(--stamp);" onclick="deleteOrder('${o.id}')">刪除</button>
+        </div>
       </div>
       <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}</div>
       <div class="order-items">${o.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
@@ -1249,6 +1252,13 @@ function renderOrdersAdminList(){
     o.status = statuses[(idx + 1) % statuses.length];
     await storageSet(ORDERS_KEY, orders, true);
     renderOrdersAdminList();
+  };
+  window.deleteOrder = async function(id){
+    if(!confirm('確定要刪除這筆訂單嗎?這個動作無法復原。')) return;
+    orders = orders.filter(x => x.id !== id);
+    await storageSet(ORDERS_KEY, orders, true);
+    renderOrdersAdminList();
+    toast('訂單已刪除');
   };
 }
 
