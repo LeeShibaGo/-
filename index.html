@@ -166,6 +166,9 @@
   }
   .cat-tab:hover{ color:var(--paper); border-color:var(--gold); }
   .cat-tab.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
+  /* 後台是淺色底,分類標籤要換成深色文字/邊框才看得清楚 */
+  #tab-products .cat-tab{ border-color:#D8D2C3; color:#6B7686; }
+  #tab-products .cat-tab:hover{ color:var(--ink); border-color:var(--stamp); }
 
   .cat-badge{ font-size:10px; letter-spacing:0.08em; color:var(--gold-dim); text-transform:uppercase; font-weight:700; }
 
@@ -317,6 +320,7 @@
       <div class="shop-tag">Daigou Exchange Board</div>
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
+      <button class="ghost-btn" id="customRequestBtn" style="border-color:var(--line-strong); color:var(--paper);">客製化代購</button>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong); color:var(--paper);">查詢訂單</button>
       <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
     </div>
@@ -375,8 +379,8 @@
       <input type="text" id="custName" placeholder="王小姐">
       <label>聯絡電話</label>
       <input type="tel" id="custPhone" placeholder="09xx-xxx-xxx">
-      <label>Email(選填,填寫才能收到訂單確認信)</label>
-      <input type="text" id="custEmail" placeholder="example@mail.com">
+      <label>Email(用來寄送訂單確認信)</label>
+      <input type="email" id="custEmail" placeholder="example@mail.com">
       <label>備註(顏色/尺寸/其他需求)</label>
       <textarea id="custNote" placeholder="選填"></textarea>
       <div class="notice-box" id="noticeBox"></div>
@@ -415,6 +419,18 @@
     <input type="text" id="lookupCodeInput" placeholder="例如:SG4K92" style="text-transform:uppercase;">
     <button class="primary-btn" id="lookupSubmitBtn">查詢</button>
     <div id="lookupResult" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<!-- Custom request / contact overlay -->
+<div class="overlay" id="customRequestOverlay">
+  <div class="sheet" style="max-width:420px;">
+    <div class="sheet-head">
+      <h2>客製化代購</h2>
+      <button class="close-x" id="closeCustomRequest">✕</button>
+    </div>
+    <div class="notice-box" style="margin-top:0;">如果您想找的商品不在目前上架清單裡,或有其他客製化代購需求,歡迎透過以下方式聯繫我們:</div>
+    <div id="customRequestLinks" style="display:flex; flex-direction:column; gap:10px; margin-top:14px;"></div>
   </div>
 </div>
 
@@ -458,6 +474,9 @@
     </div>
 
     <div class="tab-panel" id="tab-products" style="display:none;">
+      <div class="cat-tabs" id="adminCountryTabs" style="margin-bottom:8px;"></div>
+      <div class="cat-tabs subcat" id="adminBrandTabs"></div>
+      <div class="cat-tabs subcat" id="adminSubtypeTabs"></div>
       <input type="text" id="adminProductSearch" placeholder="搜尋商品名稱..." style="margin-bottom:10px;">
       <div id="productList"></div>
       <div class="pagination" id="adminPaginationBar"></div>
@@ -534,7 +553,13 @@
       <input type="text" id="shopNameInput">
       <label>訂金匯款資訊(會顯示給客人)</label>
       <textarea id="paymentInput" placeholder="例如:第一銀行(007) 123-456-789 户名 王小姐"></textarea>
-      <label>設定密碼(老闆模式進入密碼)</label>
+      <label style="margin-top:16px;">LINE 社群邀請連結(客製化代購按鈕會顯示)</label>
+      <input type="text" id="lineGroupUrlInput" placeholder="https://line.me/ti/g2/...">
+      <label>LINE 官方帳號 ID</label>
+      <input type="text" id="lineOfficialIdInput" placeholder="@wlw7925n">
+      <label>Threads 網址</label>
+      <input type="text" id="threadsUrlInput" placeholder="https://www.threads.com/@...">
+      <label style="margin-top:16px;">設定密碼(老闆模式進入密碼)</label>
       <input type="text" id="pinChangeInput">
       <button class="primary-btn" id="saveShopBtn">儲存店家資訊</button>
     </div>
@@ -555,6 +580,9 @@ const DEFAULT_SETTINGS = {
   shippingPerKg: 150,
   pin: '0000',
   payment: '第一銀行(007) 123-456-789　户名:王小姐\n轉帳後請截圖給老闆確認,謝謝您!',
+  lineGroupUrl: 'https://line.me/ti/g2/khKQ6_1RbId40z6zQpTLA37XQNXEa4tT9vPd5w?utm_source=invitation&utm_medium=link_copy&utm_campaign=default',
+  lineOfficialId: '@wlw7925n',
+  threadsUrl: 'https://www.threads.com/@shiba_worldwide_go?invite=0',
   lastUpdated: null
 };
 
@@ -595,6 +623,9 @@ const PAGE_SIZE = 20;
 let adminSearchQuery = '';
 let adminCurrentPage = 1;
 const ADMIN_PAGE_SIZE = 20;
+let adminCurrentCountry = 'all';
+let adminCurrentBrand = 'all';
+let adminCurrentSubtype = 'all';
 let selectedSize = {}; // { 'productId::color': chosenSize } - just for browsing UI, not persisted
 let selectedColor = {}; // { productId: chosenColor } - just for browsing UI, not persisted
 let pendingProductImage = null; // holds compressed base64 image before product is saved
@@ -998,7 +1029,8 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   const phone = document.getElementById('custPhone').value.trim();
   const email = document.getElementById('custEmail').value.trim();
   const note = document.getElementById('custNote').value.trim();
-  if(!name || !phone){ toast('請填寫姓名與電話'); return; }
+  if(!name || !phone || !email){ toast('請填寫姓名、電話與 Email'); return; }
+  if(!/^\S+@\S+\.\S+$/.test(email)){ toast('請填寫正確格式的 Email'); return; }
   const { lines, subtotal, shipping, total, deposit } = computeTotals();
   const order = {
     id: 'ord_' + Date.now(),
@@ -1034,6 +1066,20 @@ document.getElementById('orderLookupBtn').onclick = () => {
   document.getElementById('lookupOverlay').classList.add('open');
 };
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
+
+// ===== 客製化代購 / 聯繫方式 =====
+document.getElementById('customRequestBtn').onclick = () => {
+  const linksBox = document.getElementById('customRequestLinks');
+  const links = [];
+  if(settings.lineGroupUrl) links.push({ label: '加入 LINE 社群', url: settings.lineGroupUrl });
+  if(settings.lineOfficialId) links.push({ label: `LINE 官方帳號(${settings.lineOfficialId})`, url: `https://line.me/R/ti/p/${encodeURIComponent(settings.lineOfficialId)}` });
+  if(settings.threadsUrl) links.push({ label: '追蹤 Threads', url: settings.threadsUrl });
+  linksBox.innerHTML = links.length
+    ? links.map(l => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="primary-btn" style="display:block; text-align:center; text-decoration:none; margin-top:0;">${escapeHtml(l.label)}</a>`).join('')
+    : '<div class="empty-note">尚未設定聯繫方式。</div>';
+  document.getElementById('customRequestOverlay').classList.add('open');
+};
+document.getElementById('closeCustomRequest').onclick = () => document.getElementById('customRequestOverlay').classList.remove('open');
 document.getElementById('lookupSubmitBtn').onclick = async () => {
   const code = document.getElementById('lookupCodeInput').value.trim().toUpperCase();
   const resultBox = document.getElementById('lookupResult');
@@ -1091,6 +1137,9 @@ function openAdmin(){
   document.getElementById('shipInput').value = settings.shippingPerKg;
   document.getElementById('shopNameInput').value = settings.shopName;
   document.getElementById('paymentInput').value = settings.payment;
+  document.getElementById('lineGroupUrlInput').value = settings.lineGroupUrl || '';
+  document.getElementById('lineOfficialIdInput').value = settings.lineOfficialId || '';
+  document.getElementById('threadsUrlInput').value = settings.threadsUrl || '';
   document.getElementById('pinChangeInput').value = settings.pin;
   resetProductForm();
   renderProductAdminList();
@@ -1167,19 +1216,87 @@ document.getElementById('saveRateBtn').onclick = async () => {
 document.getElementById('saveShopBtn').onclick = async () => {
   settings.shopName = document.getElementById('shopNameInput').value.trim() || settings.shopName;
   settings.payment = document.getElementById('paymentInput').value;
+  settings.lineGroupUrl = document.getElementById('lineGroupUrlInput').value.trim();
+  settings.lineOfficialId = document.getElementById('lineOfficialIdInput').value.trim();
+  settings.threadsUrl = document.getElementById('threadsUrlInput').value.trim();
   settings.pin = document.getElementById('pinChangeInput').value.trim() || settings.pin;
   await storageSet(SETTINGS_KEY, settings, true);
   render();
   toast('店家資訊已儲存');
 };
 
+function renderAdminCountryTabs(){
+  const wrap = document.getElementById('adminCountryTabs');
+  const countries = Array.from(new Set(products.map(p => p.country || 'JP')));
+  const all = ['all', ...countries];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${adminCurrentCountry===c?'active':''}" data-country="${escapeHtml(c)}">${c==='all' ? '全部' : escapeHtml(COUNTRY_LABELS[c] || c)}</button>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      adminCurrentCountry = btn.dataset.country;
+      adminCurrentBrand = 'all';
+      adminCurrentSubtype = 'all';
+      adminCurrentPage = 1;
+      renderProductAdminList();
+    });
+  });
+}
+
+function renderAdminBrandTabs(){
+  const wrap = document.getElementById('adminBrandTabs');
+  if(adminCurrentCountry === 'all'){ wrap.innerHTML = ''; return; }
+  const scoped = products.filter(p => (p.country || 'JP') === adminCurrentCountry);
+  const brands = Array.from(new Set(scoped.map(productBrand).filter(Boolean)));
+  if(brands.length === 0){ wrap.innerHTML = ''; return; }
+  const all = ['all', ...brands];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${adminCurrentBrand===c?'active':''}" data-brand="${escapeHtml(c)}">${c==='all' ? '全部品牌' : escapeHtml(c)}</button>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      adminCurrentBrand = btn.dataset.brand;
+      adminCurrentSubtype = 'all';
+      adminCurrentPage = 1;
+      renderProductAdminList();
+    });
+  });
+}
+
+function renderAdminSubtypeTabs(){
+  const wrap = document.getElementById('adminSubtypeTabs');
+  if(adminCurrentBrand === 'all'){ wrap.innerHTML = ''; return; }
+  const scoped = products.filter(p => (p.country || 'JP') === adminCurrentCountry && productBrand(p) === adminCurrentBrand);
+  const subtypes = Array.from(new Set(scoped.map(p => p.subtype).filter(Boolean)));
+  if(subtypes.length < 2){ wrap.innerHTML = ''; return; }
+  const all = ['all', ...subtypes];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${adminCurrentSubtype===c?'active':''}" data-subtype="${escapeHtml(c)}">${c==='all' ? '全部種類' : escapeHtml(c)}</button>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      adminCurrentSubtype = btn.dataset.subtype;
+      adminCurrentPage = 1;
+      renderProductAdminList();
+    });
+  });
+}
+
 function renderProductAdminList(){
+  renderAdminCountryTabs();
+  renderAdminBrandTabs();
+  renderAdminSubtypeTabs();
+
   const box = document.getElementById('productList');
+  let list = products;
+  if(adminCurrentCountry !== 'all'){
+    list = list.filter(p => (p.country || 'JP') === adminCurrentCountry);
+    if(adminCurrentBrand !== 'all'){
+      list = list.filter(p => productBrand(p) === adminCurrentBrand);
+      if(adminCurrentSubtype !== 'all'){
+        list = list.filter(p => p.subtype === adminCurrentSubtype);
+      }
+    }
+  }
   const q = adminSearchQuery.trim().toLowerCase();
-  const list = q ? products.filter(p => p.name.toLowerCase().includes(q)) : products;
+  if(q) list = list.filter(p => p.name.toLowerCase().includes(q));
 
   if(list.length === 0){
-    box.innerHTML = `<div class="empty-note">${q ? '找不到符合「' + escapeHtml(adminSearchQuery.trim()) + '」的商品。' : '尚無商品'}</div>`;
+    box.innerHTML = `<div class="empty-note">${q ? '找不到符合「' + escapeHtml(adminSearchQuery.trim()) + '」的商品。' : '這個分類目前沒有商品。'}</div>`;
     document.getElementById('adminPaginationBar').innerHTML = '';
     return;
   }
