@@ -1,0 +1,36 @@
+name: Daily AAPE price check
+
+on:
+  schedule:
+    # 每天 UTC 01:00 = 台灣時間早上 09:00
+    - cron: "0 1 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run price watch
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: python price_watch.py
+
+      - name: Commit updated price history
+        run: |
+          git config user.name "price-watcher-bot"
+          git config user.email "actions@github.com"
+          git add last_prices.json
+          git diff --cached --quiet || git commit -m "Update recorded prices [skip ci]"
+          git push
