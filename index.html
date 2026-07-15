@@ -372,6 +372,8 @@
       <input type="text" id="custName" placeholder="王小姐">
       <label>聯絡電話</label>
       <input type="tel" id="custPhone" placeholder="09xx-xxx-xxx">
+      <label>Email(選填,填寫才能收到訂單確認信)</label>
+      <input type="text" id="custEmail" placeholder="example@mail.com">
       <label>備註(顏色/尺寸/其他需求)</label>
       <textarea id="custNote" placeholder="選填"></textarea>
       <div class="notice-box" id="noticeBox"></div>
@@ -984,6 +986,7 @@ function generateOrderCode(existingOrders){
 document.getElementById('submitOrderBtn').onclick = async () => {
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
+  const email = document.getElementById('custEmail').value.trim();
   const note = document.getElementById('custNote').value.trim();
   if(!name || !phone){ toast('請填寫姓名與電話'); return; }
   const { lines, subtotal, shipping, total, deposit } = computeTotals();
@@ -991,7 +994,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
     id: 'ord_' + Date.now(),
     code: generateOrderCode(orders),
     time: Date.now(),
-    name, phone, note,
+    name, phone, email, note,
     items: lines.map(l => ({ name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP' })),
     subtotal, shipping, total, deposit,
     status: '待確認訂金',
@@ -1009,6 +1012,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   document.getElementById('confirmOverlay').classList.add('open');
   document.getElementById('custName').value = '';
   document.getElementById('custPhone').value = '';
+  document.getElementById('custEmail').value = '';
   document.getElementById('custNote').value = '';
 };
 document.getElementById('closeConfirm').onclick = () => document.getElementById('confirmOverlay').classList.remove('open');
@@ -1435,10 +1439,11 @@ function renderOrdersAdminList(){
           <select class="status-chip" style="cursor:pointer;" onchange="setOrderStatus('${o.id}', this.value)">
             ${statuses.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
+          <button class="row-actions" style="background:none; border:none; cursor:pointer; font-size:13px; color:#6B7686;" onclick="sendConfirmationEmail('${o.id}')">寄確認信</button>
           <button class="row-actions del" style="background:none; border:none; cursor:pointer; font-size:13px; color:var(--stamp);" onclick="deleteOrder('${o.id}')">刪除</button>
         </div>
       </div>
-      <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}${o.code ? `　<span class="cart-item-sub">編碼:${escapeHtml(o.code)}</span>` : ''}</div>
+      <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}${o.email ? `　${escapeHtml(o.email)}` : ''}${o.code ? `　<span class="cart-item-sub">編碼:${escapeHtml(o.code)}</span>` : ''}</div>
       <div class="order-items">${o.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}</div>
       ${timeline ? `<div class="cart-item-sub">${timeline}</div>` : ''}
@@ -1495,6 +1500,40 @@ function renderOrdersAdminList(){
     renderOrdersAdminList();
     toast('訂單已刪除');
   };
+
+  // 訂金有沒有到帳是老闆自己手動確認的,這裡只是提供「一鍵寄確認信」的工具:
+  // 打開電腦/手機預設的郵件軟體、帶入收件人跟信件內容,寄不寄、什麼時候寄由老闆自己按送出。
+  window.sendConfirmationEmail = function(id){
+    const o = orders.find(x => x.id === id);
+    if(!o.email){
+      toast('這筆訂單客人沒有留 Email,無法寄信');
+      return;
+    }
+    window.location.href = buildConfirmationMailto(o);
+  };
+}
+
+function buildConfirmationMailto(o){
+    const itemLines = o.items.map(i => `- ${i.name}${i.color ? ' ['+i.color+']' : ''}${i.size ? ' ('+i.size+')' : ''} × ${i.qty}`).join('\n');
+    const balance = o.total - o.deposit;
+    const subject = `【${settings.shopName}】訂單確認通知(編碼:${o.code || o.id})`;
+    const body = `${o.name} 您好:
+
+已收到您的訂金,訂單確認成立!以下是訂單明細:
+
+訂單編碼:${o.code || '-'}
+${itemLines}
+
+商品小計:${fmtMoney(o.subtotal)}
+運費估算:${fmtMoney(o.shipping)}
+總金額:${fmtMoney(o.total)}
+已收訂金:${fmtMoney(o.deposit)}
+尾款(到貨前結清):${fmtMoney(balance)}
+
+商品到齊出貨前會再通知您,謝謝您的訂購!
+
+${settings.shopName}`;
+    return `mailto:${encodeURIComponent(o.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 // ===== 搜尋商品 =====
