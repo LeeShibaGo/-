@@ -52,7 +52,9 @@ WEIGHT_RULES = [
     (r"SUITCASE", 3.6),
     (r"BACKPACK|BOSTON BAG|TOTE BAG|BAG\b", 1.2),
     (r"JACKET|HOODIE|SWEAT(SHIRT)?\b", 0.65),
-    (r"PANTS|DENIM|CARGO|SHORTS", 0.45),
+    # \b 是必要的:沒有的話 "SHORTS" 會連帶匹配到 "ShortSleeve"(短袖),
+    # 把一件 T 恤估成褲子的重量
+    (r"PANTS|DENIM|CARGO|\bSHORTS\b", 0.45),
     (r"SLIDER|SHOES|SNEAKER", 0.5),
     (r"CAP|HAT|BUCKET", 0.2),
     (r"CUSHION", 0.55),
@@ -128,33 +130,64 @@ def guess_weight(name):
 
 BRAND = "AAPE"
 
-# 三層分類的第三層(種類),依序比對、第一個命中的規則就決定分類。
-# 順序很重要:例如「長袖」要在「TEE/SHIRT」這種泛用規則之前判斷,
-# 不然長袖 T 恤會被籠統的「短袖上衣」規則搶先吃掉。
-SUBTYPE_RULES = [
-    (r"SOCKS", "襪子"),
-    (r"CAP|HAT|BUCKET", "帽子"),
-    (r"SLIDER|SHOES", "鞋類"),
-    (r"BAG|SUITCASE|BACKPACK|TOTE|SACOCHE|POUCH", "包款"),
-    (r"SKIRT", "裙裝"),
-    (r"DRESS", "洋裝"),
-    (r"SHORTS", "短褲"),
-    (r"PANTS|DENIM|CARGO|JOGGER", "長褲"),
+# 三層分類的第三層(種類)。原本整個靠猜商品名稱關鍵字分類,結果「Shortsleeve
+# Tee(短袖上衣)」的名字裡剛好包含 "SHORTS" 這個子字串,被誤判成短褲 ——
+# 這種以偏概全的規則問題,不如直接信任 aape.jp 自己的分類頁面(每個分類頁的
+# 日文名稱,見 discover_categories() 抓到的 label_ja)。
+# 網站本身沒有再把「トップス(上衣)」細分成長袖/短袖,「パンツ(褲裝)」也
+# 沒有再細分長褲/短褲 —— 這兩個是我們自己加的更細分類,所以只在這兩個分類底下
+# 才需要額外用商品名稱關鍵字判斷,其他分類就直接照官網的分類名稱走,不用再猜。
+CATEGORY_ZH = {
+    "ジャケット/アウター": "外套",
+    "オールインワン・サロペット": "連身褲",
+    "スカート": "裙裝",
+    "ワンピース/ドレス": "洋裝",
+    "バッグ": "包款",
+    "シューズ": "鞋類",
+    "ファッション雑貨": "時尚配件",
+    "財布/小物": "錢包小物",
+    "腕時計": "手錶",
+    "ヘアアクセサリー": "髮飾",
+    "アクセサリー": "配件",
+    "アンダーウェア": "內著",
+    "レッグウェア": "襪類",
+    "帽子": "帽子",
+    "インテリア": "居家雜貨",
+    "食器/キッチン": "餐廚用品",
+    "雑貨/ホビー": "雜貨嗜好",
+    "水着/着物・浴衣": "泳裝和服",
+    "その他": "其他",
+}
+
+# 只有「トップス(上衣)」底下才需要再細分長袖/短袖/背心/針織/連帽,
+# 依序比對、第一個命中的規則就決定分類。
+TOPS_SUBTYPE_RULES = [
+    (r"TANKTOP|TANK\s*TOP", "背心"),
     (r"HOODIE", "連帽外套"),
     (r"CARDIGAN|KNIT", "針織衫"),
-    (r"JACKET|COAT", "外套"),
     (r"LONG\s*SLEEVE|LONG\s*SLLEVE", "長袖上衣"),  # 官網商品名偶爾把 SLEEVE 拼成 SLLEVE
     (r"CREW\s*NECK\s*SWEAT|RAGLAN.*SWEAT|SWEAT\b", "長袖上衣"),
-    (r"TANKTOP|TANK TOP", "背心"),
-    (r"TEE|POLO|SHIRT", "短袖上衣"),
+    (r"SHORT\s*SLEEVE|SHORTSLEEVE|TEE|POLO|SHIRT", "短袖上衣"),  # AAPE 的上衣預設多半是短袖
+]
+
+# 只有「パンツ(褲裝)」底下才需要再細分長褲/短褲
+PANTS_SUBTYPE_RULES = [
+    (r"SHORTS", "短褲"),
 ]
 
 
-def guess_subtype(name):
-    for pattern, subtype in SUBTYPE_RULES:
-        if re.search(pattern, name, re.IGNORECASE):
-            return subtype
-    return "其他"
+def guess_subtype(name, category_ja):
+    if category_ja == "トップス":
+        for pattern, subtype in TOPS_SUBTYPE_RULES:
+            if re.search(pattern, name, re.IGNORECASE):
+                return subtype
+        return "上衣"
+    if category_ja == "パンツ":
+        for pattern, subtype in PANTS_SUBTYPE_RULES:
+            if re.search(pattern, name, re.IGNORECASE):
+                return subtype
+        return "長褲"
+    return CATEGORY_ZH.get(category_ja, "其他")
 
 
 def is_reversible(name):
@@ -182,12 +215,14 @@ TOTAL_COUNT_RE = re.compile(r"全\s*([\d,]+)\s*件")
 
 def discover_categories():
     """
-    從首頁導覽列找出所有分類頁連結,依分類代碼去重,組成不帶性別篩選的乾淨網址。
+    從首頁導覽列找出所有分類頁連結跟它的日文分類名稱(連結文字),依分類代碼去重,
+    組成不帶性別篩選的乾淨網址。分類名稱之後會拿來決定商品的「種類」(三層分類的
+    第三層),比自己用商品名稱關鍵字用猜的準確,也是這次改版的原因。
     "GOODS_TYPE" 是「顯示全部商品」的總覽分類,底下的商品其實都會出現在
     各個細分分類裡,略過它可以避免整批商品被重複抓兩次。
     """
     soup = fetch_soup(BASE_URL)
-    codes = set()
+    categories = {}
     for a in soup.select("a[href*='/category/']"):
         href = a.get("href")
         if not href:
@@ -198,8 +233,13 @@ def discover_categories():
         code = m.group(1)
         if code == "GOODS_TYPE":
             continue
-        codes.add(code)
-    return sorted(f"{BASE_URL}/category/{code}/" for code in codes)
+        label = a.get_text(strip=True)
+        if code not in categories and label:
+            categories[code] = label
+    return sorted(
+        ({"code": code, "label_ja": label, "url": f"{BASE_URL}/category/{code}/"} for code, label in categories.items()),
+        key=lambda c: c["code"],
+    )
 
 
 def discover_products_in_category(category_url, max_pages=50):
@@ -329,10 +369,10 @@ def main():
     all_products = []
     seen_links = set()
 
-    for cat_url in categories:
-        print(f"抓取分類:{cat_url}")
+    for cat in categories:
+        print(f"抓取分類:{cat['label_ja']}({cat['url']})")
         try:
-            items = discover_products_in_category(cat_url)
+            items = discover_products_in_category(cat["url"])
         except Exception as e:
             print(f"  [錯誤] 這個分類抓取失敗:{e}")
             continue
@@ -340,6 +380,7 @@ def main():
             if it["link"] in seen_links:
                 continue
             seen_links.add(it["link"])
+            it["category_ja"] = cat["label_ja"]
             all_products.append(it)
             if args.limit and len(all_products) >= args.limit:
                 break
@@ -356,7 +397,7 @@ def main():
             "jpy": p["jpy"],
             "weight": guess_weight(name),
             "brand": BRAND,
-            "subtype": guess_subtype(name),
+            "subtype": guess_subtype(name, p["category_ja"]),
             "country": "JP",
             "saleType": "instock",
             "link": p["link"],
