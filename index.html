@@ -169,6 +169,20 @@
 
   .cat-badge{ font-size:10px; letter-spacing:0.08em; color:var(--gold-dim); text-transform:uppercase; font-weight:700; }
 
+  #searchInput{
+    width:100%; padding:11px 14px; border:1px solid var(--line-strong); border-radius:10px;
+    background:#0F1820; color:var(--paper); font-family:'Noto Sans TC',sans-serif; font-size:14px;
+  }
+  #searchInput::placeholder{ color:var(--muted); }
+  .pagination{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:24px; flex-wrap:wrap; }
+  .page-btn{
+    background:transparent; border:1px solid var(--line-strong); color:var(--muted);
+    padding:6px 12px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'JetBrains Mono',monospace;
+  }
+  .page-btn:hover:not(:disabled){ color:var(--paper); border-color:var(--gold); }
+  .page-btn.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
+  .page-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
   .size-pills{ display:flex; flex-wrap:wrap; gap:6px; }
   .size-pill{
     border:1px solid #D8D2C3; background:#fff; color:var(--ink); font-family:'JetBrains Mono',monospace;
@@ -327,9 +341,11 @@
 
 <div class="wrap">
   <h2 class="section-title">本期商品 <span>價格已依即時匯率換算,重量為預估空運/海運重量</span></h2>
+  <input type="text" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;">
   <div class="cat-tabs" id="countryTabs"></div>
   <div class="cat-tabs subcat" id="catTabs"></div>
   <div class="grid" id="productGrid"></div>
+  <div class="pagination" id="paginationBar"></div>
 </div>
 
 <!-- Floating cart bar -->
@@ -561,6 +577,9 @@ let cart = {}; // { 'productId::size': { productId, size, qty } }
 let isOwner = false;
 let currentCountry = 'all'; // 'all' | 'JP' | 'KR'
 let currentCategory = 'all';
+let searchQuery = '';
+let currentPage = 1;
+const PAGE_SIZE = 20;
 let selectedSize = {}; // { 'productId::color': chosenSize } - just for browsing UI, not persisted
 let selectedColor = {}; // { productId: chosenColor } - just for browsing UI, not persisted
 let pendingProductImage = null; // holds compressed base64 image before product is saved
@@ -659,6 +678,7 @@ function renderCountryTabs(){
     btn.addEventListener('click', () => {
       currentCountry = btn.dataset.country;
       currentCategory = 'all'; // 換大分類時,小分類篩選重設
+      currentPage = 1;
       renderProducts();
     });
   });
@@ -676,6 +696,7 @@ function renderCategoryTabs(){
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       currentCategory = btn.dataset.cat;
+      currentPage = 1;
       renderProducts();
     });
   });
@@ -696,11 +717,22 @@ function renderProducts(){
       list = list.filter(p => p.category === currentCategory);
     }
   }
+  const q = searchQuery.trim().toLowerCase();
+  if(q){
+    list = list.filter(p => p.name.toLowerCase().includes(q));
+  }
   if(list.length === 0){
-    grid.innerHTML = '<div class="empty-note">這個分類目前沒有商品。</div>';
+    grid.innerHTML = `<div class="empty-note">${q ? '找不到符合「' + escapeHtml(searchQuery.trim()) + '」的商品。' : '這個分類目前沒有商品。'}</div>`;
+    document.getElementById('paginationBar').innerHTML = '';
     return;
   }
-  grid.innerHTML = list.map(p => {
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  if(currentPage > totalPages) currentPage = totalPages;
+  if(currentPage < 1) currentPage = 1;
+  const pageList = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  renderPagination(totalPages);
+
+  grid.innerHTML = pageList.map(p => {
     const country = p.country || 'JP';
     const twd = p.jpy * countryRate(country);
     const saleType = p.saleType || 'instock';
@@ -776,6 +808,28 @@ function renderProducts(){
       addToCart(btn.dataset.id, btn.dataset.color || null, btn.dataset.size || null);
     });
   });
+}
+
+function renderPagination(totalPages){
+  const bar = document.getElementById('paginationBar');
+  if(totalPages <= 1){ bar.innerHTML = ''; return; }
+  const goTo = (p) => { currentPage = p; renderProducts(); window.scrollTo({ top: document.querySelector('.wrap').offsetTop, behavior: 'smooth' }); };
+  window.__goToPage = goTo;
+
+  // 頁數多的時候只顯示目前頁附近的頁碼,避免一大排數字擠爆畫面
+  const pages = [];
+  for(let p = 1; p <= totalPages; p++){
+    if(p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) pages.push(p);
+    else if(pages[pages.length - 1] !== '...') pages.push('...');
+  }
+  bar.innerHTML = `
+    <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="__goToPage(${currentPage - 1})">‹ 上一頁</button>
+    ${pages.map(p => p === '...'
+      ? `<span style="color:var(--muted);">…</span>`
+      : `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="__goToPage(${p})">${p}</button>`
+    ).join('')}
+    <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="__goToPage(${currentPage + 1})">下一頁 ›</button>
+  `;
 }
 
 function changeQty(id, color, delta, size){
@@ -1328,6 +1382,18 @@ function renderOrdersAdminList(){
     toast('訂單已刪除');
   };
 }
+
+// ===== 搜尋商品 =====
+let searchDebounceTimer = null;
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  clearTimeout(searchDebounceTimer);
+  const value = e.target.value;
+  searchDebounceTimer = setTimeout(() => {
+    searchQuery = value;
+    currentPage = 1;
+    renderProducts();
+  }, 200);
+});
 
 loadAll();
 </script>
