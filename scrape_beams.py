@@ -82,6 +82,68 @@ def guess_weight(name):
     return DEFAULT_WEIGHT
 
 
+# BEAMS 的顏色名稱是英文(常常是品牌自訂色名,不是標準色名),多色撞色款
+# 用 "/" 分隔多個色名(例如 BLACK/CHAMPAGNE)。採「整串精確對照」而不是逐字
+# 拆解翻譯,對照不到的品牌自訂縮寫(例如 BLLBYB、STPRTBL)保留英文原文,
+# 不硬猜中文——跟 AAPE 顏色翻譯的處理原則一致。
+COLOR_EN_TO_ZH = {
+    "WHITE": "白色",
+    "BLACK": "黑色",
+    "BLUE": "藍色",
+    "RED": "紅色",
+    "GREEN": "綠色",
+    "NAVY": "深藍色",
+    "PURPLE": "紫色",
+    "DK.PURPLE": "深紫色",
+    "BROWN": "棕色",
+    "RICH BROWN": "濃棕色",
+    "CHARCOAL": "炭灰色",
+    "KHAKI": "卡其色",
+    "OLIVE": "橄欖綠",
+    "ANCHOR GREY": "錨灰色",
+    "H.GREY": "混紡灰",
+    "TAUPE": "灰褐色",
+    "OFF WHITE": "米白色",
+    "SNOW WHITE": "雪白色",
+    "OATMEAL": "燕麥色",
+    "IVOLY": "象牙白",
+    "SAX": "淺藍色",
+    "EGGPLANT": "茄紫色",
+    "BURGUNDY": "酒紅色",
+    "OXBLOOD": "牛血紅",
+    "RUST": "鐵鏽紅",
+    "INDIGO": "靛藍色",
+    "FIELD GREEN": "田野綠",
+    "GRASSROOTS": "草根綠",
+    "SEAGRASS": "海草綠",
+    "BAYLEAF": "月桂綠",
+    "ACE BLUE": "湛藍色",
+    "TENNISBLUE": "網球藍",
+    "CHAMPAGNE": "香檳色",
+    "ECRU": "生織白",
+    "NIGHT GREEN": "夜綠色",
+    "SPORT GREEN": "運動綠",
+    "ACEBLUE/SNOWWHITE": "湛藍色/雪白色",
+    "BURNTRED/SNOWWHITE": "燒紅色/雪白色",
+    "DEEPMINT/SNOWWHITE": "薄荷綠/雪白色",
+    "LEMON BARLEY/TENNISBLUE": "檸檬麥色/網球藍",
+    "NAVY/SEAGRASS": "深藍色/海草綠",
+    "OATMEAL/SNOWWHITE": "燕麥色/雪白色",
+    "ECRU/BLACK": "生織白/黑色",
+    "RICH BROWN/BLACK": "濃棕色/黑色",
+    "SEAGRASS/BLACK": "海草綠/黑色",
+    "BLACK/CHAMPAGNE": "黑色/香檳色",
+    "BLACK/WHITE": "黑色/白色",
+    "ANCHOR GREY/EC/BLLBYB": "錨灰色/生織白/BLLBYB",
+    "OXBLOOD/STPRTBL": "牛血紅/STPRTBL",
+    "SOHOE/SNOWWHITE": "SOHOE/雪白色",
+}
+
+
+def translate_color(name):
+    return COLOR_EN_TO_ZH.get(name.strip().upper(), name)
+
+
 # breadcrumb 上的細分類(日文)→ 我們自己網站用的中文種類,
 # 對照不到的就直接保留原文,不會硬翻譯出錯誤的中文。
 SUBTYPE_JA_TO_ZH = {
@@ -262,6 +324,7 @@ def fetch_product_detail(link):
         color_name = name_el.get_text(strip=True) if name_el else color_code
         if not color_name:
             continue
+        color_name = translate_color(color_name)
 
         img_el = container.select_one(".item-thumb img")
         color_image = None
