@@ -353,7 +353,8 @@
       <h1 class="shop-name" id="shopName">柴代購網站</h1>
       <div class="shop-tag">Daigou Exchange Board</div>
     </div>
-    <div style="display:flex; align-items:center; gap:10px;">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <button class="ghost-btn" id="purchaseGuideBtn" style="border-color:var(--line-strong); color:var(--paper);">代購須知</button>
       <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong); color:var(--paper); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong); color:var(--paper);">查詢訂單</button>
       <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
@@ -454,6 +455,17 @@
         <div class="big" id="confirmOrderCode" style="font-size:22px; color:var(--ink);"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Purchase guide overlay -->
+<div class="overlay" id="purchaseGuideOverlay">
+  <div class="sheet" style="max-width:520px;">
+    <div class="sheet-head">
+      <h2>代購須知</h2>
+      <button class="close-x" id="closePurchaseGuide">✕</button>
+    </div>
+    <div id="purchaseGuideContent" style="white-space:pre-wrap; font-size:14px; line-height:1.7;"></div>
   </div>
 </div>
 
@@ -600,6 +612,8 @@
         <div><label>已完成訂單數(信任感區塊顯示)</label><input type="number" id="completedOrdersInput" placeholder="100"></div>
         <div><label>LINE 社群人數(選填,自己去社群看人數填寫)</label><input type="number" id="lineCommunityMembersInput" placeholder="例如 1500"></div>
       </div>
+      <label style="margin-top:16px;">代購須知(本期收單期間、可代購品項、下單流程等,客人點「代購須知」按鈕會看到這段文字;每次開新一團記得回來更新日期)</label>
+      <textarea id="purchaseGuideInput" style="min-height:220px;"></textarea>
       <label style="margin-top:16px;">設定密碼(老闆模式進入密碼)</label>
       <input type="text" id="pinChangeInput">
       <button class="primary-btn" id="saveShopBtn">儲存店家資訊</button>
@@ -626,6 +640,39 @@ const DEFAULT_SETTINGS = {
   threadsUrl: 'https://www.threads.com/@shiba_worldwide_go?invite=0',
   completedOrders: 100,
   lineCommunityMembers: null, // 老闆自己去 LINE 社群看人數,手動填,填了才會顯示
+  purchaseGuide: `🇯🇵【2026/06/18】～【2026/06/29】
+
+🛍 可代購、代排、代尋的商品類型
+(不違法、不為難,基本上都可以🙂‍↕️)
+藥妝、美妝、文具、雜貨
+Anessa、Canmake、Cezanne、Kate…
+品牌服飾、潮牌、球鞋、小眾選物
+動漫周邊、明星周邊、限定商品
+The North Face、Carhartt、Aape、Human Made、Bape、Beams…
+
+⚠️ 香菸、酒類、藥品恕不受理(健康食品不在此範圍內)
+⚠️ 本期商品抵台時段:7/3!!
+⚠️ 若為急單請先告知
+有想要任何東西都歡迎群組、私訊詢問～
+
+📝 如何下單
+購買方式:私訊品項＋匯款
+⚠️ 所有商品不論價格、品項皆需先匯款訂單總金額 50%
+尾款將於取貨、交貨時結清。
+💳 代尋、代排商品需於 3 小時內匯款 → 訂單成立
+⚠️ 大型商品另外報價
+🙏 剩餘 50% 回台再補尾款(賣貨便、7-11 匯款、台中市面交)
+
+總柴很好溝通、商量,長得很兇但不會咬人
+(客人怕老闆捲款逃跑,總柴怕客人跑單,接受貨到付款、全額支付、先付一半,歡迎討論)
+
+💰 價格
+群組或私訊回覆報價!如需討論、議價,請私訊官方帳號🙏
+
+🚚 運費
+賣貨便:$38
+7-11 店到店:$60
+台中市區面交:$0`,
   lastUpdated: null
 };
 
@@ -1112,6 +1159,12 @@ document.getElementById('orderLookupBtn').onclick = () => {
 };
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
 
+document.getElementById('purchaseGuideBtn').onclick = () => {
+  document.getElementById('purchaseGuideContent').textContent = settings.purchaseGuide || '老闆還沒填寫代購須知。';
+  document.getElementById('purchaseGuideOverlay').classList.add('open');
+};
+document.getElementById('closePurchaseGuide').onclick = () => document.getElementById('purchaseGuideOverlay').classList.remove('open');
+
 // ===== 客製化代購 / 聯繫方式(直接顯示連結,不用再點開視窗) =====
 function lineOfficialUrl(id){
   return `https://line.me/R/ti/p/${encodeURIComponent(id)}`;
@@ -1221,6 +1274,7 @@ function openAdmin(){
   document.getElementById('threadsUrlInput').value = settings.threadsUrl || '';
   document.getElementById('completedOrdersInput').value = settings.completedOrders || '';
   document.getElementById('lineCommunityMembersInput').value = settings.lineCommunityMembers || '';
+  document.getElementById('purchaseGuideInput').value = settings.purchaseGuide || '';
   document.getElementById('pinChangeInput').value = settings.pin;
   resetProductForm();
   renderProductAdminList();
@@ -1304,6 +1358,7 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.completedOrders = isNaN(completedOrdersVal) ? null : completedOrdersVal;
   const lineMembersVal = parseInt(document.getElementById('lineCommunityMembersInput').value, 10);
   settings.lineCommunityMembers = isNaN(lineMembersVal) ? null : lineMembersVal;
+  settings.purchaseGuide = document.getElementById('purchaseGuideInput').value;
   settings.pin = document.getElementById('pinChangeInput').value.trim() || settings.pin;
   await storageSet(SETTINGS_KEY, settings, true);
   render();
