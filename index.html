@@ -578,8 +578,8 @@
       <label style="margin-top:16px;">目前匯率(1 韓元 = 多少台幣)</label>
       <input type="number" step="0.0001" id="rateKRWInput" placeholder="0.024">
       <button type="button" class="ghost-btn" id="fetchRateBtn" style="margin-top:8px;">帶入即時匯率(日圓+韓元,每日更新)</button>
-      <label style="margin-top:16px;">日幣商品分級匯率(每行一個級距:「這個級距的原幣價格上限,匯率」,最後一行價格上限留空代表以上都算這一級。便宜商品可以用高一點的匯率賺工本費,精品用低一點的匯率避免比台灣專櫃還貴)</label>
-      <textarea id="priceTiersInput" style="min-height:80px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="10000,0.30&#10;50000,0.25&#10;,0.18"></textarea>
+      <label style="margin-top:16px;">日幣商品分級匯率(每行一個級距:「這個級距的原幣價格上限,匯率」,最後一行價格上限留空代表以上都算這一級。便宜商品可以用高一點的匯率賺工本費,精品用低一點的匯率避免比台灣專櫃還貴。採累進制計算,像所得稅級距一樣——每個級距只對落在該級距內的那一段金額套用對應匯率,不是整筆金額都套同一個匯率,價格才會隨原幣價格平滑增加,不會在級距交界處忽然變便宜)</label>
+      <textarea id="priceTiersInput" style="min-height:100px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="10000,0.30&#10;50000,0.28&#10;100000,0.26&#10;200000,0.25&#10;,0.25"></textarea>
       <label style="margin-top:16px;">每公斤運費(台幣)</label>
       <input type="number" step="1" id="shipInput" placeholder="150">
       <button class="primary-btn" id="saveRateBtn">儲存並更新看板</button>
@@ -706,7 +706,7 @@ const DEFAULT_SETTINGS = {
   // 每行一個級距,格式「這個級距的價格上限(日幣),這個級距的匯率」,由小到大排列,
   // 最後一行價格上限留空代表「以上都算這一級」。韓幣商品目前還是用上面單一的 rateKRW,
   // 之後如果韓幣商品也需要分級,可以比照這個做法另外加一個 priceTiersKRW。
-  priceTiers: `10000,0.30\n50000,0.25\n,0.18`,
+  priceTiers: `10000,0.30\n50000,0.28\n100000,0.26\n200000,0.25\n,0.25`,
   shippingPerKg: 150,
   pin: '0000',
   payment: '第一銀行(007) 123-456-789　户名:王小姐\n轉帳後請截圖給老闆確認,謝謝您!',
@@ -814,10 +814,30 @@ function parsePriceTiers(){
   return raw.length ? raw : [{ maxJpy: null, rate: settings.rate }];
 }
 
+// 級距採「累進制」換算(跟所得稅級距的算法一樣),不是整筆金額套用單一級距的
+// 匯率。原因:如果整筆金額都套同一個級距的匯率,價格剛好卡在級距交界兩側的
+// 商品,會出現「原幣價格比較貴,換算出來的台幣卻比較便宜」這種不合理的情況
+// (例如 ¥49,999 用 0.28 換算出來比 ¥50,001 用 0.26 換算還貴)。改成每個級距
+// 只對「落在這個級距範圍內的那一段金額」套用該級距的匯率,價格才會隨著原幣
+// 價格平滑增加,不會在級距交界處忽然變便宜。
+function tieredJpyToTwd(jpy){
+  const tiers = parsePriceTiers();
+  let total = 0;
+  let prevMax = 0;
+  for(const tier of tiers){
+    const bracketTop = tier.maxJpy == null ? Infinity : tier.maxJpy;
+    const amountInBracket = Math.max(0, Math.min(jpy, bracketTop) - prevMax);
+    total += amountInBracket * tier.rate;
+    if(jpy <= bracketTop) break;
+    prevMax = bracketTop;
+  }
+  return total;
+}
+
 // 商品實際賣給客人的台幣價格。優先順序:
 // 1. 商品自己填了 twdOverride(手動對照台灣專櫃價,通常用在精品)就直接用這個數字。
 // 2. 韓幣商品維持原本單一 rateKRW 換算(目前沒有分級需求)。
-// 3. 日幣商品依原幣價格找對應的級距匯率換算(見 parsePriceTiers)。
+// 3. 日幣商品依原幣價格,用累進級距匯率換算(見 tieredJpyToTwd)。
 function sellPriceTwd(p){
   if(p.twdOverride != null && p.twdOverride !== '' && !isNaN(p.twdOverride)){
     return Number(p.twdOverride);
@@ -825,9 +845,7 @@ function sellPriceTwd(p){
   if((p.country || 'JP') === 'KR'){
     return p.jpy * settings.rateKRW;
   }
-  const tiers = parsePriceTiers();
-  const tier = tiers.find(t => t.maxJpy == null || p.jpy <= t.maxJpy) || tiers[tiers.length - 1];
-  return p.jpy * tier.rate;
+  return tieredJpyToTwd(p.jpy);
 }
 
 let settings = { ...DEFAULT_SETTINGS };
