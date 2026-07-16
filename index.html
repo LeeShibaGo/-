@@ -300,6 +300,14 @@
   .cart-item-sub{ font-size:12px; color:#6B7686; font-family:'JetBrains Mono',monospace; }
   .remove-btn{ background:none; border:none; color:var(--stamp); cursor:pointer; font-size:13px; }
 
+  .delivery-options{ display:flex; flex-direction:column; gap:8px; }
+  .delivery-option{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1px solid #D8D2C3; border-radius:9px; padding:9px 12px; font-size:14px; cursor:pointer;
+  }
+  .delivery-option.active{ border-color:var(--stamp); background:#FBF3E4; }
+  .delivery-option span:last-child{ font-family:'JetBrains Mono',monospace; color:#6B7686; }
+
   .totals{ margin-top:16px; padding-top:14px; border-top:1px solid #D8D2C3; font-family:'JetBrains Mono',monospace; font-size:14px; }
   .totals-row{ display:flex; justify-content:space-between; margin:5px 0; }
   .totals-row.deposit{ font-size:18px; font-weight:700; color: var(--stamp); margin-top:10px; padding-top:10px; border-top:1px dashed #D8D2C3; }
@@ -422,6 +430,8 @@
       <button class="close-x" id="closeCart">✕</button>
     </div>
     <div id="cartItemsList"></div>
+    <label style="margin-top:14px;">國內取貨方式</label>
+    <div id="deliveryOptionsBox" class="delivery-options"></div>
     <div class="totals" id="totalsBox"></div>
 
     <div id="checkoutForm">
@@ -614,6 +624,8 @@
       </div>
       <label style="margin-top:16px;">代購須知(本期收單期間、可代購品項、下單流程等,客人點「代購須知」按鈕會看到這段文字;每次開新一團記得回來更新日期)</label>
       <textarea id="purchaseGuideInput" style="min-height:220px;"></textarea>
+      <label style="margin-top:16px;">國內取貨方式與運費(結帳時客人可以選,金額會自動加進訂單總額;一行一個,格式是「名稱,金額」)</label>
+      <textarea id="deliveryOptionsInput" style="min-height:90px; font-family:'JetBrains Mono',monospace; font-size:13px;" placeholder="賣貨便,38&#10;7-11 店到店,60&#10;台中市區面交,0"></textarea>
       <label style="margin-top:16px;">設定密碼(老闆模式進入密碼)</label>
       <input type="text" id="pinChangeInput">
       <button class="primary-btn" id="saveShopBtn">儲存店家資訊</button>
@@ -673,6 +685,10 @@ The North Face、Carhartt、Aape、Human Made、Bape、Beams…
 賣貨便:$38
 7-11 店到店:$60
 台中市區面交:$0`,
+  // 國內取貨方式,每行一個「名稱,運費」,結帳時客人選一個,金額會自動加進訂單總額
+  // (這是台灣境內的取貨/配送費用,跟上面「每公斤運費」是不同的東西 ——
+  // 每公斤運費是日本/韓國運回台灣的國際運費,這裡是到customer手上最後一哩路的費用)
+  deliveryOptions: `賣貨便,38\n7-11 店到店,60\n台中市區面交,0`,
   lastUpdated: null
 };
 
@@ -1029,13 +1045,30 @@ function cartLines(){
   }).filter(Boolean);
 }
 
+// 把「賣貨便,38」這種一行一個選項的文字,解析成 [{label:'賣貨便', fee:38}, ...]
+function parseDeliveryOptions(){
+  return (settings.deliveryOptions || '')
+    .split('\n')
+    .map(line => {
+      const [label, feeStr] = line.split(',');
+      const fee = parseFloat(feeStr);
+      return label && !isNaN(fee) ? { label: label.trim(), fee } : null;
+    })
+    .filter(Boolean);
+}
+
+let selectedDeliveryLabel = null; // 客人在結帳畫面選的國內取貨方式
+
 function computeTotals(){
   const lines = cartLines();
   const subtotal = lines.reduce((s,l) => s + l.jpy * countryRate(l.country || 'JP') * l.qty, 0);
   const shipping = lines.reduce((s,l) => s + l.weight * l.qty * settings.shippingPerKg, 0);
-  const total = subtotal + shipping;
+  const deliveryOptions = parseDeliveryOptions();
+  const deliveryOption = deliveryOptions.find(o => o.label === selectedDeliveryLabel) || deliveryOptions[0] || null;
+  const deliveryFee = deliveryOption ? deliveryOption.fee : 0;
+  const total = subtotal + shipping + deliveryFee;
   const deposit = total * 0.5;
-  return { lines, subtotal, shipping, total, deposit };
+  return { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit };
 }
 
 function renderCartBar(){
@@ -1054,7 +1087,10 @@ document.getElementById('openCartBtn').onclick = () => {
 document.getElementById('closeCart').onclick = () => document.getElementById('cartOverlay').classList.remove('open');
 
 function renderCartDrawer(){
-  const { lines, subtotal, shipping, total, deposit } = computeTotals();
+  const { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit } = computeTotals();
+  if(deliveryOptions.length && !selectedDeliveryLabel){
+    selectedDeliveryLabel = deliveryOptions[0].label;
+  }
   const list = document.getElementById('cartItemsList');
   if(lines.length === 0){
     list.innerHTML = '<div class="empty-note">清單是空的,回商品頁挑選商品吧。</div>';
@@ -1085,9 +1121,28 @@ function renderCartDrawer(){
       });
     });
   }
+  const deliveryBox = document.getElementById('deliveryOptionsBox');
+  if(deliveryOptions.length === 0){
+    deliveryBox.innerHTML = '<div class="empty-note">老闆還沒設定取貨方式。</div>';
+  } else {
+    deliveryBox.innerHTML = deliveryOptions.map(o => `
+      <label class="delivery-option ${o.label === selectedDeliveryLabel ? 'active' : ''}">
+        <span><input type="radio" name="deliveryOption" value="${escapeHtml(o.label)}" ${o.label === selectedDeliveryLabel ? 'checked' : ''}> ${escapeHtml(o.label)}</span>
+        <span>${fmtMoney(o.fee)}</span>
+      </label>
+    `).join('');
+    deliveryBox.querySelectorAll('input[name="deliveryOption"]').forEach(input => {
+      input.addEventListener('change', () => {
+        selectedDeliveryLabel = input.value;
+        renderCartDrawer();
+      });
+    });
+  }
+
   document.getElementById('totalsBox').innerHTML = `
     <div class="totals-row"><span>商品小計</span><span>${fmtMoney(subtotal)}</span></div>
-    <div class="totals-row"><span>運費估算</span><span>${fmtMoney(shipping)}</span></div>
+    <div class="totals-row"><span>國際運費估算</span><span>${fmtMoney(shipping)}</span></div>
+    <div class="totals-row"><span>國內取貨運費${deliveryOption ? '(' + escapeHtml(deliveryOption.label) + ')' : ''}</span><span>${fmtMoney(deliveryFee)}</span></div>
     <div class="totals-row"><span>總金額</span><span>${fmtMoney(total)}</span></div>
     <div class="totals-row deposit"><span>應付訂金(50%)</span><span>${fmtMoney(deposit)}</span></div>
   `;
@@ -1123,14 +1178,14 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   const note = document.getElementById('custNote').value.trim();
   if(!name || !phone || !email){ toast('請填寫姓名、電話與 Email'); return; }
   if(!/^\S+@\S+\.\S+$/.test(email)){ toast('請填寫正確格式的 Email'); return; }
-  const { lines, subtotal, shipping, total, deposit } = computeTotals();
+  const { lines, subtotal, shipping, deliveryOption, deliveryFee, total, deposit } = computeTotals();
   const order = {
     id: 'ord_' + Date.now(),
     code: generateOrderCode(orders),
     time: Date.now(),
     name, phone, email, note,
     items: lines.map(l => ({ name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP', purchased: false })),
-    subtotal, shipping, total, deposit,
+    subtotal, shipping, deliveryMethod: deliveryOption ? deliveryOption.label : null, deliveryFee, total, deposit,
     status: '待確認訂金',
     statusTimestamps: { '待確認訂金': Date.now() }
   };
@@ -1238,6 +1293,7 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
       `;
       }).join('')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(found.total)}　訂金 ${fmtMoney(found.deposit)}</div>
+      ${found.deliveryMethod ? `<div class="cart-item-sub">取貨方式:${escapeHtml(found.deliveryMethod)}</div>` : ''}
       <div style="margin-top:8px; font-size:12px; color:#6B7686;">
         ${timelineRows.map(([label, t]) => `<div>${label}:${new Date(t).toLocaleString('zh-TW')}</div>`).join('')}
       </div>
@@ -1275,6 +1331,7 @@ function openAdmin(){
   document.getElementById('completedOrdersInput').value = settings.completedOrders || '';
   document.getElementById('lineCommunityMembersInput').value = settings.lineCommunityMembers || '';
   document.getElementById('purchaseGuideInput').value = settings.purchaseGuide || '';
+  document.getElementById('deliveryOptionsInput').value = settings.deliveryOptions || '';
   document.getElementById('pinChangeInput').value = settings.pin;
   resetProductForm();
   renderProductAdminList();
@@ -1359,6 +1416,7 @@ document.getElementById('saveShopBtn').onclick = async () => {
   const lineMembersVal = parseInt(document.getElementById('lineCommunityMembersInput').value, 10);
   settings.lineCommunityMembers = isNaN(lineMembersVal) ? null : lineMembersVal;
   settings.purchaseGuide = document.getElementById('purchaseGuideInput').value;
+  settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
   settings.pin = document.getElementById('pinChangeInput').value.trim() || settings.pin;
   await storageSet(SETTINGS_KEY, settings, true);
   render();
@@ -1755,7 +1813,7 @@ function renderOrdersAdminList(){
           <span style="${i.purchased ? 'text-decoration:line-through; color:#B5AE9C;' : ''}">${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}</span>
         </label>
       `).join('')}</div>
-      <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}${o.deliveryMethod ? `　取貨:${escapeHtml(o.deliveryMethod)}` : ''}</div>
       ${timeline ? `<div class="cart-item-sub">${timeline}</div>` : ''}
       ${o.status === '無法完成' && o.cancelReason ? `<div class="cart-item-sub" style="color:var(--stamp);">無法完成原因:${escapeHtml(o.cancelReason)}</div>` : ''}
       ${o.note ? `<div class="cart-item-sub">備註:${escapeHtml(o.note)}</div>` : ''}
@@ -1843,8 +1901,8 @@ function buildConfirmationMailto(o){
 ${itemLines}
 
 商品小計:${fmtMoney(o.subtotal)}
-運費估算:${fmtMoney(o.shipping)}
-總金額:${fmtMoney(o.total)}
+國際運費估算:${fmtMoney(o.shipping)}
+${o.deliveryMethod ? `國內取貨運費(${o.deliveryMethod}):${fmtMoney(o.deliveryFee || 0)}\n` : ''}總金額:${fmtMoney(o.total)}
 已收訂金:${fmtMoney(o.deposit)}
 尾款(到貨前結清):${fmtMoney(balance)}
 
