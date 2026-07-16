@@ -845,8 +845,11 @@ async function loadAll(){
   const p = await storageGet(PRODUCTS_KEY);
   const o = await storageGet(ORDERS_KEY);
   if(s) settings = { ...DEFAULT_SETTINGS, ...s };
-  if(p) products = p;
-  if(o) orders = o;
+  // Firebase 存的 key 如果不是連續從 0 開始的索引(例如混雜了手動批次匯入用的
+  // 自訂 id),讀出來會是物件而不是陣列,這裡一律轉成陣列,避免後面所有
+  // products.map()/orders.map() 直接整頁壞掉。
+  if(p) products = Array.isArray(p) ? p : Object.values(p);
+  if(o) orders = Array.isArray(o) ? o : Object.values(o);
   render();
 }
 
