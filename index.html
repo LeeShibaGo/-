@@ -114,6 +114,17 @@
   .grid{
     display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap:18px;
   }
+  /* 本週新品:固定顯示一行,超出寬度用橫向捲動,而不是像商品清單一樣自動換行 */
+  #newArrivalsGrid{
+    display:flex;
+    overflow-x:auto;
+    padding-bottom:6px;
+    scroll-snap-type:x mandatory;
+  }
+  #newArrivalsGrid > .card{
+    flex:0 0 230px;
+    scroll-snap-align:start;
+  }
   .card{
     background: var(--paper);
     color: var(--ink);
@@ -1081,7 +1092,7 @@ function renderNewArrivals(){
   const recent = products
     .filter(p => productAddedAt(p) >= cutoff)
     .sort((a, b) => productAddedAt(b) - productAddedAt(a))
-    .slice(0, 12);
+    .slice(0, 5);
   if(recent.length === 0){
     wrap.style.display = 'none';
     return;
