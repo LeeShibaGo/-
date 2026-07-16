@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>代購牌告板</title>
+<title>柴代購網站</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -281,7 +281,7 @@
   .totals-row.deposit{ font-size:18px; font-weight:700; color: var(--stamp); margin-top:10px; padding-top:10px; border-top:1px dashed #D8D2C3; }
 
   label{ display:block; font-size:12px; color:#6B7686; margin: 12px 0 5px; }
-  input[type=text], input[type=tel], textarea, input[type=number], select{
+  input[type=text], input[type=tel], input[type=email], textarea, input[type=number], select{
     width:100%; padding:10px 12px; border:1px solid #D8D2C3; border-radius:9px;
     font-family:'Noto Sans TC',sans-serif; font-size:14px; background:#fff; color: var(--ink);
   }
@@ -326,7 +326,7 @@
 <div class="board-outer">
   <div class="board-top">
     <div>
-      <h1 class="shop-name" id="shopName">代購牌告板</h1>
+      <h1 class="shop-name" id="shopName">柴代購網站</h1>
       <div class="shop-tag">Daigou Exchange Board</div>
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
@@ -1043,7 +1043,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
     code: generateOrderCode(orders),
     time: Date.now(),
     name, phone, email, note,
-    items: lines.map(l => ({ name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP' })),
+    items: lines.map(l => ({ name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP', purchased: false })),
     subtotal, shipping, total, deposit,
     status: '待確認訂金',
     statusTimestamps: { '待確認訂金': Date.now() }
@@ -1119,7 +1119,12 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
         <span>訂購人:${escapeHtml(found.name)}</span>
         <span class="status-chip" style="cursor:default;">${escapeHtml(found.status)}</span>
       </div>
-      <div class="order-items">${found.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
+      <div class="order-items">${found.items.map(i => `
+        <div style="padding:2px 0;">
+          <span style="${i.purchased ? 'color:#2E7D4F;' : 'color:var(--muted);'}">${i.purchased ? '✓ 已購入' : '採購中'}</span>
+          　${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}
+        </div>
+      `).join('')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(found.total)}　訂金 ${fmtMoney(found.deposit)}</div>
       <div style="margin-top:8px; font-size:12px; color:#6B7686;">
         ${timelineRows.map(([label, t]) => `<div>${label}:${new Date(t).toLocaleString('zh-TW')}</div>`).join('')}
@@ -1624,7 +1629,12 @@ function renderOrdersAdminList(){
         </div>
       </div>
       <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}${o.email ? `　${escapeHtml(o.email)}` : ''}${o.code ? `　<span class="cart-item-sub">編碼:${escapeHtml(o.code)}</span>` : ''}</div>
-      <div class="order-items">${o.items.map(i => `${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}`).join('、')}</div>
+      <div class="order-items">${o.items.map((i, idx) => `
+        <label style="display:flex; align-items:center; gap:6px; padding:2px 0; cursor:pointer;">
+          <input type="checkbox" ${i.purchased ? 'checked' : ''} onchange="toggleItemPurchased('${o.id}', ${idx})">
+          <span style="${i.purchased ? 'text-decoration:line-through; color:#B5AE9C;' : ''}">${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}</span>
+        </label>
+      `).join('')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}</div>
       ${timeline ? `<div class="cart-item-sub">${timeline}</div>` : ''}
       ${o.status === '無法完成' && o.cancelReason ? `<div class="cart-item-sub" style="color:var(--stamp);">無法完成原因:${escapeHtml(o.cancelReason)}</div>` : ''}
@@ -1679,6 +1689,14 @@ function renderOrdersAdminList(){
     await storageSet(ORDERS_KEY, orders, true);
     renderOrdersAdminList();
     toast('訂單已刪除');
+  };
+
+  window.toggleItemPurchased = async function(orderId, itemIndex){
+    const o = orders.find(x => x.id === orderId);
+    const item = o.items[itemIndex];
+    item.purchased = !item.purchased;
+    await storageSet(ORDERS_KEY, orders, true);
+    renderOrdersAdminList();
   };
 
   // 訂金有沒有到帳是老闆自己手動確認的,這裡只是提供「一鍵寄確認信」的工具:
