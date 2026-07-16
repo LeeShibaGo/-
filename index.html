@@ -243,6 +243,10 @@
   .size-pill.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
   .size-pill.disabled{ opacity:0.4; text-decoration:line-through; cursor:not-allowed; }
   .size-pill.disabled:hover{ border-color:#D8D2C3; }
+  .size-select{
+    border:1px solid #D8D2C3; background:#fff; color:var(--ink); font-family:'JetBrains Mono',monospace;
+    font-size:12px; padding:5px 8px; border-radius:6px; cursor:pointer; max-width:100%;
+  }
 
   .sale-badge{
     display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.05em;
@@ -901,6 +905,11 @@ function escapeHtml(str){
 // 就先拿 category 頂著用,畫面上才不會整排商品都掉進「其他」。
 function productBrand(p){ return p.brand || p.category || '其他'; }
 
+// 鞋類的尺寸選項通常比服飾多很多(例如跑鞋一款可能有 14 個尺寸),
+// 選項一多用小按鈕全部攤開會很亂,鞋子尺寸選項才需要收進下拉選單。
+// 服飾尺寸(XS/S/M/L/XL 這種)選項數量少,維持原本的按鈕列就好。
+function isShoeSubtype(subtype){ return (subtype || '').includes('鞋'); }
+
 // 商品「什麼時候上架的」拿來判斷是不是本週新品。優先用明確的 addedAt 欄位,
 // 舊資料沒有這個欄位的話,退而求其次從 id 裡面常見的「p_xxx_<時間戳記>」格式猜一個出來。
 function productAddedAt(p){
@@ -1042,11 +1051,20 @@ function buildCardHTML(p){
       ${p.desc ? `<div class="desc">${escapeHtml(p.desc)}</div>` : ''}
       ${p.note ? `<div class="notice-box" style="margin-top:0;">⚠ ${escapeHtml(p.note)}</div>` : ''}
       ${p.link ? `<a href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer" class="link-btn">查看官網介紹 ↗</a>` : ''}
-      ${hasColors ? `<div class="size-pills">${p.colors.map(c => `<button type="button" class="size-pill ${c.name===chosenColor?'active':''}" data-id="${p.id}" data-color="${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>`).join('')}</div>` : ''}
-      ${hasSizes ? `<div class="size-pills">${sizesForChoice.map(s => {
-        const outOfStock = saleType !== 'preorder' && stockForColor && (stockForColor[s] || 0) <= 0;
-        return `<button type="button" class="size-pill ${s===chosenSize?'active':''} ${outOfStock?'disabled':''}" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${escapeHtml(s)}" ${outOfStock ? 'disabled' : ''}>${escapeHtml(s)}${outOfStock ? '(缺)' : ''}</button>`;
-      }).join('')}</div>` : ''}
+      ${hasColors ? (p.colors.length > 3
+        ? `<select class="size-select color-select" data-id="${p.id}">${p.colors.map(c => `<option value="${escapeHtml(c.name)}" ${c.name===chosenColor?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select>`
+        : `<div class="size-pills">${p.colors.map(c => `<button type="button" class="size-pill ${c.name===chosenColor?'active':''}" data-id="${p.id}" data-color="${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>`).join('')}</div>`
+      ) : ''}
+      ${hasSizes ? (isShoeSubtype(p.subtype) && sizesForChoice.length > 3
+        ? `<select class="size-select shoe-size-select" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}">${sizesForChoice.map(s => {
+            const outOfStock = saleType !== 'preorder' && stockForColor && (stockForColor[s] || 0) <= 0;
+            return `<option value="${escapeHtml(s)}" ${s===chosenSize?'selected':''} ${outOfStock?'disabled':''}>${escapeHtml(s)}${outOfStock ? '(缺)' : ''}</option>`;
+          }).join('')}</select>`
+        : `<div class="size-pills">${sizesForChoice.map(s => {
+            const outOfStock = saleType !== 'preorder' && stockForColor && (stockForColor[s] || 0) <= 0;
+            return `<button type="button" class="size-pill ${s===chosenSize?'active':''} ${outOfStock?'disabled':''}" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${escapeHtml(s)}" ${outOfStock ? 'disabled' : ''}>${escapeHtml(s)}${outOfStock ? '(缺)' : ''}</button>`;
+          }).join('')}</div>`
+      ) : ''}
       <div class="qty-row">
         <div class="stepper">
           <button aria-label="減少" class="qty-btn" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${chosenSize ? escapeHtml(chosenSize) : ''}" data-delta="-1">－</button>
@@ -1069,6 +1087,19 @@ function wireCardEvents(grid, onChange){
       } else if(btn.dataset.color){
         selectedColor[btn.dataset.id] = btn.dataset.color;
       }
+      onChange();
+    });
+  });
+  grid.querySelectorAll('.color-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      selectedColor[sel.dataset.id] = sel.value;
+      onChange();
+    });
+  });
+  grid.querySelectorAll('.shoe-size-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const stateKey = sel.dataset.id + '::' + (sel.dataset.color || '-');
+      selectedSize[stateKey] = sel.value;
       onChange();
     });
   });
