@@ -1,16 +1,23 @@
 """
 每日商品價格檢查器
 ------------------
-用途:讀取 products_config.json 裡列出的商品網址,抓取目前價格,
-跟上次記錄的價格比較,如果漲價就發 LINE 通知。
+用途:直接讀取網站目前實際上架的「所有商品」(從 Firebase 即時抓,不是
+一份固定的清單),對每件有官網連結的商品抓取目前售價,跟上次記錄的價格
+比較,如果漲價就發 LINE 通知。
 
 執行方式:python price_watch.py
 建議搭配 GitHub Actions 排程,每天自動執行一次(見 .github/workflows/check-prices.yml,
 設定步驟見 PRICE_WATCHER_SETUP.md)。
 
-products_config.json 目前是對照 aape.jp 實際網頁結構產生的(selector 是
-".price-entity",已用真實網頁驗證過)。如果之後換成別的供應商網站,
-CSS selector 要針對那個網站重新確認,不能直接沿用。
+這支程式本來是讀 products_config.json 裡一份寫死的商品清單,但那份清單
+是某一批上架商品的「當下快照」,之後商品換了、上下架了都不會自動更新,
+等於每次都要重新產生一次清單。現在改成每次執行都直接向 Firebase 要
+目前真正上架的商品(跟網站上客人看到的一樣),沒有 link 欄位的商品
+(手動加的、沒有官網連結可查價的)會自動略過,不需要再手動維護清單。
+
+CSS selector 依網域對照(見 SELECTOR_BY_DOMAIN),目前只有 aape.jp
+驗證過。之後如果進了其他網站的商品,要先去該網站確認 selector 才能
+把新網域加進對照表,不然那些商品會被跳過、不會出錯也不會被追蹤。
 """
 
 import json
@@ -18,6 +25,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -28,7 +36,8 @@ for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8", errors="replace")
 
-CONFIG_PATH = Path(__file__).parent / "products_config.json"
+FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
+PRODUCTS_KEY = "daigou-products-v1"
 LAST_PRICES_PATH = Path(__file__).parent / "last_prices.json"
 
 # 模擬瀏覽器的 User-Agent,降低被網站擋下的機率(但無法保證一定不會被擋)
@@ -37,6 +46,12 @@ HEADERS = {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
     )
+}
+
+# 網域 -> 價格所在的 CSS selector。要追蹤新供應商網站之前,
+# 一定要先實際打開那個網站確認 selector,不能用猜的。
+SELECTOR_BY_DOMAIN = {
+    "aape.jp": ".price-entity",
 }
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
@@ -60,12 +75,24 @@ def extract_price_number(text):
     return float(cleaned) if cleaned else None
 
 
-def fetch_price(product):
+def fetch_live_products():
+    """直接向 Firebase 要目前網站上真正上架的商品,跟客人看到的一樣。"""
+    res = requests.get(f"{FIREBASE_DB_URL}/{PRODUCTS_KEY}.json", timeout=15)
+    res.raise_for_status()
+    return res.json() or []
+
+
+def selector_for_url(url):
+    domain = urlparse(url).netloc.replace("www.", "")
+    return SELECTOR_BY_DOMAIN.get(domain)
+
+
+def fetch_price(url, selector):
     try:
-        res = requests.get(product["url"], headers=HEADERS, timeout=15)
+        res = requests.get(url, headers=HEADERS, timeout=15)
         res.raise_for_status()
         soup = BeautifulSoup(res.text, "html.parser")
-        el = soup.select_one(product["selector"])
+        el = soup.select_one(selector)
         if not el:
             return None, "找不到價格區塊,selector 可能需要調整"
         price = extract_price_number(el.get_text())
@@ -105,30 +132,43 @@ def send_line(message):
 
 
 def main():
-    products = load_json(CONFIG_PATH, [])
+    all_products = fetch_live_products()
     last_prices = load_json(LAST_PRICES_PATH, {})
 
-    if not products:
-        print("products_config.json 是空的,請先加入要追蹤的商品。")
+    trackable = [p for p in all_products if p.get("link")]
+    print(f"目前上架商品共 {len(all_products)} 件,其中有官網連結可查價的 {len(trackable)} 件")
+
+    if not trackable:
+        print("目前沒有任何商品有官網連結可以查價。")
         sys.exit(0)
 
     increased_lines = []
     error_lines = []
+    skipped_domains = set()
     updated_prices = dict(last_prices)
 
-    for product in products:
-        name = product.get("name", product["url"])
-        price, error = fetch_price(product)
+    for product in trackable:
+        url = product["link"]
+        name = product.get("name", url)
+        selector = selector_for_url(url)
+        if not selector:
+            skipped_domains.add(urlparse(url).netloc)
+            continue
+
+        price, error = fetch_price(url, selector)
 
         if error:
             error_lines.append(f"⚠️ {name}:{error}")
             continue
 
-        old_price = last_prices.get(product["url"])
-        updated_prices[product["url"]] = price
+        old_price = last_prices.get(url)
+        updated_prices[url] = price
 
         if old_price is not None and price > old_price:
             increased_lines.append(f"📈 {name}:¥{old_price:.0f} → ¥{price:.0f}")
+
+    if skipped_domains:
+        print(f"以下網域還沒設定 selector,已略過(不算錯誤):{', '.join(skipped_domains)}")
 
     save_json(LAST_PRICES_PATH, updated_prices)
 
