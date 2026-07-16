@@ -328,6 +328,11 @@
 
   .notice-box{ background:#EFE7D0; border:1px solid #DCCFA6; border-radius:10px; padding:10px 12px; font-size:12px; color:#6B5B3E; margin-top:10px; }
 
+  .faq-item{ border-bottom:1px dashed #D8D2C3; padding:12px 0; }
+  .faq-item:last-child{ border-bottom:none; }
+  .faq-q{ font-weight:700; font-size:14px; margin-bottom:6px; }
+  .faq-a{ font-size:13px; color:#6B7686; line-height:1.6; white-space:pre-wrap; }
+
   /* admin */
   .tabs{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
   .tab-btn{ background:#EAE3D1; border:1px solid #D8D2C3; color:var(--ink); padding:7px 14px; border-radius:8px; font-size:13px; cursor:pointer; }
@@ -363,6 +368,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
       <button class="ghost-btn" id="purchaseGuideBtn" style="border-color:var(--line-strong); color:var(--paper);">代購須知</button>
+      <button class="ghost-btn" id="faqBtn" style="border-color:var(--line-strong); color:var(--paper);">FAQ</button>
       <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong); color:var(--paper); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong); color:var(--paper);">查詢訂單</button>
       <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
@@ -395,6 +401,11 @@
     <div class="trust-title">⭐⭐⭐⭐⭐ 客戶真實回饋(LINE 對話截圖,非文字捏造)</div>
     <div class="testimonial-grid" id="testimonialGrid"></div>
   </div>
+</div>
+
+<div class="wrap" id="newArrivalsWrap" style="display:none;">
+  <h2 class="section-title">🔥 本週新品 <span>最近上架的商品</span></h2>
+  <div class="grid" id="newArrivalsGrid"></div>
 </div>
 
 <div class="wrap">
@@ -476,6 +487,17 @@
       <button class="close-x" id="closePurchaseGuide">✕</button>
     </div>
     <div id="purchaseGuideContent" style="white-space:pre-wrap; font-size:14px; line-height:1.7;"></div>
+  </div>
+</div>
+
+<!-- FAQ overlay -->
+<div class="overlay" id="faqOverlay">
+  <div class="sheet" style="max-width:520px;">
+    <div class="sheet-head">
+      <h2>常見問題</h2>
+      <button class="close-x" id="closeFaq">✕</button>
+    </div>
+    <div id="faqContent"></div>
   </div>
 </div>
 
@@ -626,6 +648,8 @@
       <textarea id="purchaseGuideInput" style="min-height:220px;"></textarea>
       <label style="margin-top:16px;">國內取貨方式與運費(結帳時客人可以選,金額會自動加進訂單總額;一行一個,格式是「名稱,金額」)</label>
       <textarea id="deliveryOptionsInput" style="min-height:90px; font-family:'JetBrains Mono',monospace; font-size:13px;" placeholder="賣貨便,38&#10;7-11 店到店,60&#10;台中市區面交,0"></textarea>
+      <label style="margin-top:16px;">常見問題 FAQ(客人點「FAQ」按鈕會看到;每題用一行「---」分隔,每題第一行是問題、下面是答案)</label>
+      <textarea id="faqInput" style="min-height:220px; font-size:13px;"></textarea>
       <label style="margin-top:16px;">設定密碼(老闆模式進入密碼)</label>
       <input type="text" id="pinChangeInput">
       <button class="primary-btn" id="saveShopBtn">儲存店家資訊</button>
@@ -689,6 +713,27 @@ The North Face、Carhartt、Aape、Human Made、Bape、Beams…
   // (這是台灣境內的取貨/配送費用,跟上面「每公斤運費」是不同的東西 ——
   // 每公斤運費是日本/韓國運回台灣的國際運費,這裡是到customer手上最後一哩路的費用)
   deliveryOptions: `賣貨便,38\n7-11 店到店,60\n台中市區面交,0`,
+  // FAQ 雛形,一題一組用 --- 分隔,每組第一行是問題、其餘是答案
+  faq: `如何確定不會被捲款跑路?
+可以先付一半訂金、貨到後再付尾款,也接受台中市區面交當面交易。目前已經完成 100+ 筆訂單,LINE 社群也有其他客人的真實回饋可以參考。
+---
+訂金為什麼要先付 50%?
+代購需要先在日本/韓國把商品買下來,50% 訂金是用來確保這筆採購成本,尾款於商品到貨、交貨時結清。
+---
+大概多久會收到商品?
+依照當期收單公告的時程,商品抵台後會盡快通知取貨,實際天數請參考首頁「代購須知」裡本期公告的抵台時間。
+---
+我要的商品缺貨或買不到怎麼辦?
+會第一時間通知您,可以選擇退回訂金或更換其他商品,不會用缺貨商品硬湊單。
+---
+可以指定顏色、尺寸嗎?
+可以,下單或私訊時請註明想要的顏色/尺寸,如果現場沒有會盡量幫忙調貨或告知缺貨狀況。
+---
+運費怎麼計算?
+分成兩段:國際運費依商品重量計算(每公斤運費見首頁看板),國內取貨運費依您選擇的取貨方式(賣貨便/7-11店到店/面交)計算,結帳時都會自動算給您看。
+---
+急件可以處理嗎?
+可以,下單或私訊時請先告知是急件,會盡量優先協助,實際能否加急依當期行程而定。`,
   lastUpdated: null
 };
 
@@ -814,6 +859,7 @@ function render(){
   renderSocialLinks();
   renderTrustSection();
   renderProducts();
+  renderNewArrivals();
   renderCartBar();
 }
 
@@ -826,6 +872,14 @@ function escapeHtml(str){
 // 商品的「品牌」欄位是新格式,舊資料如果還沒轉檔、只有 category 欄位,
 // 就先拿 category 頂著用,畫面上才不會整排商品都掉進「其他」。
 function productBrand(p){ return p.brand || p.category || '其他'; }
+
+// 商品「什麼時候上架的」拿來判斷是不是本週新品。優先用明確的 addedAt 欄位,
+// 舊資料沒有這個欄位的話,退而求其次從 id 裡面常見的「p_xxx_<時間戳記>」格式猜一個出來。
+function productAddedAt(p){
+  if(p.addedAt) return p.addedAt;
+  const m = String(p.id || '').match(/(\d{13})/);
+  return m ? parseInt(m[1], 10) : 0;
+}
 
 function renderCountryTabs(){
   const wrap = document.getElementById('countryTabs');
@@ -915,33 +969,38 @@ function renderProducts(){
   const pageList = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   renderPagination(totalPages);
 
-  grid.innerHTML = pageList.map(p => {
-    const country = p.country || 'JP';
-    const twd = p.jpy * countryRate(country);
-    const saleType = p.saleType || 'instock';
-    const hasColors = p.colors && p.colors.length > 0;
+  grid.innerHTML = pageList.map(buildCardHTML).join('');
+  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); });
+}
 
-    let chosenColor = null, sizesForChoice = [], stockForColor = null, colorImage = null;
-    if(hasColors){
-      chosenColor = selectedColor[p.id] || p.colors[0].name;
-      const colorObj = p.colors.find(c => c.name === chosenColor) || p.colors[0];
-      chosenColor = colorObj.name;
-      sizesForChoice = colorObj.sizes || [];
-      stockForColor = colorObj.stock || null;
-      colorImage = colorObj.image || null;
-    } else if(p.sizes && p.sizes.length > 0){
-      sizesForChoice = p.sizes;
-    }
-    const hasSizes = sizesForChoice.length > 0;
-    const sizeStateKey = p.id + '::' + (chosenColor || '-');
-    const chosenSize = hasSizes ? (selectedSize[sizeStateKey] || sizesForChoice[0]) : null;
-    const key = cartKey(p.id, chosenColor, chosenSize);
-    const qty = (cart[key] && cart[key].qty) || 0;
-    const soldOut = saleType !== 'preorder' && stockForColor && chosenSize && (stockForColor[chosenSize] || 0) <= 0;
-    const displayImage = colorImage || p.image;
-    const badgeParts = [COUNTRY_LABELS[country] || country, productBrand(p), p.subtype].filter(Boolean);
+// 單張商品卡片的 HTML,商品清單跟「本週新品」都共用這份樣板
+function buildCardHTML(p){
+  const country = p.country || 'JP';
+  const twd = p.jpy * countryRate(country);
+  const saleType = p.saleType || 'instock';
+  const hasColors = p.colors && p.colors.length > 0;
 
-    return `
+  let chosenColor = null, sizesForChoice = [], stockForColor = null, colorImage = null;
+  if(hasColors){
+    chosenColor = selectedColor[p.id] || p.colors[0].name;
+    const colorObj = p.colors.find(c => c.name === chosenColor) || p.colors[0];
+    chosenColor = colorObj.name;
+    sizesForChoice = colorObj.sizes || [];
+    stockForColor = colorObj.stock || null;
+    colorImage = colorObj.image || null;
+  } else if(p.sizes && p.sizes.length > 0){
+    sizesForChoice = p.sizes;
+  }
+  const hasSizes = sizesForChoice.length > 0;
+  const sizeStateKey = p.id + '::' + (chosenColor || '-');
+  const chosenSize = hasSizes ? (selectedSize[sizeStateKey] || sizesForChoice[0]) : null;
+  const key = cartKey(p.id, chosenColor, chosenSize);
+  const qty = (cart[key] && cart[key].qty) || 0;
+  const soldOut = saleType !== 'preorder' && stockForColor && chosenSize && (stockForColor[chosenSize] || 0) <= 0;
+  const displayImage = colorImage || p.image;
+  const badgeParts = [COUNTRY_LABELS[country] || country, productBrand(p), p.subtype].filter(Boolean);
+
+  return `
     <div class="card">
       ${displayImage ? `<img class="prod-image" id="prodImg-${p.id}" src="${escapeHtml(displayImage)}" alt="${escapeHtml(p.name)}">` : ''}
       <div class="stamp">${p.weight}<small>KG</small></div>
@@ -969,8 +1028,10 @@ function renderProducts(){
         <button class="add-btn" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${chosenSize ? escapeHtml(chosenSize) : ''}" ${soldOut ? 'disabled' : ''}>${soldOut ? '已售完' : '加入清單'}</button>
       </div>
     </div>`;
-  }).join('');
+}
 
+// 幫一個商品格子(grid)裡的顏色/尺寸/數量/加入清單按鈕綁事件,onChange 是狀態改變後要重新畫哪些畫面
+function wireCardEvents(grid, onChange){
   grid.querySelectorAll('.size-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       if(btn.disabled) return;
@@ -980,21 +1041,41 @@ function renderProducts(){
       } else if(btn.dataset.color){
         selectedColor[btn.dataset.id] = btn.dataset.color;
       }
-      renderProducts();
+      onChange();
     });
   });
   grid.querySelectorAll('.qty-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if(btn.disabled) return;
       changeQty(btn.dataset.id, btn.dataset.color || null, parseInt(btn.dataset.delta, 10), btn.dataset.size || null);
+      onChange();
     });
   });
   grid.querySelectorAll('.add-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if(btn.disabled) return;
       addToCart(btn.dataset.id, btn.dataset.color || null, btn.dataset.size || null);
+      onChange();
     });
   });
+}
+
+// 本週新品:只看最近 7 天內上架的商品,沒有的話整塊隱藏,不留一個空區塊
+function renderNewArrivals(){
+  const wrap = document.getElementById('newArrivalsWrap');
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recent = products
+    .filter(p => productAddedAt(p) >= cutoff)
+    .sort((a, b) => productAddedAt(b) - productAddedAt(a))
+    .slice(0, 12);
+  if(recent.length === 0){
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+  const grid = document.getElementById('newArrivalsGrid');
+  grid.innerHTML = recent.map(buildCardHTML).join('');
+  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); });
 }
 
 function renderPagination(totalPages){
@@ -1220,6 +1301,21 @@ document.getElementById('purchaseGuideBtn').onclick = () => {
 };
 document.getElementById('closePurchaseGuide').onclick = () => document.getElementById('purchaseGuideOverlay').classList.remove('open');
 
+document.getElementById('faqBtn').onclick = () => {
+  const blocks = (settings.faq || '').split('---').map(b => b.trim()).filter(Boolean);
+  const box = document.getElementById('faqContent');
+  box.innerHTML = blocks.length
+    ? blocks.map(b => {
+        const lines = b.split('\n');
+        const q = lines[0];
+        const a = lines.slice(1).join('\n').trim();
+        return `<div class="faq-item"><div class="faq-q">Q. ${escapeHtml(q)}</div><div class="faq-a">${escapeHtml(a)}</div></div>`;
+      }).join('')
+    : '<div class="empty-note">老闆還沒填寫常見問題。</div>';
+  document.getElementById('faqOverlay').classList.add('open');
+};
+document.getElementById('closeFaq').onclick = () => document.getElementById('faqOverlay').classList.remove('open');
+
 // ===== 客製化代購 / 聯繫方式(直接顯示連結,不用再點開視窗) =====
 function lineOfficialUrl(id){
   return `https://line.me/R/ti/p/${encodeURIComponent(id)}`;
@@ -1332,6 +1428,7 @@ function openAdmin(){
   document.getElementById('lineCommunityMembersInput').value = settings.lineCommunityMembers || '';
   document.getElementById('purchaseGuideInput').value = settings.purchaseGuide || '';
   document.getElementById('deliveryOptionsInput').value = settings.deliveryOptions || '';
+  document.getElementById('faqInput').value = settings.faq || '';
   document.getElementById('pinChangeInput').value = settings.pin;
   resetProductForm();
   renderProductAdminList();
@@ -1417,6 +1514,7 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.lineCommunityMembers = isNaN(lineMembersVal) ? null : lineMembersVal;
   settings.purchaseGuide = document.getElementById('purchaseGuideInput').value;
   settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
+  settings.faq = document.getElementById('faqInput').value;
   settings.pin = document.getElementById('pinChangeInput').value.trim() || settings.pin;
   await storageSet(SETTINGS_KEY, settings, true);
   render();
@@ -1693,6 +1791,7 @@ document.getElementById('bulkImportBtn').onclick = async () => {
     if(!it.name || typeof it.jpy !== 'number' || typeof it.weight !== 'number'){ skipped++; return; }
     const prod = {
       id: 'p_' + Date.now() + '_' + i,
+      addedAt: Date.now(),
       name: it.name,
       jpy: it.jpy,
       weight: it.weight,
@@ -1760,7 +1859,7 @@ document.getElementById('addProdBtn').onclick = async () => {
     if(!ok){ toast('儲存失敗,圖片可能太大,建議換更小的圖片或改用圖片網址'); }
     else { toast('商品已更新'); }
   } else {
-    const newProd = { id: 'p_' + Date.now(), name, country, jpy: price, weight, desc, saleType };
+    const newProd = { id: 'p_' + Date.now(), addedAt: Date.now(), name, country, jpy: price, weight, desc, saleType };
     if(brand) newProd.brand = brand;
     if(subtype) newProd.subtype = subtype;
     if(colors.length) newProd.colors = colors;
