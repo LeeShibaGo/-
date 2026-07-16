@@ -302,9 +302,12 @@
     .sheet{ border-radius:18px; }
   }
   @keyframes rise{ from{ transform: translateY(30px); opacity:0;} to{ transform:translateY(0); opacity:1; } }
-  .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .sheet-head{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+    position:sticky; top:-22px; background:var(--paper); padding-top:22px; margin-top:-22px; z-index:1;
+  }
   .sheet-head h2{ font-family:'Noto Serif TC',serif; margin:0; font-size:20px; }
-  .close-x{ background:none; border:none; font-size:22px; cursor:pointer; color:#6B7686; line-height:1;}
+  .close-x{ background:none; border:none; font-size:22px; cursor:pointer; color:#6B7686; line-height:1; padding:6px; margin:-6px; }
 
   .cart-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed #D8D2C3; }
   .cart-item-name{ font-size:14px; font-weight:500; }
