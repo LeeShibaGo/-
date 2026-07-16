@@ -186,6 +186,30 @@
   .page-btn.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
   .page-btn:disabled{ opacity:0.35; cursor:not-allowed; }
 
+  .trust-section{ margin: 22px 0 34px; }
+  .trust-stats{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:22px; }
+  .trust-stat{
+    background:#0F1820; border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 26px; text-align:center; min-width:150px;
+  }
+  .trust-stat-num{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:26px; color:var(--amber);
+    text-shadow: 0 0 14px rgba(242,179,61,0.35);
+  }
+  .trust-stat-label{ font-size:12px; color:var(--muted); margin-top:4px; }
+  .trust-title{
+    font-family:'Noto Serif TC',serif; font-weight:700; font-size:16px; text-align:center;
+    color:var(--paper); margin-bottom:16px;
+  }
+  .testimonial-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:12px;
+  }
+  .testimonial-grid a{ display:block; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  .testimonial-grid img{
+    width:100%; aspect-ratio: 1 / 1; object-fit:cover; display:block; transition:transform .2s ease;
+  }
+  .testimonial-grid a:hover img{ transform:scale(1.05); }
+
   .site-footer{ border-top:1px solid var(--line); padding: 28px 20px 120px; }
   .site-footer-inner{ max-width:1080px; margin:0 auto; text-align:center; }
   .site-footer-title{ font-size:12px; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin-bottom:14px; }
@@ -353,6 +377,14 @@
         <div class="ship-line" style="margin-top:4px;">下單需先付 <b>50%</b> 訂金</div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="trust-section">
+    <div class="trust-stats" id="trustStats"></div>
+    <div class="trust-title">⭐⭐⭐⭐⭐ 客戶真實回饋(LINE 對話截圖,非文字捏造)</div>
+    <div class="testimonial-grid" id="testimonialGrid"></div>
   </div>
 </div>
 
@@ -564,6 +596,10 @@
       <input type="text" id="lineOfficialIdInput" placeholder="@wlw7925n">
       <label>Threads 網址</label>
       <input type="text" id="threadsUrlInput" placeholder="https://www.threads.com/@...">
+      <div class="field-row" style="margin-top:16px;">
+        <div><label>已完成訂單數(信任感區塊顯示)</label><input type="number" id="completedOrdersInput" placeholder="100"></div>
+        <div><label>LINE 社群人數(選填,自己去社群看人數填寫)</label><input type="number" id="lineCommunityMembersInput" placeholder="例如 1500"></div>
+      </div>
       <label style="margin-top:16px;">設定密碼(老闆模式進入密碼)</label>
       <input type="text" id="pinChangeInput">
       <button class="primary-btn" id="saveShopBtn">儲存店家資訊</button>
@@ -588,6 +624,8 @@ const DEFAULT_SETTINGS = {
   lineGroupUrl: 'https://line.me/ti/g2/khKQ6_1RbId40z6zQpTLA37XQNXEa4tT9vPd5w?utm_source=invitation&utm_medium=link_copy&utm_campaign=default',
   lineOfficialId: '@wlw7925n',
   threadsUrl: 'https://www.threads.com/@shiba_worldwide_go?invite=0',
+  completedOrders: 100,
+  lineCommunityMembers: null, // 老闆自己去 LINE 社群看人數,手動填,填了才會顯示
   lastUpdated: null
 };
 
@@ -711,6 +749,7 @@ function render(){
   document.getElementById('shipRateShow').textContent = settings.shippingPerKg;
   document.getElementById('rateUpdated').textContent = '上次更新:' + (settings.lastUpdated ? new Date(settings.lastUpdated).toLocaleString('zh-TW') : '尚未更新過');
   renderSocialLinks();
+  renderTrustSection();
   renderProducts();
   renderCartBar();
 }
@@ -1095,6 +1134,22 @@ function renderSocialLinks(){
     .join('');
 }
 
+// 客戶真實回饋截圖(LINE 對話截圖,證明不是編出來的評價)
+const TESTIMONIAL_IMAGES = ['testimonials/1.jpg','testimonials/2.jpg','testimonials/3.jpg','testimonials/4.jpg','testimonials/5.jpg','testimonials/6.jpg','testimonials/7.jpg','testimonials/8.jpg','testimonials/9.jpg','testimonials/10.jpg'];
+
+function renderTrustSection(){
+  const stats = [];
+  if(settings.completedOrders) stats.push({ num: `${settings.completedOrders}+`, label: '已完成訂單' });
+  if(settings.lineCommunityMembers) stats.push({ num: `${settings.lineCommunityMembers}+`, label: 'LINE 社群會員' });
+  document.getElementById('trustStats').innerHTML = stats
+    .map(s => `<div class="trust-stat"><div class="trust-stat-num">${escapeHtml(s.num)}</div><div class="trust-stat-label">${escapeHtml(s.label)}</div></div>`)
+    .join('');
+
+  document.getElementById('testimonialGrid').innerHTML = TESTIMONIAL_IMAGES
+    .map(src => `<a href="${src}" target="_blank" rel="noopener noreferrer"><img src="${src}" alt="客戶真實回饋截圖" loading="lazy"></a>`)
+    .join('');
+}
+
 document.getElementById('lookupSubmitBtn').onclick = async () => {
   const code = document.getElementById('lookupCodeInput').value.trim().toUpperCase();
   const resultBox = document.getElementById('lookupResult');
@@ -1164,6 +1219,8 @@ function openAdmin(){
   document.getElementById('lineGroupUrlInput').value = settings.lineGroupUrl || '';
   document.getElementById('lineOfficialIdInput').value = settings.lineOfficialId || '';
   document.getElementById('threadsUrlInput').value = settings.threadsUrl || '';
+  document.getElementById('completedOrdersInput').value = settings.completedOrders || '';
+  document.getElementById('lineCommunityMembersInput').value = settings.lineCommunityMembers || '';
   document.getElementById('pinChangeInput').value = settings.pin;
   resetProductForm();
   renderProductAdminList();
@@ -1243,6 +1300,10 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.lineGroupUrl = document.getElementById('lineGroupUrlInput').value.trim();
   settings.lineOfficialId = document.getElementById('lineOfficialIdInput').value.trim();
   settings.threadsUrl = document.getElementById('threadsUrlInput').value.trim();
+  const completedOrdersVal = parseInt(document.getElementById('completedOrdersInput').value, 10);
+  settings.completedOrders = isNaN(completedOrdersVal) ? null : completedOrdersVal;
+  const lineMembersVal = parseInt(document.getElementById('lineCommunityMembersInput').value, 10);
+  settings.lineCommunityMembers = isNaN(lineMembersVal) ? null : lineMembersVal;
   settings.pin = document.getElementById('pinChangeInput').value.trim() || settings.pin;
   await storageSet(SETTINGS_KEY, settings, true);
   render();
