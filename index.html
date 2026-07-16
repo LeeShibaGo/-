@@ -185,6 +185,16 @@
   .page-btn:hover:not(:disabled){ color:var(--paper); border-color:var(--gold); }
   .page-btn.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
   .page-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  .site-footer{ border-top:1px solid var(--line); padding: 28px 20px 120px; }
+  .site-footer-inner{ max-width:1080px; margin:0 auto; text-align:center; }
+  .site-footer-title{ font-size:12px; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin-bottom:14px; }
+  .social-links{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+  .social-link{
+    display:inline-flex; align-items:center; gap:8px; background:transparent; border:1px solid var(--line-strong);
+    color:var(--paper); padding:9px 16px; border-radius:20px; font-size:13px; text-decoration:none; transition:all .15s ease;
+  }
+  .social-link:hover{ border-color:var(--gold); color:var(--gold); }
   /* 後台是淺色底,分頁按鈕要換成深色文字/邊框才看得清楚 */
   #tab-products .page-btn{ border-color:#D8D2C3; color:#6B7686; }
   #tab-products .page-btn:hover:not(:disabled){ color:var(--ink); border-color:var(--stamp); }
@@ -320,7 +330,7 @@
       <div class="shop-tag">Daigou Exchange Board</div>
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
-      <button class="ghost-btn" id="customRequestBtn" style="border-color:var(--line-strong); color:var(--paper);">客製化代購</button>
+      <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong); color:var(--paper); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong); color:var(--paper);">查詢訂單</button>
       <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
     </div>
@@ -355,6 +365,13 @@
   <div class="grid" id="productGrid"></div>
   <div class="pagination" id="paginationBar"></div>
 </div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <div class="site-footer-title">聯繫我們 / 客製化代購</div>
+    <div id="socialLinks" class="social-links"></div>
+  </div>
+</footer>
 
 <!-- Floating cart bar -->
 <div class="cart-bar" id="cartBar">
@@ -419,18 +436,6 @@
     <input type="text" id="lookupCodeInput" placeholder="例如:SG4K92" style="text-transform:uppercase;">
     <button class="primary-btn" id="lookupSubmitBtn">查詢</button>
     <div id="lookupResult" style="margin-top:14px;"></div>
-  </div>
-</div>
-
-<!-- Custom request / contact overlay -->
-<div class="overlay" id="customRequestOverlay">
-  <div class="sheet" style="max-width:420px;">
-    <div class="sheet-head">
-      <h2>客製化代購</h2>
-      <button class="close-x" id="closeCustomRequest">✕</button>
-    </div>
-    <div class="notice-box" style="margin-top:0;">如果您想找的商品不在目前上架清單裡,或有其他客製化代購需求,歡迎透過以下方式聯繫我們:</div>
-    <div id="customRequestLinks" style="display:flex; flex-direction:column; gap:10px; margin-top:14px;"></div>
   </div>
 </div>
 
@@ -705,6 +710,7 @@ function render(){
   document.getElementById('rateDisplayKRW').textContent = `1 KRW = ${Number(settings.rateKRW).toFixed(4)} TWD`;
   document.getElementById('shipRateShow').textContent = settings.shippingPerKg;
   document.getElementById('rateUpdated').textContent = '上次更新:' + (settings.lastUpdated ? new Date(settings.lastUpdated).toLocaleString('zh-TW') : '尚未更新過');
+  renderSocialLinks();
   renderProducts();
   renderCartBar();
 }
@@ -1067,19 +1073,28 @@ document.getElementById('orderLookupBtn').onclick = () => {
 };
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
 
-// ===== 客製化代購 / 聯繫方式 =====
-document.getElementById('customRequestBtn').onclick = () => {
-  const linksBox = document.getElementById('customRequestLinks');
+// ===== 客製化代購 / 聯繫方式(直接顯示連結,不用再點開視窗) =====
+function lineOfficialUrl(id){
+  return `https://line.me/R/ti/p/${encodeURIComponent(id)}`;
+}
+function renderSocialLinks(){
+  const customLink = document.getElementById('customRequestLink');
+  if(settings.lineOfficialId){
+    customLink.href = lineOfficialUrl(settings.lineOfficialId);
+    customLink.style.display = '';
+  } else {
+    customLink.style.display = 'none';
+  }
+
   const links = [];
   if(settings.lineGroupUrl) links.push({ label: '加入 LINE 社群', url: settings.lineGroupUrl });
-  if(settings.lineOfficialId) links.push({ label: `LINE 官方帳號(${settings.lineOfficialId})`, url: `https://line.me/R/ti/p/${encodeURIComponent(settings.lineOfficialId)}` });
+  if(settings.lineOfficialId) links.push({ label: `LINE 官方帳號(${settings.lineOfficialId})`, url: lineOfficialUrl(settings.lineOfficialId) });
   if(settings.threadsUrl) links.push({ label: '追蹤 Threads', url: settings.threadsUrl });
-  linksBox.innerHTML = links.length
-    ? links.map(l => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="primary-btn" style="display:block; text-align:center; text-decoration:none; margin-top:0;">${escapeHtml(l.label)}</a>`).join('')
-    : '<div class="empty-note">尚未設定聯繫方式。</div>';
-  document.getElementById('customRequestOverlay').classList.add('open');
-};
-document.getElementById('closeCustomRequest').onclick = () => document.getElementById('customRequestOverlay').classList.remove('open');
+  document.getElementById('socialLinks').innerHTML = links
+    .map(l => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="social-link">${escapeHtml(l.label)}</a>`)
+    .join('');
+}
+
 document.getElementById('lookupSubmitBtn').onclick = async () => {
   const code = document.getElementById('lookupCodeInput').value.trim().toUpperCase();
   const resultBox = document.getElementById('lookupResult');
