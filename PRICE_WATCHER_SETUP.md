@@ -44,10 +44,34 @@
    - 請確認目前只有你自己加了這個官方帳號好友,避免之後有其他人也加了好友,
      不小心收到這些內部用的漲價通知
 
+## 目前支援的網站
+
+- **aape.jp**:`SELECTOR_BY_DOMAIN` 用 CSS selector `.price-entity`,已驗證。
+- **beams.co.jp**:`SELECTOR_BY_DOMAIN` 用 CSS selector `.item-price`,已用瀏覽器
+  實際確認過是對的(注意:泛用的 `.price` 這個 class 在同一頁會同時抓到
+  「推薦商品」輪播裡其他商品的價格,不能用,`.item-price` 才是唯一對應到
+  當前商品的)。⚠️ 但這個網站對非瀏覽器連線有網路層級的封鎖(不是回
+  403,是直接連線逾時),在某些執行環境下(包含目前開發用的這台機器)
+  會連不上、一直逾時失敗。**GitHub Actions 的伺服器能不能連到 beams.co.jp
+  還沒有實際驗證過**,選好第一次執行後請到 repo 的「Actions」分頁看有沒有
+  正常跑完,如果 beams.co.jp 的商品一直顯示讀取失敗,代表 GitHub Actions
+  的網路也連不到,那就沒辦法追蹤這個網站的價格了。
+- **on.com**:因為價格的 CSS class 是自動產生的雜湊字串(例如
+  `_price_4bgex_172`),每次官網重新部署都可能改變,而且同一頁還會混到
+  其他推薦商品的價格,不適合用 CSS selector。改用 `EXTRACTOR_BY_DOMAIN`
+  對照表,裡面是一個自訂函式,直接讀取頁面裡 schema.org 的 JSON-LD 商品
+  資料(跟批次上架時抓商品資料用的是同一份,比較穩定),已實測抓到正確
+  價格。
+
 ## 之後上架其他供應商網站的商品,怎麼做
 
-`price_watch.py` 裡的 `SELECTOR_BY_DOMAIN` 是「網域 → 價格 CSS selector」的
-對照表,目前只有 `aape.jp` 驗證過。如果之後進了其他網站的商品(例如 Dior、
-Human Made 或任何新供應商),要先實際打開那個網站確認價格在哪個 CSS
-selector 裡,再把新的網域加進這份對照表,不然那個網站的商品會被自動
-略過、不會被追蹤(不會出錯,只是不會幫你查價)。
+先實際打開那個網站的商品頁面確認價格在哪裡:
+- 如果是一般的 CSS class(而且沒有跟其他商品的價格混在一起),把新的網域
+  加進 `SELECTOR_BY_DOMAIN` 就好。
+- 如果 class 名稱看起來是自動產生的亂碼、或是同一頁會抓到多個商品的價格
+  分不清楚哪個才是對的,可以參考 `extract_on_price()` 的做法,改成寫一個
+  自訂函式加進 `EXTRACTOR_BY_DOMAIN`,直接從頁面裡的結構化資料
+  (schema.org JSON-LD 之類)抓價格,會比 CSS selector 穩定。
+
+沒設定的網域,那個網站的商品會被自動略過、不會被追蹤(不會出錯,只是
+不會幫你查價)。

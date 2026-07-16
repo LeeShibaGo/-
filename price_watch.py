@@ -50,8 +50,12 @@ HEADERS = {
 
 # 網域 -> 價格所在的 CSS selector。要追蹤新供應商網站之前,
 # 一定要先實際打開那個網站確認 selector,不能用猜的。
+# beams.co.jp 注意:泛用的 .price 在同一頁會同時抓到「推薦商品」輪播裡其他
+# 商品的價格(不是當前這件的價格),實測只有 .item-price 這個 class 在頁面上
+# 唯一出現一次、對應到當前商品,選這個才不會抓錯。
 SELECTOR_BY_DOMAIN = {
     "aape.jp": ".price-entity",
+    "beams.co.jp": ".item-price",
 }
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
@@ -82,15 +86,59 @@ def fetch_live_products():
     return res.json() or []
 
 
+def extract_on_price(html):
+    """
+    on.com(昂跑)的價格 class 是 CSS Modules 產生的雜湊字串(例如
+    "_price_4bgex_172"),每次官網重新部署都可能改變,而且同一頁還會出現
+    「推薦商品」輪播裡其他商品的價格(class 長得很像但不是當前商品的價格),
+    用 CSS selector 硬選很不穩定。改成讀取 schema.org 的 JSON-LD
+    (跟 scrape_on_full.py 抓商品資料時用的是同一份資料),裡面的
+    ProductGroup.hasVariant 明確列出當前商品每個顏色自己的價格,穩定可靠。
+    """
+    m = re.search(r'<script[^>]*id="json-ld"[^>]*>(.*?)</script>', html, re.DOTALL)
+    if not m:
+        return None
+    try:
+        data = json.loads(m.group(1))
+    except Exception:
+        return None
+    graph = data.get("@graph", [])
+    pg = next((g for g in graph if g.get("@type") == "ProductGroup"), None)
+    if not pg:
+        return None
+    for variant in pg.get("hasVariant", []):
+        price = variant.get("offers", {}).get("price")
+        if price:
+            return float(price)
+    return None
+
+
+# 網域 -> 自訂價格擷取函式(不是靠 CSS selector,適合價格藏在 JSON 資料裡、
+# 或是 class 名稱不穩定/會跟其他商品混在一起分不清楚的網站)
+EXTRACTOR_BY_DOMAIN = {
+    "on.com": extract_on_price,
+}
+
+
 def selector_for_url(url):
     domain = urlparse(url).netloc.replace("www.", "")
     return SELECTOR_BY_DOMAIN.get(domain)
 
 
-def fetch_price(url, selector):
+def extractor_for_url(url):
+    domain = urlparse(url).netloc.replace("www.", "")
+    return EXTRACTOR_BY_DOMAIN.get(domain)
+
+
+def fetch_price(url, selector=None, extractor=None):
     try:
         res = requests.get(url, headers=HEADERS, timeout=15)
         res.raise_for_status()
+        if extractor:
+            price = extractor(res.text)
+            if price is None:
+                return None, "找不到價格資料,擷取邏輯可能需要調整"
+            return price, None
         soup = BeautifulSoup(res.text, "html.parser")
         el = soup.select_one(selector)
         if not el:
@@ -151,11 +199,12 @@ def main():
         url = product["link"]
         name = product.get("name", url)
         selector = selector_for_url(url)
-        if not selector:
+        extractor = extractor_for_url(url)
+        if not selector and not extractor:
             skipped_domains.add(urlparse(url).netloc)
             continue
 
-        price, error = fetch_price(url, selector)
+        price, error = fetch_price(url, selector=selector, extractor=extractor)
 
         if error:
             error_lines.append(f"⚠️ {name}:{error}")
