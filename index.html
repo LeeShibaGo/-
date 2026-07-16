@@ -369,6 +369,7 @@
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
       <button class="ghost-btn" id="purchaseGuideBtn" style="border-color:var(--line-strong); color:var(--paper);">代購須知</button>
       <button class="ghost-btn" id="faqBtn" style="border-color:var(--line-strong); color:var(--paper);">FAQ</button>
+      <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong); color:var(--paper);">客戶真實回饋</button>
       <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong); color:var(--paper); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong); color:var(--paper);">查詢訂單</button>
       <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
@@ -398,8 +399,6 @@
 <div class="wrap">
   <div class="trust-section">
     <div class="trust-stats" id="trustStats"></div>
-    <div class="trust-title">⭐⭐⭐⭐⭐ 客戶真實回饋(LINE 對話截圖,非文字捏造)</div>
-    <div class="testimonial-grid" id="testimonialGrid"></div>
   </div>
 </div>
 
@@ -498,6 +497,18 @@
       <button class="close-x" id="closeFaq">✕</button>
     </div>
     <div id="faqContent"></div>
+  </div>
+</div>
+
+<!-- 客戶真實回饋 overlay -->
+<div class="overlay" id="testimonialOverlay">
+  <div class="sheet" style="max-width:640px;">
+    <div class="sheet-head">
+      <h2>⭐⭐⭐⭐⭐ 客戶真實回饋</h2>
+      <button class="close-x" id="closeTestimonial">✕</button>
+    </div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:14px;">LINE 對話截圖,非文字捏造</div>
+    <div class="testimonial-grid" id="testimonialGrid"></div>
   </div>
 </div>
 
@@ -1303,6 +1314,11 @@ document.getElementById('purchaseGuideBtn').onclick = () => {
   document.getElementById('purchaseGuideOverlay').classList.add('open');
 };
 document.getElementById('closePurchaseGuide').onclick = () => document.getElementById('purchaseGuideOverlay').classList.remove('open');
+
+document.getElementById('testimonialBtn').onclick = () => {
+  document.getElementById('testimonialOverlay').classList.add('open');
+};
+document.getElementById('closeTestimonial').onclick = () => document.getElementById('testimonialOverlay').classList.remove('open');
 
 document.getElementById('faqBtn').onclick = () => {
   const blocks = (settings.faq || '').split('---').map(b => b.trim()).filter(Boolean);

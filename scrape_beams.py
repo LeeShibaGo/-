@@ -56,11 +56,13 @@ HEADERS = {
 }
 REQUEST_DELAY = 0.8
 
-# 目前只指定這兩個品牌,之後要加別的品牌只要在這裡加一行
-# (key 是我們自己網站上要顯示的品牌名稱, value 是拿去 BEAMS 搜尋的關鍵字)
+# 目前只指定這兩個品牌,之後要加別的品牌只要在這裡加一行。
+# key 是拿去 BEAMS 搜尋、也用來比對商品名稱開頭的品牌字樣(商品名稱在
+# BEAMS 官網上是「NEEDLES / xxx」這種格式,不會帶 BEAMS 字首),
+# value 是我們自己網站上要顯示的品牌名稱(標示這是透過 BEAMS 代購的商品)。
 BRANDS = {
-    "NEEDLES": "Needles",
-    "FRED PERRY": "Fred Perry",
+    "Needles": "BEAMS x NEEDLES",
+    "Fred Perry": "BEAMS x FRED PERRY",
 }
 
 WEIGHT_RULES = [
@@ -247,6 +249,11 @@ def discover_products(keyword, brand_label, max_pages=20):
     """
     用關鍵字搜尋鎖定品牌,翻頁抓出該品牌底下所有商品的基本資訊。
     """
+    # 商品名稱有時會帶「【別注】」這種前綴(BEAMS 自己跟品牌談的特別訂製款),
+    # 品牌名稱不會剛好在字串最開頭,所以不能用單純的 startswith 比對,
+    # 要允許前面出現方括號類的前綴。
+    name_re = re.compile(r"(^|[\s\]】])" + re.escape(brand_label).replace(r"\ ", r"\s*") + r"\s*/", re.IGNORECASE)
+
     products = []
     seen_links = set()
     page = 1
@@ -267,7 +274,7 @@ def discover_products(keyword, brand_label, max_pages=20):
                 continue
             name_tag = card.select_one(".product-name")
             name = name_tag.get_text(strip=True) if name_tag else a.get("title", "").strip()
-            if not name or not name.upper().startswith(brand_label.upper()):
+            if not name or not name_re.search(name):
                 continue
 
             price_tag = card.select_one(".price")
@@ -366,10 +373,10 @@ def main():
     all_products = []
     seen_links = set()
 
-    for brand_display, keyword in BRANDS.items():
-        print(f"搜尋品牌:{brand_display}(關鍵字:{keyword})")
+    for match_label, brand_display in BRANDS.items():
+        print(f"搜尋品牌:{brand_display}(關鍵字:{match_label})")
         try:
-            items = discover_products(keyword, brand_display)
+            items = discover_products(match_label, match_label)
         except Exception as e:
             print(f"  [錯誤] 這個品牌搜尋失敗:{e}")
             continue
