@@ -802,6 +802,24 @@ const COUNTRY_CURRENCY_SYMBOL = { JP: '¥', KR: '₩' };
 function currencySymbol(country){ return COUNTRY_CURRENCY_SYMBOL[country] || '¥'; }
 function countryRate(country){ return country === 'KR' ? settings.rateKRW : settings.rate; }
 
+// 首頁最上層瀏覽分類,從「國家」改成「精品/運動品牌/潮流品牌」,每個品牌歸在
+// 哪一大類寫死在這裡對照,對照不到的品牌(例如美妝保養、零食伴手禮這種沒有
+// 特定品牌的雜項)就歸進「生活選物」。country 欄位(JP/KR)還是保留,只是不再
+// 拿來當最上層分類用,匯率換算跟商品卡片上的產地標示還是照舊看 country。
+const TIER_BY_BRAND = {
+  'Dior': '精品',
+  'Dior 日本限定': '精品',
+  'Louis Vuitton': '精品',
+  'On': '運動品牌',
+  'Nike': '運動品牌',
+  'AAPE': '潮流品牌',
+  'BEAMS x NEEDLES': '潮流品牌',
+  'BEAMS x FRED PERRY': '潮流品牌',
+  'MUSINSA': '潮流品牌',
+};
+const TIER_ORDER = ['精品', '運動品牌', '潮流品牌', '生活選物'];
+function productTier(p){ return TIER_BY_BRAND[productBrand(p)] || '生活選物'; }
+
 // 把「10000,0.30」這種一行一個級距的文字,解析成 [{maxJpy:10000, rate:0.30}, ...]
 // maxJpy 留空(該行只有逗號後面有值)代表「以上都算這一級」,解析成 null,務必排在最後一行。
 function parsePriceTiers(){
@@ -856,7 +874,7 @@ let products = [...DEFAULT_PRODUCTS];
 let orders = [];
 let cart = {}; // { 'productId::size': { productId, size, qty } }
 let isOwner = false;
-let currentCountry = 'all'; // 'all' | 'JP' | 'KR'
+let currentTier = 'all'; // 'all' | '精品' | '運動品牌' | '潮流品牌' | '生活選物'
 let currentBrand = 'all';
 let currentSubtype = 'all';
 let searchQuery = '';
@@ -865,7 +883,7 @@ const PAGE_SIZE = 20;
 let adminSearchQuery = '';
 let adminCurrentPage = 1;
 const ADMIN_PAGE_SIZE = 20;
-let adminCurrentCountry = 'all';
+let adminCurrentTier = 'all';
 let adminCurrentBrand = 'all';
 let adminCurrentSubtype = 'all';
 let selectedSize = {}; // { 'productId::color': chosenSize } - just for browsing UI, not persisted
@@ -982,12 +1000,12 @@ function productAddedAt(p){
 
 function renderCountryTabs(){
   const wrap = document.getElementById('countryTabs');
-  const countries = Array.from(new Set(products.map(p => p.country || 'JP')));
-  const all = ['all', ...countries];
-  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentCountry===c?'active':''}" data-country="${escapeHtml(c)}">${c==='all' ? '全部' : escapeHtml(COUNTRY_LABELS[c] || c)}</button>`).join('');
+  const tiers = Array.from(new Set(products.map(productTier))).sort((a,b) => TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b));
+  const all = ['all', ...tiers];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentTier===c?'active':''}" data-tier="${escapeHtml(c)}">${c==='all' ? '全部' : escapeHtml(c)}</button>`).join('');
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
-      currentCountry = btn.dataset.country;
+      currentTier = btn.dataset.tier;
       currentBrand = 'all'; // 換大分類時,底下的品牌/種類篩選重設
       currentSubtype = 'all';
       currentPage = 1;
@@ -998,9 +1016,9 @@ function renderCountryTabs(){
 
 function renderBrandTabs(){
   const wrap = document.getElementById('brandTabs');
-  // 只有選定某個國家(不是「全部」)時,才顯示底下的品牌標籤
-  if(currentCountry === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => (p.country || 'JP') === currentCountry);
+  // 只有選定某個大分類(不是「全部」)時,才顯示底下的品牌標籤
+  if(currentTier === 'all'){ wrap.innerHTML = ''; return; }
+  const scoped = products.filter(p => productTier(p) === currentTier);
   const brands = Array.from(new Set(scoped.map(productBrand).filter(Boolean)));
   if(brands.length === 0){ wrap.innerHTML = ''; return; }
   const all = ['all', ...brands];
@@ -1019,7 +1037,7 @@ function renderSubtypeTabs(){
   const wrap = document.getElementById('subtypeTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的種類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => (p.country || 'JP') === currentCountry && productBrand(p) === currentBrand);
+  const scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
   const subtypes = Array.from(new Set(scoped.map(p => p.subtype).filter(Boolean)));
   // 這個品牌底下的商品種類都一樣(或沒填),沒必要多一排只有一個選項的標籤
   if(subtypes.length < 2){ wrap.innerHTML = ''; return; }
@@ -1044,8 +1062,8 @@ function renderProducts(){
     return;
   }
   let list = products;
-  if(currentCountry !== 'all'){
-    list = list.filter(p => (p.country || 'JP') === currentCountry);
+  if(currentTier !== 'all'){
+    list = list.filter(p => productTier(p) === currentTier);
     if(currentBrand !== 'all'){
       list = list.filter(p => productBrand(p) === currentBrand);
       if(currentSubtype !== 'all'){
@@ -1652,12 +1670,12 @@ document.getElementById('saveShopBtn').onclick = async () => {
 
 function renderAdminCountryTabs(){
   const wrap = document.getElementById('adminCountryTabs');
-  const countries = Array.from(new Set(products.map(p => p.country || 'JP')));
-  const all = ['all', ...countries];
-  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${adminCurrentCountry===c?'active':''}" data-country="${escapeHtml(c)}">${c==='all' ? '全部' : escapeHtml(COUNTRY_LABELS[c] || c)}</button>`).join('');
+  const tiers = Array.from(new Set(products.map(productTier))).sort((a,b) => TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b));
+  const all = ['all', ...tiers];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${adminCurrentTier===c?'active':''}" data-tier="${escapeHtml(c)}">${c==='all' ? '全部' : escapeHtml(c)}</button>`).join('');
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
-      adminCurrentCountry = btn.dataset.country;
+      adminCurrentTier = btn.dataset.tier;
       adminCurrentBrand = 'all';
       adminCurrentSubtype = 'all';
       adminCurrentPage = 1;
@@ -1668,8 +1686,8 @@ function renderAdminCountryTabs(){
 
 function renderAdminBrandTabs(){
   const wrap = document.getElementById('adminBrandTabs');
-  if(adminCurrentCountry === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => (p.country || 'JP') === adminCurrentCountry);
+  if(adminCurrentTier === 'all'){ wrap.innerHTML = ''; return; }
+  const scoped = products.filter(p => productTier(p) === adminCurrentTier);
   const brands = Array.from(new Set(scoped.map(productBrand).filter(Boolean)));
   if(brands.length === 0){ wrap.innerHTML = ''; return; }
   const all = ['all', ...brands];
@@ -1687,7 +1705,7 @@ function renderAdminBrandTabs(){
 function renderAdminSubtypeTabs(){
   const wrap = document.getElementById('adminSubtypeTabs');
   if(adminCurrentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => (p.country || 'JP') === adminCurrentCountry && productBrand(p) === adminCurrentBrand);
+  const scoped = products.filter(p => productTier(p) === adminCurrentTier && productBrand(p) === adminCurrentBrand);
   const subtypes = Array.from(new Set(scoped.map(p => p.subtype).filter(Boolean)));
   if(subtypes.length < 2){ wrap.innerHTML = ''; return; }
   const all = ['all', ...subtypes];
@@ -1708,8 +1726,8 @@ function renderProductAdminList(){
 
   const box = document.getElementById('productList');
   let list = products;
-  if(adminCurrentCountry !== 'all'){
-    list = list.filter(p => (p.country || 'JP') === adminCurrentCountry);
+  if(adminCurrentTier !== 'all'){
+    list = list.filter(p => productTier(p) === adminCurrentTier);
     if(adminCurrentBrand !== 'all'){
       list = list.filter(p => productBrand(p) === adminCurrentBrand);
       if(adminCurrentSubtype !== 'all'){
