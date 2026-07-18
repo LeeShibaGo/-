@@ -431,6 +431,7 @@
   <div class="cat-tabs" id="countryTabs"></div>
   <div class="cat-tabs subcat" id="brandTabs"></div>
   <div class="cat-tabs subcat" id="subtypeTabs"></div>
+  <div class="cat-tabs subcat" id="seriesTabs"></div>
   <div class="grid" id="productGrid"></div>
   <div class="pagination" id="paginationBar"></div>
 </div>
@@ -878,6 +879,7 @@ let isOwner = false;
 let currentTier = 'all'; // 'all' | '精品' | '運動品牌' | '潮流品牌' | '生活選物'
 let currentBrand = 'all';
 let currentSubtype = 'all';
+let currentSeries = 'all';
 let searchQuery = '';
 let currentPage = 1;
 const PAGE_SIZE = 20;
@@ -1009,6 +1011,7 @@ function renderCountryTabs(){
       currentTier = btn.dataset.tier;
       currentBrand = 'all'; // 換大分類時,底下的品牌/種類篩選重設
       currentSubtype = 'all';
+      currentSeries = 'all';
       currentPage = 1;
       renderProducts();
     });
@@ -1027,7 +1030,8 @@ function renderBrandTabs(){
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       currentBrand = btn.dataset.brand;
-      currentSubtype = 'all'; // 換品牌時,種類篩選重設
+      currentSubtype = 'all'; // 換品牌時,種類/系列篩選重設
+      currentSeries = 'all';
       currentPage = 1;
       renderProducts();
     });
@@ -1047,6 +1051,29 @@ function renderSubtypeTabs(){
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       currentSubtype = btn.dataset.subtype;
+      currentSeries = 'all'; // 換種類時,系列篩選重設
+      currentPage = 1;
+      renderProducts();
+    });
+  });
+}
+
+function renderSeriesTabs(){
+  const wrap = document.getElementById('seriesTabs');
+  // 只有選定某個品牌(不是「全部」)時,才顯示底下的系列標籤
+  if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
+  let scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  if(currentSubtype !== 'all'){
+    scoped = scoped.filter(p => p.subtype === currentSubtype);
+  }
+  const seriesList = Array.from(new Set(scoped.map(p => p.series).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+  // 系列不到兩個就不用多一排標籤
+  if(seriesList.length < 2){ wrap.innerHTML = ''; return; }
+  const all = ['all', ...seriesList];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentSeries===c?'active':''}" data-series="${escapeHtml(c)}">${c==='all' ? '全部系列' : escapeHtml(c)}</button>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentSeries = btn.dataset.series;
       currentPage = 1;
       renderProducts();
     });
@@ -1057,6 +1084,7 @@ function renderProducts(){
   renderCountryTabs();
   renderBrandTabs();
   renderSubtypeTabs();
+  renderSeriesTabs();
   const grid = document.getElementById('productGrid');
   if(products.length === 0){
     grid.innerHTML = '<div class="empty-note">目前尚未上架商品,請點右上角齒輪進入老闆模式新增。</div>';
@@ -1069,6 +1097,9 @@ function renderProducts(){
       list = list.filter(p => productBrand(p) === currentBrand);
       if(currentSubtype !== 'all'){
         list = list.filter(p => p.subtype === currentSubtype);
+      }
+      if(currentSeries !== 'all'){
+        list = list.filter(p => p.series === currentSeries);
       }
     }
   }
