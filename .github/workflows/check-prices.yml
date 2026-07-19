@@ -1,4 +1,4 @@
-name: Daily AAPE price check
+name: Daily price check & stock sync
 
 on:
   schedule:
@@ -26,6 +26,12 @@ jobs:
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
         run: python price_watch.py
+
+      # Salomon + On 每日庫存+價格同步:重新抓官網每個顏色每個尺寸的庫存,
+      # 直接更新 Firebase,讓網站上的缺貨狀態最多只落後一天。
+      # On 要逐頁抓約 1700 個顏色頁面,這步大約跑 40~60 分鐘屬正常。
+      - name: Sync Salomon + On stock and prices
+        run: python sync_stock.py
 
       - name: Commit updated price history
         run: |
