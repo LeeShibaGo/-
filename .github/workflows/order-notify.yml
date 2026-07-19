@@ -4,12 +4,7 @@ on:
   schedule:
     # 每 15 分鐘檢查一次新訂單(GitHub 排程有時會延遲幾分鐘,屬正常)
     - cron: "*/15 * * * *"
-  workflow_dispatch:
-    inputs:
-      test:
-        description: "發送測試訊息(不檢查訂單)"
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -30,12 +25,7 @@ jobs:
       - name: Check new orders
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-        run: |
-          if [ "${{ inputs.test }}" = "true" ]; then
-            python check_orders.py --test
-          else
-            python check_orders.py
-          fi
+        run: python check_orders.py
 
       - name: Commit seen-order record
         run: |
