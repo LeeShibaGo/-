@@ -135,6 +135,15 @@
     display:flex; flex-direction:column; gap:10px;
     border: 1px solid rgba(0,0,0,0.06);
   }
+  /* 從分享連結 ?p= 直達的那件商品,亮框幾秒讓客人一眼看到 */
+  .card.deep-linked{
+    border: 2px solid var(--gold, #C9A227);
+    box-shadow: 0 0 0 4px rgba(201,162,39,0.25), var(--shadow);
+    animation: deepLinkFade 3s ease 2s forwards;
+  }
+  @keyframes deepLinkFade{
+    to{ border-color: rgba(0,0,0,0.06); box-shadow: var(--shadow); }
+  }
   .stamp{
     position:absolute; top:14px; right:14px;
     width:52px; height:52px; border-radius:50%;
@@ -880,6 +889,7 @@ let currentTier = 'all'; // 'all' | '精品' | '運動品牌' | '潮流品牌' |
 let currentBrand = 'all';
 let currentSubtype = 'all';
 let currentSeries = 'all';
+let pendingProductId = null; // 從分享連結 ?p=商品id 進來時,要捲動到的那件商品
 let searchQuery = '';
 let currentPage = 1;
 const PAGE_SIZE = 20;
@@ -962,7 +972,49 @@ async function loadAll(){
   // products.map()/orders.map() 直接整頁壞掉。
   if(p) products = Array.isArray(p) ? p : Object.values(p);
   if(o) orders = Array.isArray(o) ? o : Object.values(o);
+  applyUrlParams();
   render();
+}
+
+// 支援分享用的直達連結:?brand=On&subtype=路跑鞋&series=Cloudmonster 3,或 ?p=商品id。
+// 網址參數只在進站時讀一次,之後瀏覽時由 updateUrl() 反向把目前位置寫回網址列。
+function applyUrlParams(){
+  const q = new URLSearchParams(location.search);
+  const pid = q.get('p');
+  if(pid){
+    const prod = products.find(x => x.id === pid);
+    if(prod){
+      currentTier = productTier(prod);
+      currentBrand = productBrand(prod);
+      currentSubtype = prod.subtype || 'all';
+      currentSeries = prod.series || 'all';
+      pendingProductId = pid;
+      return;
+    }
+  }
+  const brand = q.get('brand');
+  if(brand){
+    const match = products.find(x => productBrand(x).toLowerCase() === brand.toLowerCase());
+    if(match){
+      currentBrand = productBrand(match);
+      currentTier = productTier(match);
+      const sub = q.get('subtype');
+      if(sub && products.some(x => productBrand(x) === currentBrand && x.subtype === sub)) currentSubtype = sub;
+      const ser = q.get('series');
+      if(ser && products.some(x => productBrand(x) === currentBrand && x.series === ser)) currentSeries = ser;
+    }
+  }
+}
+
+function updateUrl(){
+  const q = new URLSearchParams();
+  if(currentTier !== 'all' && currentBrand !== 'all'){
+    q.set('brand', currentBrand);
+    if(currentSubtype !== 'all') q.set('subtype', currentSubtype);
+    if(currentSeries !== 'all') q.set('series', currentSeries);
+  }
+  const qs = q.toString();
+  history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
 }
 
 function render(){
@@ -1112,6 +1164,11 @@ function renderProducts(){
     document.getElementById('paginationBar').innerHTML = '';
     return;
   }
+  // 從 ?p= 分享連結進來的話,先算出那件商品落在第幾頁,翻過去再捲動到它
+  if(pendingProductId){
+    const idx = list.findIndex(x => x.id === pendingProductId);
+    if(idx >= 0) currentPage = Math.floor(idx / PAGE_SIZE) + 1;
+  }
   const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   if(currentPage > totalPages) currentPage = totalPages;
   if(currentPage < 1) currentPage = 1;
@@ -1120,6 +1177,15 @@ function renderProducts(){
 
   grid.innerHTML = pageList.map(buildCardHTML).join('');
   wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); });
+  if(pendingProductId){
+    const el = grid.querySelector(`[data-pid="${CSS.escape(pendingProductId)}"]`);
+    if(el){
+      el.classList.add('deep-linked');
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+    }
+    pendingProductId = null;
+  }
+  updateUrl();
 }
 
 // 單張商品卡片的 HTML,商品清單跟「本週新品」都共用這份樣板
@@ -1150,7 +1216,7 @@ function buildCardHTML(p){
   const badgeParts = [COUNTRY_LABELS[country] || country, productBrand(p), p.subtype].filter(Boolean);
 
   return `
-    <div class="card">
+    <div class="card" data-pid="${escapeHtml(p.id)}">
       ${displayImage ? `<img class="prod-image" id="prodImg-${p.id}" src="${escapeHtml(displayImage)}" alt="${escapeHtml(p.name)}">` : ''}
       <div class="stamp">${p.weight}<small>KG</small></div>
       <div class="cat-badge">${badgeParts.map(escapeHtml).join(' · ')}</div>
