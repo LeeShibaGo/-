@@ -20,6 +20,7 @@
 """
 
 import json
+import os
 import re
 import sys
 import time
@@ -27,6 +28,24 @@ import time
 import requests
 
 from scrape_on_full import extract_ldjson, extract_size_stock, fix_size_key
+
+LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "")
+price_change_lines = []  # 這次同步中所有官網價格變動,結束後彙整成一則 LINE 通知
+
+
+def send_line(message):
+    if not LINE_CHANNEL_ACCESS_TOKEN:
+        print("[提示] 未設定 LINE_CHANNEL_ACCESS_TOKEN,價格變動摘要只印出不發送")
+        return
+    res = requests.post(
+        "https://api.line.me/v2/bot/message/broadcast",
+        headers={"Content-Type": "application/json",
+                 "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}"},
+        json={"messages": [{"type": "text", "text": message[:4900]}]},
+        timeout=15,
+    )
+    if res.status_code != 200:
+        print(f"[錯誤] LINE 發送失敗:{res.status_code} {res.text}")
 
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
@@ -115,6 +134,7 @@ def sync_salomon(items):
                     new_jpy = None
         if new_jpy and new_jpy != card.get("jpy"):
             print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[Salomon] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
             card["jpy"] = new_jpy
             price_changed += 1
     print(f"Salomon 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
@@ -166,6 +186,7 @@ def sync_on(items):
                 break
         if new_jpy and new_jpy != card.get("jpy"):
             print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[On] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
             card["jpy"] = new_jpy
             price_changed += 1
 
@@ -202,6 +223,10 @@ def main():
     if only in (None, "on"):
         sync_on(items)
     save_products(items)
+    if price_change_lines:
+        # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
+        head = f"📋 今日價格同步:共 {len(price_change_lines)} 件官網改價,網站售價已自動更新\n\n"
+        send_line(head + "\n".join(price_change_lines[:60]))
 
 
 if __name__ == "__main__":

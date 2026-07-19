@@ -191,6 +191,7 @@ def main():
         sys.exit(0)
 
     increased_lines = []
+    decreased_lines = []
     error_lines = []
     skipped_domains = set()
     updated_prices = dict(last_prices)
@@ -215,21 +216,25 @@ def main():
 
         if old_price is not None and price > old_price:
             increased_lines.append(f"📈 {name}:¥{old_price:.0f} → ¥{price:.0f}")
+        elif old_price is not None and price < old_price:
+            decreased_lines.append(f"📉 {name}:¥{old_price:.0f} → ¥{price:.0f}")
 
     if skipped_domains:
         print(f"以下網域還沒設定 selector,已略過(不算錯誤):{', '.join(skipped_domains)}")
 
     save_json(LAST_PRICES_PATH, updated_prices)
 
-    if increased_lines or error_lines:
+    if increased_lines or decreased_lines or error_lines:
         message_parts = []
         if increased_lines:
             message_parts.append("以下商品漲價了:\n" + "\n".join(increased_lines))
+        if decreased_lines:
+            message_parts.append("以下商品降價了(可考慮調整售價):\n" + "\n".join(decreased_lines))
         if error_lines:
             message_parts.append("以下商品讀取失敗,建議檢查網址或 selector:\n" + "\n".join(error_lines))
         send_line("\n\n".join(message_parts))
     else:
-        print("今天沒有商品漲價,也沒有讀取錯誤。")
+        print("今天沒有商品漲價或降價,也沒有讀取錯誤。")
 
 
 if __name__ == "__main__":

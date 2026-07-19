@@ -31,6 +31,8 @@ jobs:
       # 直接更新 Firebase,讓網站上的缺貨狀態最多只落後一天。
       # On 要逐頁抓約 1700 個顏色頁面,這步大約跑 40~60 分鐘屬正常。
       - name: Sync Salomon + On stock and prices
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
         run: python sync_stock.py
 
       - name: Commit updated price history
