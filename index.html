@@ -1489,6 +1489,22 @@ function generateOrderCode(existingOrders){
   return code;
 }
 
+// 客人下單當下,立刻(而非等 15 分鐘排程)推 LINE 通知老闆。
+// 用 Google Apps Script 當中繼(避免 LINE 金鑰外流到前端程式碼)。
+// no-cors 模式讀不到回應內容,但不需要——這只是「盡量發送」,失敗也不擋下單流程,
+// 15 分鐘一次的 GitHub 排程(check_orders.py)還是會補上這則通知當備援。
+const ORDER_NOTIFY_URL = 'https://script.google.com/macros/s/AKfycbxd1zT_9uNnhkSL4YJ6lh1hgXlMyiK5ygEVXZTEhPQWs5Vd-dzs0hJ0mj-wenQWQrDAXw/exec';
+function notifyOrderInstant(order){
+  try{
+    fetch(ORDER_NOTIFY_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(order),
+    }).catch(() => {});
+  }catch(e){}
+}
+
 document.getElementById('submitOrderBtn').onclick = async () => {
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
@@ -1509,6 +1525,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   };
   orders = [order, ...orders];
   await storageSet(ORDERS_KEY, orders, true);
+  notifyOrderInstant(order);
   cart = {};
   renderProducts();
   renderCartBar();
