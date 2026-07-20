@@ -114,14 +114,14 @@
   .grid{
     display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap:18px;
   }
-  /* 本週新品:固定顯示一行,超出寬度用橫向捲動,而不是像商品清單一樣自動換行 */
-  #newArrivalsGrid{
+  /* 本週新品/熱銷商品:固定顯示一行,超出寬度用橫向捲動,而不是像商品清單一樣自動換行 */
+  #newArrivalsGrid, #bestSellersGrid{
     display:flex;
     overflow-x:auto;
     padding-bottom:6px;
     scroll-snap-type:x mandatory;
   }
-  #newArrivalsGrid > .card{
+  #newArrivalsGrid > .card, #bestSellersGrid > .card{
     flex:0 0 230px;
     scroll-snap-align:start;
   }
@@ -189,6 +189,8 @@
   /* 後台是淺色底,分類標籤要換成深色文字/邊框才看得清楚 */
   #tab-products .cat-tab{ border-color:#D8D2C3; color:#6B7686; }
   #tab-products .cat-tab:hover{ color:var(--ink); border-color:var(--stamp); }
+
+  .sold-badge{ font-size:12px; color:var(--stamp-dim); font-weight:700; margin-top:-6px; }
 
   /* ===== 前台商品分類改成左側直式選單 ===== */
   .shop-layout{ display:flex; align-items:flex-start; gap:24px; }
@@ -460,6 +462,11 @@
   <div class="grid" id="newArrivalsGrid"></div>
 </div>
 
+<div class="wrap" id="bestSellersWrap" style="display:none;">
+  <h2 class="section-title">🏆 熱銷商品 <span>大家搶著買的商品</span></h2>
+  <div class="grid" id="bestSellersGrid"></div>
+</div>
+
 <div class="wrap">
   <h2 class="section-title">本期商品 <span>價格已依即時匯率換算,重量為預估空運/海運重量</span></h2>
   <div class="shop-layout">
@@ -700,6 +707,10 @@
     </div>
 
     <div class="tab-panel" id="tab-orders" style="display:none;">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-bottom:12px; cursor:pointer;">
+        <input type="checkbox" id="showCompletedOrdersToggle" style="width:auto;">
+        顯示已出貨(完成)的訂單
+      </label>
       <div id="ordersList"></div>
       <div class="empty-note" id="ordersEmpty" style="display:none;">目前還沒有訂單。</div>
     </div>
@@ -1056,11 +1067,37 @@ function render(){
   document.getElementById('rateDisplayKRW').textContent = `1 KRW = ${Number(settings.rateKRW).toFixed(4)} TWD`;
   document.getElementById('shipRateShow').textContent = settings.shippingPerKg;
   document.getElementById('rateUpdated').textContent = '上次更新:' + (settings.lastUpdated ? new Date(settings.lastUpdated).toLocaleString('zh-TW') : '尚未更新過');
+  soldMaps = computeSoldMaps();
   renderSocialLinks();
   renderTrustSection();
   renderProducts();
   renderNewArrivals();
+  renderBestSellers();
   renderCartBar();
+}
+
+// 統計每個商品賣出多少件,給商品卡的「已售 N 件」跟「熱銷商品」用。
+// 訂單品項優先用 productId 對應(新訂單都有這欄位),舊訂單沒有 productId 的話
+// 退而求其次用商品名稱比對。「無法完成」的訂單不算數(客人根本沒買到)。
+let soldMaps = { byId: new Map(), byName: new Map() };
+function computeSoldMaps(){
+  const byId = new Map();
+  const byName = new Map();
+  for(const o of orders){
+    if(o.status === '無法完成') continue;
+    for(const it of (o.items || [])){
+      const qty = it.qty || 0;
+      if(it.productId){
+        byId.set(it.productId, (byId.get(it.productId) || 0) + qty);
+      } else {
+        byName.set(it.name, (byName.get(it.name) || 0) + qty);
+      }
+    }
+  }
+  return { byId, byName };
+}
+function getSoldQty(p){
+  return (soldMaps.byId.get(p.id) || 0) + (soldMaps.byName.get(p.name) || 0);
 }
 
 function escapeHtml(str){
@@ -1209,7 +1246,7 @@ function renderProducts(){
   renderPagination(totalPages);
 
   grid.innerHTML = pageList.map(buildCardHTML).join('');
-  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); });
+  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); renderBestSellers(); });
   if(pendingProductId){
     const el = grid.querySelector(`[data-pid="${CSS.escape(pendingProductId)}"]`);
     if(el){
@@ -1247,6 +1284,7 @@ function buildCardHTML(p){
   const soldOut = saleType !== 'preorder' && stockForColor && chosenSize && (stockForColor[chosenSize] || 0) <= 0;
   const displayImage = colorImage || p.image;
   const badgeParts = [COUNTRY_LABELS[country] || country, productBrand(p), p.subtype].filter(Boolean);
+  const soldQty = getSoldQty(p);
 
   return `
     <div class="card" data-pid="${escapeHtml(p.id)}">
@@ -1259,6 +1297,7 @@ function buildCardHTML(p){
         <span class="price-jpy">${currencySymbol(country)}${p.jpy.toLocaleString('en-US')}</span>
         <span class="price-twd">${fmtMoney(twd)}</span>
       </div>
+      ${soldQty > 0 ? `<div class="sold-badge">🔥 已售 ${soldQty} 件</div>` : ''}
       ${p.desc ? `<div class="desc">${escapeHtml(p.desc)}</div>` : ''}
       ${p.note ? `<div class="notice-box" style="margin-top:0;">⚠ ${escapeHtml(p.note)}</div>` : ''}
       ${p.link ? `<a href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer" class="link-btn">查看官網介紹 ↗</a>` : ''}
@@ -1345,7 +1384,27 @@ function renderNewArrivals(){
   wrap.style.display = '';
   const grid = document.getElementById('newArrivalsGrid');
   grid.innerHTML = recent.map(buildCardHTML).join('');
-  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); });
+  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); renderBestSellers(); });
+}
+
+// 熱銷商品:依「已售數量」排序,跟本週新品共用同一份卡片樣板/橫向捲動樣式,
+// 目前沒有任何一件賣出紀錄的話整塊隱藏。
+function renderBestSellers(){
+  const wrap = document.getElementById('bestSellersWrap');
+  const ranked = products
+    .map(p => ({ p, qty: getSoldQty(p) }))
+    .filter(x => x.qty > 0)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5)
+    .map(x => x.p);
+  if(ranked.length === 0){
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+  const grid = document.getElementById('bestSellersGrid');
+  grid.innerHTML = ranked.map(buildCardHTML).join('');
+  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); renderBestSellers(); });
 }
 
 function renderPagination(totalPages){
@@ -1551,7 +1610,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
     code: generateOrderCode(orders),
     time: Date.now(),
     name, phone, email, note,
-    items: lines.map(l => ({ name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP', purchased: false })),
+    items: lines.map(l => ({ productId: l.id, name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP', purchased: false })),
     subtotal, shipping, deliveryMethod: deliveryOption ? deliveryOption.label : null, deliveryFee, total, deposit,
     status: '待確認訂金',
     statusTimestamps: { '待確認訂金': Date.now() }
@@ -1729,6 +1788,7 @@ function openAdmin(){
   document.getElementById('adminOverlay').classList.add('open');
 }
 document.getElementById('closeAdmin').onclick = () => document.getElementById('adminOverlay').classList.remove('open');
+document.getElementById('showCompletedOrdersToggle').addEventListener('change', renderOrdersAdminList);
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.onclick = () => {
@@ -2182,14 +2242,19 @@ document.getElementById('addProdBtn').onclick = async () => {
 function renderOrdersAdminList(){
   const box = document.getElementById('ordersList');
   const empty = document.getElementById('ordersEmpty');
-  if(orders.length === 0){
+  // 已出貨代表這筆訂單流程走完了,預設先隱藏讓清單只顯示還需要處理的訂單,
+  // 勾選上面的顯示選項才會列出來(不會刪除資料,只是畫面上先濾掉)。
+  const showCompleted = document.getElementById('showCompletedOrdersToggle').checked;
+  const visibleOrders = showCompleted ? orders : orders.filter(o => o.status !== '已出貨');
+  if(visibleOrders.length === 0){
     box.innerHTML = '';
     empty.style.display = 'block';
+    empty.textContent = orders.length === 0 ? '目前還沒有訂單。' : '沒有需要處理的訂單(已出貨的訂單被隱藏了,上面可以勾選顯示)。';
     return;
   }
   empty.style.display = 'none';
   const statuses = ['待確認訂金', '已收訂金', '採購中', '已出貨', '無法完成'];
-  box.innerHTML = orders.map(o => {
+  box.innerHTML = visibleOrders.map(o => {
     const ts = o.statusTimestamps || {};
     const timeline = statuses
       .filter(s => s !== '無法完成' && ts[s])
