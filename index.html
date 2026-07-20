@@ -197,6 +197,7 @@
   .cat-sidebar{
     flex: 0 0 190px; display:flex; flex-direction:column; gap:14px;
     position:sticky; top:12px; align-self:flex-start;
+    max-height: calc(100vh - 24px); overflow-y:auto; -webkit-overflow-scrolling:touch;
   }
   .cat-sidebar .cat-tabs{
     display:flex; flex-direction:column; flex-wrap:nowrap; gap:6px; margin-bottom:0;
@@ -473,6 +474,7 @@
     <aside class="cat-sidebar">
       <div class="cat-tabs" id="countryTabs"></div>
       <div class="cat-tabs subcat" id="brandTabs"></div>
+      <div class="cat-tabs subcat" id="groupTabs"></div>
       <div class="cat-tabs subcat" id="subtypeTabs"></div>
       <div class="cat-tabs subcat" id="seriesTabs"></div>
     </aside>
@@ -877,6 +879,27 @@ const TIER_BY_BRAND = {
 const TIER_ORDER = ['精品', '運動品牌', '潮流品牌', '生活選物'];
 function productTier(p){ return TIER_BY_BRAND[productBrand(p)] || '生活選物'; }
 
+// 品牌底下的細項種類(subtype)太多、太雜,客人要一個一個點才找得到,
+// 所以在「品牌」跟「種類」之間多加一層大分類(上身/褲子/裙子/外套/鞋子/包包/配件),
+// 把同性質的細項先收在同一個大分類頁籤底下。找不到對應大分類的 subtype
+// (例如高爾夫球、公仔這種少見類型),就讓它自己成一個大分類,不用勉強塞。
+const SUBTYPE_GROUP = {
+  '短袖上衣': '上身', 'T恤': '上身', '長袖上衣': '上身', '上衣': '上身', 'Polo衫': '上身',
+  '大學T': '上身', '襯衫': '上身', '毛衣': '上身', '針織衫': '上身', '背心': '上身',
+  '長褲': '褲子', '短褲': '褲子', '內搭褲': '褲子', '牛仔褲': '褲子',
+  '裙裝洋裝': '裙子', '洋裝': '裙子', '裙裝': '裙子',
+  '外套': '外套', '連帽外套': '外套', '針織外套': '外套', '運動外套': '外套', '運動套裝': '外套',
+  '運動休閒鞋': '鞋子', '越野跑鞋': '鞋子', '健行鞋': '鞋子', '皮革運動鞋': '鞋子', '路跑鞋': '鞋子',
+  '跑鞋': '鞋子', '涼鞋': '鞋子', '運動鞋': '鞋子', '鞋類': '鞋子', '網球鞋': '鞋子',
+  '靴類': '鞋子', '樂福鞋': '鞋子', '帆布鞋': '鞋子', '芭蕾鞋': '鞋子',
+  '包款': '包包', '後背包': '包包', '肩背包': '包包', '斜背包': '包包', '斜背小包': '包包',
+  '皮夾': '包包', '小型皮件': '包包', '鑰匙包': '包包', '護照套': '包包',
+  '帽子': '配件', '皮帶': '配件', '配件': '配件', '手錶': '配件', '圍巾配件': '配件',
+  '眼鏡': '配件', '手套護腕': '配件', '香水': '配件', '網球用品': '配件', '服飾配件': '配件',
+  '毛巾': '配件', '泳裝': '配件', '珠寶飾品': '配件', '內著': '配件', '運動內衣': '配件', '服飾': '配件', '襪類': '配件',
+};
+function subtypeGroup(subtype){ return subtype ? (SUBTYPE_GROUP[subtype] || subtype) : null; }
+
 // 把「10000,0.30」這種一行一個級距的文字,解析成 [{maxJpy:10000, rate:0.30}, ...]
 // maxJpy 留空(該行只有逗號後面有值)代表「以上都算這一級」,解析成 null,務必排在最後一行。
 function parsePriceTiers(){
@@ -933,6 +956,7 @@ let cart = {}; // { 'productId::size': { productId, size, qty } }
 let isOwner = false;
 let currentTier = 'all'; // 'all' | '精品' | '運動品牌' | '潮流品牌' | '生活選物'
 let currentBrand = 'all';
+let currentGroup = 'all'; // 上身/褲子/裙子/外套/鞋子/包包/配件...(見 SUBTYPE_GROUP)
 let currentSubtype = 'all';
 let currentSeries = 'all';
 let pendingProductId = null; // 從分享連結 ?p=商品id 進來時,要捲動到的那件商品
@@ -1032,6 +1056,7 @@ function applyUrlParams(){
     if(prod){
       currentTier = productTier(prod);
       currentBrand = productBrand(prod);
+      currentGroup = subtypeGroup(prod.subtype) || 'all';
       currentSubtype = prod.subtype || 'all';
       currentSeries = prod.series || 'all';
       pendingProductId = pid;
@@ -1045,7 +1070,10 @@ function applyUrlParams(){
       currentBrand = productBrand(match);
       currentTier = productTier(match);
       const sub = q.get('subtype');
-      if(sub && products.some(x => productBrand(x) === currentBrand && x.subtype === sub)) currentSubtype = sub;
+      if(sub && products.some(x => productBrand(x) === currentBrand && x.subtype === sub)){
+        currentSubtype = sub;
+        currentGroup = subtypeGroup(sub) || 'all';
+      }
       const ser = q.get('series');
       if(ser && products.some(x => productBrand(x) === currentBrand && x.series === ser)) currentSeries = ser;
     }
@@ -1134,6 +1162,7 @@ function renderCountryTabs(){
     btn.addEventListener('click', () => {
       currentTier = btn.dataset.tier;
       currentBrand = 'all'; // 換大分類時,底下的品牌/種類篩選重設
+      currentGroup = 'all';
       currentSubtype = 'all';
       currentSeries = 'all';
       currentPage = 1;
@@ -1154,7 +1183,29 @@ function renderBrandTabs(){
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       currentBrand = btn.dataset.brand;
-      currentSubtype = 'all'; // 換品牌時,種類/系列篩選重設
+      currentGroup = 'all'; // 換品牌時,大分類/種類/系列篩選重設
+      currentSubtype = 'all';
+      currentSeries = 'all';
+      currentPage = 1;
+      renderProducts();
+    });
+  });
+}
+
+function renderGroupTabs(){
+  const wrap = document.getElementById('groupTabs');
+  // 只有選定某個品牌(不是「全部」)時,才顯示底下的大分類標籤
+  if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
+  const scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean)));
+  // 這個品牌底下只有一種大分類,沒必要多一排標籤
+  if(groups.length < 2){ wrap.innerHTML = ''; return; }
+  const all = ['all', ...groups];
+  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentGroup===c?'active':''}" data-group="${escapeHtml(c)}">${c==='all' ? '全部分類' : escapeHtml(c)}</button>`).join('');
+  wrap.querySelectorAll('.cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentGroup = btn.dataset.group;
+      currentSubtype = 'all'; // 換大分類時,種類/系列篩選重設
       currentSeries = 'all';
       currentPage = 1;
       renderProducts();
@@ -1166,7 +1217,10 @@ function renderSubtypeTabs(){
   const wrap = document.getElementById('subtypeTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的種類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  let scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  if(currentGroup !== 'all'){
+    scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
+  }
   const subtypes = Array.from(new Set(scoped.map(p => p.subtype).filter(Boolean)));
   // 這個品牌底下的商品種類都一樣(或沒填),沒必要多一排只有一個選項的標籤
   if(subtypes.length < 2){ wrap.innerHTML = ''; return; }
@@ -1187,6 +1241,9 @@ function renderSeriesTabs(){
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的系列標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
   let scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  if(currentGroup !== 'all'){
+    scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
+  }
   if(currentSubtype !== 'all'){
     scoped = scoped.filter(p => p.subtype === currentSubtype);
   }
@@ -1207,6 +1264,7 @@ function renderSeriesTabs(){
 function renderProducts(){
   renderCountryTabs();
   renderBrandTabs();
+  renderGroupTabs();
   renderSubtypeTabs();
   renderSeriesTabs();
   const grid = document.getElementById('productGrid');
@@ -1219,6 +1277,9 @@ function renderProducts(){
     list = list.filter(p => productTier(p) === currentTier);
     if(currentBrand !== 'all'){
       list = list.filter(p => productBrand(p) === currentBrand);
+      if(currentGroup !== 'all'){
+        list = list.filter(p => subtypeGroup(p.subtype) === currentGroup);
+      }
       if(currentSubtype !== 'all'){
         list = list.filter(p => p.subtype === currentSubtype);
       }
