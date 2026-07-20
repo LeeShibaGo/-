@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""每日庫存 + 價格同步(Salomon + On)
+"""每日庫存 + 價格同步(Salomon + On + Onitsuka Tiger)
 ------------------------------------------------------------
 用途:
-  網站上 Salomon 和 On 商品的尺寸庫存,原本只是上架當下抓的快照,
+  網站上這幾個品牌商品的尺寸庫存,原本只是上架當下抓的快照,
   官網賣掉或補貨都不會反映。這支程式每天由 GitHub Actions 排程執行,
   重新到官網抓一次「每個顏色每個尺寸的庫存」和「目前售價」,
   直接更新 Firebase 上的商品資料,客人看到的缺貨狀態最多只落後一天。
@@ -12,11 +12,13 @@
   所以用「顏色圖片的網址」當對照鍵:
   - Salomon:Shopify 圖片檔名(去掉 ?v= 版本參數)
   - On:Contentful 圖片網址裡的 asset id(路徑第二段)
+  - Onitsuka Tiger:asics.scene7.com 圖片網址裡的貨號(SKU)
   圖片對不到的顏色(官網下架該配色)一律把庫存歸零,不刪資料。
 
 執行方式:
-  python sync_stock.py            # Salomon + On 都跑
+  python sync_stock.py            # Salomon + On + Onitsuka Tiger 都跑
   python sync_stock.py salomon    # 只跑 Salomon(快,測試用)
+  python sync_stock.py onitsuka   # 只跑 Onitsuka Tiger
 """
 
 import json
@@ -28,6 +30,7 @@ import time
 import requests
 
 from scrape_on_full import extract_ldjson, extract_size_stock, fix_size_key
+from scrape_onitsuka import ENDPOINT as ONITSUKA_ENDPOINT, HEADERS as ONITSUKA_HEADERS, QUERY as ONITSUKA_QUERY
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "")
 price_change_lines = []  # 這次同步中所有官網價格變動,結束後彙整成一則 LINE 通知
@@ -215,6 +218,77 @@ def sync_on(items):
           f"價格變動 {price_changed} 件,錯誤 {errors} 件")
 
 
+# ---------- Onitsuka Tiger ----------
+
+def onitsuka_sku_from_image(url):
+    # 圖片網址範例:https://asics.scene7.com/is/image/asics/1183C102_200_SR_RT_GLB?...
+    # 檔名開頭的貨號(SKU)跟官網 API 回傳的 sku 欄位是同一組,拿來對照最準。
+    m = re.search(r"/asics/([A-Za-z0-9]+_[A-Za-z0-9]+)_", url or "")
+    return m.group(1) if m else (url or "")
+
+
+def onitsuka_fetch_all():
+    all_items = []
+    page = 1
+    while True:
+        res = requests.post(
+            ONITSUKA_ENDPOINT, headers=ONITSUKA_HEADERS,
+            json={"query": ONITSUKA_QUERY, "variables": {"page": page}}, timeout=30,
+        )
+        res.raise_for_status()
+        data = res.json()["data"]["productSearch"]
+        all_items.extend(data["items"])
+        if page * 100 >= data["total_count"]:
+            break
+        page += 1
+        time.sleep(0.3)
+    return [x["productView"] for x in all_items]
+
+
+def sync_onitsuka(items):
+    print("=== Onitsuka Tiger 同步開始 ===")
+    fresh = onitsuka_fetch_all()
+    print(f"官網商品共 {len(fresh)} 件(每色一筆)")
+    by_sku = {p["sku"]: p for p in fresh}
+
+    cards = [p for p in items if p.get("brand") == "Onitsuka Tiger"]
+    stock_changed = price_changed = colors_gone = 0
+    for card in cards:
+        new_jpy = None
+        for ci, color in enumerate(card.get("colors", [])):
+            sku = onitsuka_sku_from_image(color.get("image"))
+            fp = by_sku.get(sku)
+            if not fp:
+                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                    colors_gone += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+                continue
+            size_opt = next((o for o in (fp.get("options") or []) if o["id"] == "size"), None)
+            sizes, stock = [], {}
+            if size_opt:
+                for v in size_opt["values"]:
+                    label = fix_size_key(v["title"])
+                    if label in stock:
+                        continue
+                    sizes.append(label)
+                    stock[label] = 5 if v.get("inStock") else 0
+            if sizes and stock != (color.get("stock") or {}):
+                stock_changed += 1
+            if sizes:
+                color["sizes"], color["stock"] = sizes, stock
+            if ci == 0:
+                pr = (fp.get("priceRange") or {}).get("minimum", {}).get("final", {}).get("amount", {}).get("value")
+                if pr:
+                    new_jpy = int(pr)
+        if new_jpy and new_jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[Onitsuka Tiger] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+    print(f"Onitsuka Tiger 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
+          f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
+
+
 def main():
     only = sys.argv[1].lower() if len(sys.argv) > 1 else None
     items = load_products()
@@ -222,6 +296,8 @@ def main():
         sync_salomon(items)
     if only in (None, "on"):
         sync_on(items)
+    if only in (None, "onitsuka"):
+        sync_onitsuka(items)
     save_products(items)
     if price_change_lines:
         # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
