@@ -190,6 +190,32 @@
   #tab-products .cat-tab{ border-color:#D8D2C3; color:#6B7686; }
   #tab-products .cat-tab:hover{ color:var(--ink); border-color:var(--stamp); }
 
+  /* ===== 前台商品分類改成左側直式選單 ===== */
+  .shop-layout{ display:flex; align-items:flex-start; gap:24px; }
+  .cat-sidebar{
+    flex: 0 0 190px; display:flex; flex-direction:column; gap:14px;
+    position:sticky; top:12px; align-self:flex-start;
+  }
+  .cat-sidebar .cat-tabs{
+    display:flex; flex-direction:column; flex-wrap:nowrap; gap:6px; margin-bottom:0;
+  }
+  .cat-sidebar .cat-tabs.subcat{
+    margin-top:0; padding-left:0; padding-top:10px; border-top:1px dashed var(--line-strong);
+  }
+  .cat-sidebar .cat-tab{
+    width:100%; text-align:left; border-radius:8px; white-space:normal; line-height:1.4;
+  }
+  .shop-main{ flex:1; min-width:0; }
+
+  @media (max-width: 640px){
+    .shop-layout{ gap:10px; }
+    .cat-sidebar{ flex:0 0 84px; gap:8px; }
+    .cat-sidebar .cat-tab{ font-size:11px; padding:6px 8px; }
+    .cat-sidebar .cat-tabs.subcat{ padding-top:8px; }
+    .cat-sidebar .cat-tabs.subcat .cat-tab{ font-size:10px; padding:5px 6px; }
+    .shop-main .grid{ grid-template-columns: 1fr; }
+  }
+
   .cat-badge{ font-size:10px; letter-spacing:0.08em; color:var(--gold-dim); text-transform:uppercase; font-weight:700; }
 
   #searchInput{
@@ -436,13 +462,19 @@
 
 <div class="wrap">
   <h2 class="section-title">本期商品 <span>價格已依即時匯率換算,重量為預估空運/海運重量</span></h2>
-  <input type="text" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;">
-  <div class="cat-tabs" id="countryTabs"></div>
-  <div class="cat-tabs subcat" id="brandTabs"></div>
-  <div class="cat-tabs subcat" id="subtypeTabs"></div>
-  <div class="cat-tabs subcat" id="seriesTabs"></div>
-  <div class="grid" id="productGrid"></div>
-  <div class="pagination" id="paginationBar"></div>
+  <div class="shop-layout">
+    <aside class="cat-sidebar">
+      <div class="cat-tabs" id="countryTabs"></div>
+      <div class="cat-tabs subcat" id="brandTabs"></div>
+      <div class="cat-tabs subcat" id="subtypeTabs"></div>
+      <div class="cat-tabs subcat" id="seriesTabs"></div>
+    </aside>
+    <div class="shop-main">
+      <input type="text" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;">
+      <div class="grid" id="productGrid"></div>
+      <div class="pagination" id="paginationBar"></div>
+    </div>
+  </div>
 </div>
 
 <footer class="site-footer">
