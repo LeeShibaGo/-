@@ -15,6 +15,15 @@
   - Onitsuka Tiger:asics.scene7.com 圖片網址裡的貨號(SKU)
   圖片對不到的顏色(官網下架該配色)一律把庫存歸零,不刪資料。
 
+寫回 Firebase 的方式(2026-07-21 修正):
+  每個品牌同步完自己的商品後,會呼叫 merge_and_save() 重新抓一次「當下
+  最新」的完整清單當基底,只用商品 id 把這次處理過的商品換成新版本,
+  不會沿用 main() 一開始那份舊快照整包覆蓋。原因是 On 單獨一次就要跑
+  40 分鐘以上,加上 price_watch.py,整個排程常常跑 2 小時以上,如果全程
+  共用同一份記憶體、只在最後整包寫回,執行期間只要有人從別的地方(例如
+  上架新品牌)也寫入 Firebase,較晚完成的寫入就會用舊快照蓋掉那些變動
+  ——DESCENTE 剛上架的 1240 件商品就這樣被蓋掉重來過一次。
+
 執行方式:
   python sync_stock.py            # Salomon + On + Onitsuka Tiger 都跑
   python sync_stock.py salomon    # 只跑 Salomon(快,測試用)
@@ -84,6 +93,35 @@ def save_products(items):
     print(f"Firebase 已更新(HTTP {res.status_code})")
 
 
+def merge_and_save(updated_cards):
+    """
+    這幾個同步(尤其是 On,單一次要逐頁抓上千個顏色頁面,常常跑超過 40 分鐘)
+    如果用「main() 一開始 fetch 一次、全程共用同一份記憶體、最後才整包寫回」
+    的做法,執行期間只要有人從別的地方(例如手動上架新品牌)也對 Firebase
+    寫入,較晚完成的寫入就會用自己開始執行當下的舊快照整包覆蓋過去,把
+    中途發生的其他寫入全部抹掉——2026-07-21 就這樣把剛上架的 DESCENTE
+    1240 件商品整批蓋掉過一次。
+
+    修法:每個品牌的同步做完自己的事之後,不要沿用舊快照,而是在真正要
+    寫回之前重新抓一次「當下最新」的完整清單當基底,只用 id 把這次同步
+    處理過的商品換成新版本,其他商品(不管是哪個品牌、是不是這次執行期間
+    才被別人加進去的)原封不動保留,寫回的時間差從「整支程式跑多久」
+    縮短成「重新抓一次 Firebase 要多久」,幾乎不會再跟其他寫入互相覆蓋。
+    """
+    fresh = load_products()
+    updated_by_id = {c["id"]: c for c in updated_cards if c.get("id")}
+    seen_ids = set()
+    merged = []
+    for p in fresh:
+        pid = p.get("id")
+        seen_ids.add(pid)
+        merged.append(updated_by_id.get(pid, p))
+    # 這幾支同步只更新既有商品,理論上不會出現「fresh 裡找不到的 id」,
+    # 但保險起見,萬一真的發生就把它補進去,不要憑空遺失資料。
+    merged.extend(c for c in updated_cards if c.get("id") not in seen_ids)
+    save_products(merged)
+
+
 # ---------- Salomon ----------
 
 def salomon_image_key(url):
@@ -142,6 +180,7 @@ def sync_salomon(items):
             price_changed += 1
     print(f"Salomon 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
           f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
+    merge_and_save(cards)
 
 
 # ---------- On ----------
@@ -216,6 +255,7 @@ def sync_on(items):
             print(f"  進度 {idx+1}/{len(cards)}(庫存有變 {stock_changed},錯誤 {errors})")
     print(f"On 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
           f"價格變動 {price_changed} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
 
 
 # ---------- Onitsuka Tiger ----------
@@ -287,18 +327,21 @@ def sync_onitsuka(items):
             price_changed += 1
     print(f"Onitsuka Tiger 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
           f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
+    merge_and_save(cards)
 
 
 def main():
     only = sys.argv[1].lower() if len(sys.argv) > 1 else None
     items = load_products()
+    # 每支 sync_xxx() 現在會在自己做完事之後,各自重新抓最新資料、合併、
+    # 寫回(見 merge_and_save 的說明),不再共用這份 items 到最後才整包寫回,
+    # 所以這裡不需要(也不應該)在三支都跑完後再存一次舊快照。
     if only in (None, "salomon"):
         sync_salomon(items)
     if only in (None, "on"):
         sync_on(items)
     if only in (None, "onitsuka"):
         sync_onitsuka(items)
-    save_products(items)
     if price_change_lines:
         # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
         head = f"📋 今日價格同步:共 {len(price_change_lines)} 件官網改價,網站售價已自動更新\n\n"
