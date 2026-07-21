@@ -23,12 +23,20 @@
     --muted:#9FB0BE;
     --shadow: 0 18px 40px rgba(0,0,0,0.35);
     --radius: 14px;
+    /* 前台頁面改成淺色底之後,原本設計給深色底用的邊框線/次要文字顏色
+       (--line/--line-strong/--muted 都是用 --paper 的顏色調透明度做的,
+       深色底上才看得到)在淺色底上會整個糊掉,另外開一組給淺色底用。 */
+    --bg-page: var(--paper-2);
+    --text-page: var(--ink);
+    --line-onlight: rgba(20,31,43,0.12);
+    --line-strong-onlight: #D8D2C3;
+    --muted-onlight: #6B7686;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--bg-page);
+    color: var(--text-page);
     font-family:'Noto Sans TC', sans-serif;
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
@@ -41,8 +49,8 @@
 
   /* ===== Header / Board ===== */
   .board-outer{
-    background: linear-gradient(180deg, var(--ink-2), var(--ink));
-    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #FFFFFF, var(--bg-page));
+    border-bottom: 1px solid var(--line-onlight);
   }
   .board-top{
     max-width:1080px; margin:0 auto; padding: 22px 20px 0;
@@ -53,26 +61,26 @@
     font-size: clamp(22px, 4vw, 32px);
     letter-spacing: 0.02em;
     margin:0;
-    color: var(--paper);
+    color: var(--text-page);
   }
   .shop-tag{
-    font-size:12px; color: var(--gold); letter-spacing:0.18em; margin-top:4px;
+    font-size:12px; color: var(--gold-dim); letter-spacing:0.18em; margin-top:4px;
     text-transform:uppercase; font-weight:700;
   }
   .gear-btn{
-    background: transparent; border:1px solid var(--line-strong); color: var(--muted);
+    background: transparent; border:1px solid var(--line-strong-onlight); color: var(--muted-onlight);
     width:40px; height:40px; border-radius:50%; cursor:pointer;
     display:flex; align-items:center; justify-content:center; font-size:18px;
     transition: all .2s ease; flex-shrink:0;
   }
-  .gear-btn:hover{ color:var(--paper); border-color:var(--gold); transform: rotate(20deg); }
+  .gear-btn:hover{ color:var(--text-page); border-color:var(--gold); transform: rotate(20deg); }
 
   .board{
     max-width:1080px; margin: 18px auto 0; padding: 0 20px 26px;
   }
   .board-panel{
-    background: #0F1820;
-    border: 1px solid var(--line);
+    background: #FFFFFF;
+    border: 1px solid var(--line-onlight);
     border-radius: var(--radius);
     padding: 20px 24px;
     display:flex;
@@ -80,11 +88,11 @@
     gap: 18px 28px;
     align-items:center;
     justify-content:space-between;
-    box-shadow: inset 0 2px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 12px rgba(20,31,43,0.06);
   }
   .rate-cols{ display:flex; flex-wrap:wrap; gap:28px; }
   .board-label{
-    font-size:11px; letter-spacing:0.2em; color: var(--muted); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:8px;
+    font-size:11px; letter-spacing:0.2em; color: var(--muted-onlight); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:8px;
   }
   .board-label .dot{ width:6px;height:6px;border-radius:50%; background:#3DDC84; box-shadow:0 0 8px #3DDC84; animation: pulse 1.8s infinite; }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
@@ -99,17 +107,17 @@
   }
   .rate-display.flash{ animation: flash .6s ease; }
   @keyframes flash{ 0%{ color:#fff; text-shadow:0 0 30px #fff;} 100%{ color:var(--amber); text-shadow:0 0 18px rgba(242,179,61,0.45);} }
-  .rate-sub{ font-size:12px; color:var(--muted); margin-bottom:4px; font-family:'JetBrains Mono',monospace; }
+  .rate-sub{ font-size:12px; color:var(--muted-onlight); margin-bottom:4px; font-family:'JetBrains Mono',monospace; }
   .board-meta{ text-align:right; }
-  .ship-line{ font-size:13px; color:var(--muted); }
-  .ship-line b{ color:var(--paper); font-family:'JetBrains Mono',monospace; }
+  .ship-line{ font-size:13px; color:var(--muted-onlight); }
+  .ship-line b{ color:var(--text-page); font-family:'JetBrains Mono',monospace; }
 
   /* ===== Products ===== */
   .section-title{
     font-family:'Noto Serif TC', serif; font-weight:700; font-size:20px;
-    margin: 30px 0 16px; display:flex; align-items:baseline; gap:10px; color: var(--paper);
+    margin: 30px 0 16px; display:flex; align-items:baseline; gap:10px; color: var(--text-page);
   }
-  .section-title span{ font-size:12px; color:var(--muted); font-weight:400; font-family:'Noto Sans TC',sans-serif; }
+  .section-title span{ font-size:12px; color:var(--muted-onlight); font-weight:400; font-family:'Noto Sans TC',sans-serif; }
 
   .grid{
     display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap:18px;
@@ -174,19 +182,19 @@
     transition: transform .15s ease;
   }
   .add-btn:hover{ transform: translateY(-1px); background: var(--stamp); }
-  .empty-note{ color:var(--muted); font-size:14px; padding: 20px 0; }
+  .empty-note{ color:var(--muted-onlight); font-size:14px; padding: 20px 0; }
 
   .cat-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
   .cat-tabs.subcat{ margin-top:-10px; padding-left:4px; }
   .cat-tabs.subcat .cat-tab{ font-size:12px; padding:5px 12px; border-style:dashed; }
   .cat-tab{
-    background:transparent; border:1px solid var(--line-strong); color:var(--muted);
+    background:transparent; border:1px solid var(--line-strong-onlight); color:var(--muted-onlight);
     padding:6px 14px; border-radius:20px; font-size:13px; cursor:pointer; transition:all .15s ease;
     font-family:'Noto Sans TC',sans-serif;
   }
-  .cat-tab:hover{ color:var(--paper); border-color:var(--gold); }
+  .cat-tab:hover{ color:var(--text-page); border-color:var(--gold); }
   .cat-tab.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
-  /* 後台是淺色底,分類標籤要換成深色文字/邊框才看得清楚 */
+  /* 後台是淺色底,分類標籤要換成深色文字/邊框才看得清楚(前台現在也是淺色底,共用同一組) */
   #tab-products .cat-tab{ border-color:#D8D2C3; color:#6B7686; }
   #tab-products .cat-tab:hover{ color:var(--ink); border-color:var(--stamp); }
 
@@ -203,7 +211,7 @@
     display:flex; flex-direction:column; flex-wrap:nowrap; gap:6px; margin-bottom:0;
   }
   .cat-sidebar .cat-tabs.subcat{
-    margin-top:0; padding-left:0; padding-top:10px; border-top:1px dashed var(--line-strong);
+    margin-top:0; padding-left:0; padding-top:10px; border-top:1px dashed var(--line-strong-onlight);
   }
   .cat-sidebar .cat-tab{
     width:100%; text-align:left; border-radius:8px; white-space:normal; line-height:1.4;
@@ -222,52 +230,52 @@
   .cat-badge{ font-size:10px; letter-spacing:0.08em; color:var(--gold-dim); text-transform:uppercase; font-weight:700; }
 
   #searchInput{
-    width:100%; padding:11px 14px; border:1px solid var(--line-strong); border-radius:10px;
-    background:#0F1820; color:var(--paper); font-family:'Noto Sans TC',sans-serif; font-size:14px;
+    width:100%; padding:11px 14px; border:1px solid var(--line-strong-onlight); border-radius:10px;
+    background:#FFFFFF; color:var(--text-page); font-family:'Noto Sans TC',sans-serif; font-size:14px;
   }
-  #searchInput::placeholder{ color:var(--muted); }
+  #searchInput::placeholder{ color:var(--muted-onlight); }
   .pagination{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:24px; flex-wrap:wrap; }
   .page-btn{
-    background:transparent; border:1px solid var(--line-strong); color:var(--muted);
+    background:transparent; border:1px solid var(--line-strong-onlight); color:var(--muted-onlight);
     padding:6px 12px; border-radius:8px; font-size:13px; cursor:pointer; font-family:'JetBrains Mono',monospace;
   }
-  .page-btn:hover:not(:disabled){ color:var(--paper); border-color:var(--gold); }
+  .page-btn:hover:not(:disabled){ color:var(--text-page); border-color:var(--gold); }
   .page-btn.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
   .page-btn:disabled{ opacity:0.35; cursor:not-allowed; }
 
   .trust-section{ margin: 22px 0 34px; }
   .trust-stats{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:22px; }
   .trust-stat{
-    background:#0F1820; border:1px solid var(--line); border-radius:var(--radius);
+    background:#FFFFFF; border:1px solid var(--line-onlight); border-radius:var(--radius);
     padding:16px 26px; text-align:center; min-width:150px;
   }
   .trust-stat-num{
-    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:26px; color:var(--amber);
-    text-shadow: 0 0 14px rgba(242,179,61,0.35);
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:26px; color:var(--gold-dim);
+    text-shadow: none;
   }
-  .trust-stat-label{ font-size:12px; color:var(--muted); margin-top:4px; }
+  .trust-stat-label{ font-size:12px; color:var(--muted-onlight); margin-top:4px; }
   .trust-title{
     font-family:'Noto Serif TC',serif; font-weight:700; font-size:16px; text-align:center;
-    color:var(--paper); margin-bottom:16px;
+    color:var(--text-page); margin-bottom:16px;
   }
   .testimonial-grid{
     display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:12px;
   }
-  .testimonial-grid a{ display:block; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  .testimonial-grid a{ display:block; border-radius:10px; overflow:hidden; border:1px solid var(--line-onlight); }
   .testimonial-grid img{
     width:100%; aspect-ratio: 1 / 1; object-fit:cover; display:block; transition:transform .2s ease;
   }
   .testimonial-grid a:hover img{ transform:scale(1.05); }
 
-  .site-footer{ border-top:1px solid var(--line); padding: 28px 20px 120px; }
+  .site-footer{ border-top:1px solid var(--line-onlight); padding: 28px 20px 120px; }
   .site-footer-inner{ max-width:1080px; margin:0 auto; text-align:center; }
-  .site-footer-title{ font-size:12px; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin-bottom:14px; }
+  .site-footer-title{ font-size:12px; letter-spacing:0.12em; color:var(--muted-onlight); text-transform:uppercase; margin-bottom:14px; }
   .social-links{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
   .social-link{
-    display:inline-flex; align-items:center; gap:8px; background:transparent; border:1px solid var(--line-strong);
-    color:var(--paper); padding:9px 16px; border-radius:20px; font-size:13px; text-decoration:none; transition:all .15s ease;
+    display:inline-flex; align-items:center; gap:8px; background:transparent; border:1px solid var(--line-strong-onlight);
+    color:var(--text-page); padding:9px 16px; border-radius:20px; font-size:13px; text-decoration:none; transition:all .15s ease;
   }
-  .social-link:hover{ border-color:var(--gold); color:var(--gold); }
+  .social-link:hover{ border-color:var(--gold); color:var(--gold-dim); }
   /* 後台是淺色底,分頁按鈕要換成深色文字/邊框才看得清楚 */
   #tab-products .page-btn{ border-color:#D8D2C3; color:#6B7686; }
   #tab-products .page-btn:hover:not(:disabled){ color:var(--ink); border-color:var(--stamp); }
@@ -316,15 +324,15 @@
   /* ===== Floating cart bar ===== */
   .cart-bar{
     position:fixed; left:0; right:0; bottom:0;
-    background: var(--ink-2); border-top:1px solid var(--line);
+    background: #FFFFFF; border-top:1px solid var(--line-onlight);
     padding: 14px 20px; display:flex; align-items:center; justify-content:space-between;
-    z-index:40; box-shadow: 0 -10px 30px rgba(0,0,0,0.35);
+    z-index:40; box-shadow: 0 -10px 30px rgba(20,31,43,0.12);
     transform: translateY(110%); transition: transform .25s ease;
   }
   .cart-bar.show{ transform: translateY(0); }
   .cart-bar-inner{ max-width:1080px; margin:0 auto; width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-  .cart-info{ font-size:14px; color:var(--paper); }
-  .cart-info b{ color:var(--amber); font-family:'JetBrains Mono',monospace; }
+  .cart-info{ font-size:14px; color:var(--text-page); }
+  .cart-info b{ color:var(--stamp); font-family:'JetBrains Mono',monospace; }
   .cart-btn{ background:var(--gold); color:var(--ink); border:none; padding:11px 20px; border-radius:10px; font-weight:700; cursor:pointer; }
   .cart-btn:hover{ background: var(--amber); }
 
@@ -423,11 +431,11 @@
       <div class="shop-tag">Daigou Exchange Board</div>
     </div>
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-      <button class="ghost-btn" id="purchaseGuideBtn" style="border-color:var(--line-strong); color:var(--paper);">代購須知</button>
-      <button class="ghost-btn" id="faqBtn" style="border-color:var(--line-strong); color:var(--paper);">FAQ</button>
-      <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong); color:var(--paper); display:none;">客戶真實回饋</button>
-      <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong); color:var(--paper); text-decoration:none; display:none;">客製化代購</a>
-      <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong); color:var(--paper);">查詢訂單</button>
+      <button class="ghost-btn" id="purchaseGuideBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">代購須知</button>
+      <button class="ghost-btn" id="faqBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">FAQ</button>
+      <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); display:none;">客戶真實回饋</button>
+      <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong-onlight); color:var(--text-page); text-decoration:none; display:none;">客製化代購</a>
+      <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">查詢訂單</button>
       <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
     </div>
   </div>
