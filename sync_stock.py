@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""每日庫存 + 價格同步(Salomon + On + Onitsuka Tiger)
+"""每日庫存 + 價格同步
 ------------------------------------------------------------
 用途:
   網站上這幾個品牌商品的尺寸庫存,原本只是上架當下抓的快照,
@@ -7,9 +7,27 @@
   重新到官網抓一次「每個顏色每個尺寸的庫存」和「目前售價」,
   直接更新 Firebase 上的商品資料,客人看到的缺貨狀態最多只落後一天。
 
+兩種同步方式(2026-07-24 擴大範圍):
+  A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE):
+     這幾家官網的商品頁(或 API)本身就會把「每個顏色每個尺寸」的完整
+     庫存用靜態資料吐出來,可以做到跟客人在網站上看到的一樣即時。
+  B) 只同步價格(AAPE、Lacoste、J.Lindeberg、DESCENTE):
+     這幾家的尺寸庫存是點了才用 AJAX 動態載入,静態頁面抓不到,沒辦法
+     做庫存同步;但目前售價都能從靜態頁面(JSON-LD 或固定 CSS class)
+     直接讀到,所以至少把價格這塊做到自動更新 + LINE 通知,不用像以前
+     的 price_watch.py 只通知、不會自動改價。
+  以下品牌目前技術上做不到自動追蹤,原因各不相同,不會用繞過偵測的
+  方式硬做:
+  - HONMA:售價是頁面載入後才用 JS 動態渲染,靜態抓不到數字。
+  - TaylorMade:官網有 DataDome 機器人偵測,會被導到驗證頁。
+  - Dior、Dior 日本限定、Louis Vuitton:官網對非瀏覽器的請求直接回
+    HTTP 403。
+  - MUSINSA、UNIQLO、Nike、零食伴手禮:這些是手動加的參考商品,
+    沒有官網連結可以查價。
+
 比對方式:
   商品顏色名稱在網站上已翻成中文,沒辦法拿名字對照官網,
-  所以用「顏色圖片的網址」當對照鍵:
+  所以用「顏色圖片的網址」當對照鍵(BAPE 例外,見下方 sync_bape 說明):
   - Salomon:Shopify 圖片檔名(去掉 ?v= 版本參數)
   - On:Contentful 圖片網址裡的 asset id(路徑第二段)
   - Onitsuka Tiger:asics.scene7.com 圖片網址裡的貨號(SKU)
@@ -25,9 +43,14 @@
   ——DESCENTE 剛上架的 1240 件商品就這樣被蓋掉重來過一次。
 
 執行方式:
-  python sync_stock.py            # Salomon + On + Onitsuka Tiger 都跑
+  python sync_stock.py            # 全部品牌都跑
   python sync_stock.py salomon    # 只跑 Salomon(快,測試用)
   python sync_stock.py onitsuka   # 只跑 Onitsuka Tiger
+  python sync_stock.py bape       # 只跑 BAPE
+  python sync_stock.py aape       # 只跑 AAPE(只同步價格)
+  python sync_stock.py lacoste    # 只跑 Lacoste(只同步價格)
+  python sync_stock.py jlindeberg # 只跑 J.Lindeberg(只同步價格)
+  python sync_stock.py descente   # 只跑 DESCENTE(只同步價格)
 """
 
 import json
@@ -330,6 +353,162 @@ def sync_onitsuka(items):
     merge_and_save(cards)
 
 
+# ---------- BAPE(jp.bape.com,Shopify)----------
+
+# 顏色代碼對照,跟原本上架用的 _bape_import.py 是同一份(該檔上架完就照慣例刪掉了,
+# 這裡重新內嵌一份,同步時才能把官網顏色代碼轉成中文名稱去對照卡片上既有的顏色)。
+BAPE_COLOR_SIMPLE = {
+    "BLACK": "黑色", "WHITE": "白色", "GREEN": "綠色", "PINK": "粉紅色", "BLUE": "藍色", "NAVY": "深藍",
+    "YELLOW": "黃色", "GRAY": "灰色", "RED": "紅色", "PURPLE": "紫色", "BROWN": "棕色", "BEIGE": "米色",
+    "SILVER": "銀色", "OLIVEDRAB": "橄欖綠", "MULTI": "多色", "IVORY": "象牙白", "ORANGE": "橘色",
+    "INDIGO": "靛藍", "LIGHTINDI": "淺靛藍", "CHARCOAL": "炭灰色", "GOLD": "金色", "BURGUNDY": "酒紅色",
+    "CLEAR": "透明", "LIGHTGREEN": "淺綠色", "SAX": "天藍色",
+}
+BAPE_COLOR_CODE2 = {
+    "WH": "白", "BK": "黑", "GR": "綠", "PK": "粉紅", "BL": "藍", "NY": "深藍", "YE": "黃", "PP": "紫",
+    "RD": "紅", "OR": "橘", "SX": "天藍", "ML": "多色", "BW": "黑白", "OD": "橄欖綠", "BG": "米",
+    "GD": "金", "SV": "銀", "GY": "灰",
+}
+
+
+def bape_translate_color(name):
+    if name in BAPE_COLOR_SIMPLE:
+        return BAPE_COLOR_SIMPLE[name]
+    if len(name) == 5 and name[2] == "X":
+        c1, c2 = name[:2], name[3:5]
+        if c1 in BAPE_COLOR_CODE2 and c2 in BAPE_COLOR_CODE2:
+            return f"{BAPE_COLOR_CODE2[c1]}x{BAPE_COLOR_CODE2[c2]}"
+    return name
+
+
+def bape_handle_from_link(link):
+    return (link or "").rstrip("/").rsplit("/", 1)[-1]
+
+
+def sync_bape(items):
+    print("=== BAPE 同步開始 ===")
+    shop_products = []
+    page = 1
+    while True:
+        ps = fetch(f"https://jp.bape.com/products.json?limit=250&page={page}").json().get("products", [])
+        shop_products.extend(ps)
+        if len(ps) < 250:
+            break
+        page += 1
+        time.sleep(0.8)
+    print(f"官網商品共 {len(shop_products)} 件(所有 vendor)")
+    by_handle = {p["handle"]: p for p in shop_products}
+
+    cards = [p for p in items if p.get("brand") == "BAPE"]
+    stock_changed = price_changed = colors_gone = 0
+    for card in cards:
+        sp = by_handle.get(bape_handle_from_link(card.get("link")))
+        if not sp or not sp.get("variants"):
+            for color in card.get("colors", []):
+                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                    colors_gone += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+            continue
+
+        by_raw_color = {}
+        for v in sp["variants"]:
+            raw = (v.get("option1") or "").strip()
+            by_raw_color.setdefault(raw, []).append(v)
+        # 同一個中文譯名如果對應到不只一種官網代碼(理論上不該發生,translate_color
+        # 是固定對照表),用第一個代碼為準就好,不用太講究。
+        by_translated_name = {}
+        for raw in by_raw_color:
+            by_translated_name.setdefault(bape_translate_color(raw), raw)
+
+        for color in card.get("colors", []):
+            raw = by_translated_name.get(color.get("name"))
+            variants = by_raw_color.get(raw) if raw else None
+            if not variants:
+                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                    colors_gone += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+                continue
+            sizes, stock = [], {}
+            for v in variants:
+                s = fix_size_key((v.get("option2") or "").strip())
+                if not s or s in stock:
+                    continue
+                sizes.append(s)
+                stock[s] = 5 if v.get("available") else 0
+            if stock != (color.get("stock") or {}):
+                stock_changed += 1
+            color["sizes"], color["stock"] = sizes, stock
+
+        try:
+            new_jpy = int(float(sp["variants"][0]["price"]))
+        except (KeyError, ValueError, TypeError):
+            new_jpy = None
+        if new_jpy and new_jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[BAPE] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+    print(f"BAPE 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
+          f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
+    merge_and_save(cards)
+
+
+# ---------- 只追價格的品牌(AAPE / Lacoste / J.Lindeberg / DESCENTE)----------
+#
+# 這幾個網站的商品頁不會像 Shopify 那樣把「每個顏色每個尺寸」的完整庫存
+# 用靜態資料吐出來(尺寸庫存都是點了才用 AJAX 動態載入),沒辦法像
+# Salomon/BAPE 那樣做到「每個顏色每個尺寸」的庫存同步。但商品目前的
+# 售價都能從靜態頁面直接讀到,所以至少把「價格」這塊做到跟 Salomon/On/
+# Onitsuka 一樣:每天自動比對、有變動就直接更新 Firebase 上的售價,
+# 並且發 LINE 通知,不用像以前的 price_watch.py 只通知、不會自動改價。
+
+_LDJSON_RE = re.compile(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', re.DOTALL)
+
+
+def extract_ldjson_price(html):
+    for block in _LDJSON_RE.findall(html):
+        if '"@type":"Product"' in block or '"@type": "Product"' in block:
+            m = re.search(r'"price"\s*:\s*"?(\d+(?:\.\d+)?)"?', block)
+            if m:
+                return float(m.group(1))
+    return None
+
+
+def extract_aape_price(html):
+    # 官網結構(ebisumart)確認過:.price-entity 這個 class 在商品頁只會出現
+    # 一次、對應到當前這件商品,不會跟其他推薦商品的價格混在一起。
+    m = re.search(r'class="price-entity[^"]*">\s*([\d,]+)', html)
+    return float(m.group(1).replace(",", "")) if m else None
+
+
+def sync_price_only(items, brand, extractor):
+    print(f"=== {brand} 價格同步開始 ===")
+    cards = [p for p in items if p.get("brand") == brand]
+    changed = errors = 0
+    for idx, card in enumerate(cards):
+        link = card.get("link")
+        if not link:
+            continue
+        try:
+            html = fetch(link, timeout=25).text
+            time.sleep(0.4)
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+        new_jpy = extractor(html)
+        if new_jpy and int(new_jpy) != card.get("jpy"):
+            new_jpy = int(new_jpy)
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[{brand}] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            changed += 1
+        if (idx + 1) % 200 == 0:
+            print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},讀取失敗 {errors})")
+    print(f"{brand} 完成:{len(cards)} 張卡,價格變動 {changed} 件,讀取失敗 {errors} 件")
+    merge_and_save(cards)
+
+
 def main():
     only = sys.argv[1].lower() if len(sys.argv) > 1 else None
     items = load_products()
@@ -342,6 +521,16 @@ def main():
         sync_on(items)
     if only in (None, "onitsuka"):
         sync_onitsuka(items)
+    if only in (None, "bape"):
+        sync_bape(items)
+    if only in (None, "aape"):
+        sync_price_only(items, "AAPE", extract_aape_price)
+    if only in (None, "lacoste"):
+        sync_price_only(items, "Lacoste", extract_ldjson_price)
+    if only in (None, "jlindeberg"):
+        sync_price_only(items, "J.Lindeberg", extract_ldjson_price)
+    if only in (None, "descente"):
+        sync_price_only(items, "DESCENTE", extract_ldjson_price)
     if price_change_lines:
         # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
         head = f"📋 今日價格同步:共 {len(price_change_lines)} 件官網改價,網站售價已自動更新\n\n"

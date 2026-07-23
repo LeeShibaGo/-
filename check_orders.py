@@ -6,7 +6,7 @@
   這支程式由 GitHub Actions 每 15 分鐘執行一次,檢查 Firebase 裡
   有沒有「上次檢查之後」的新訂單,有的話用 LINE 推播訂單摘要給老闆。
 
-  LINE 發送方式與 price_watch.py 相同(官方帳號廣播,只有老闆自己
+  LINE 發送方式與 sync_stock.py 相同(官方帳號廣播,只有老闆自己
   是好友,效果等同私訊)。已通知過的訂單 id 記錄在 last_seen_orders.json,
   由 workflow 自動 commit 回 repo,不會重複通知。
 
