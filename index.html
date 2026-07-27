@@ -112,9 +112,10 @@
   .ship-line{ font-size:13px; color:var(--muted-onlight); }
   .ship-line b{ color:var(--text-page); font-family:'JetBrains Mono',monospace; }
   .batch-status{
-    display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700;
-    color:var(--stamp); background:rgba(166,57,44,0.08); border:1px solid rgba(166,57,44,0.25);
-    padding:6px 12px; border-radius:8px; margin-bottom:10px;
+    display:flex; align-items:center; justify-content:center; gap:6px; text-align:center;
+    font-size:13px; font-weight:700; color:var(--stamp);
+    background:rgba(166,57,44,0.08); border:1px solid rgba(166,57,44,0.25);
+    padding:8px 14px; border-radius:8px; flex:1 1 100%;
   }
 
   /* ===== Products ===== */
@@ -446,6 +447,7 @@
   </div>
   <div class="board">
     <div class="board-panel">
+      <div class="batch-status" id="batchStatusLine" style="display:none;">📦 <span id="batchStatusText"></span></div>
       <div class="rate-cols">
         <div>
           <div class="board-label"><span class="dot"></span>JPY → TWD</div>
@@ -457,7 +459,6 @@
         </div>
       </div>
       <div class="board-meta">
-        <div class="batch-status" id="batchStatusLine" style="display:none;">📦 <span id="batchStatusText"></span></div>
         <div class="rate-sub" id="rateUpdated">上次更新:—</div>
         <div class="ship-line">每公斤運費 <b id="shipRateShow">150</b> 元</div>
         <div class="ship-line" style="margin-top:4px;">下單需先付 <b>50%</b> 訂金</div>
