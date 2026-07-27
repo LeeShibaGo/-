@@ -66,6 +66,7 @@ from scrape_onitsuka import ENDPOINT as ONITSUKA_ENDPOINT, HEADERS as ONITSUKA_H
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "")
 price_change_lines = []  # 這次同步中所有官網價格變動,結束後彙整成一則 LINE 通知
+delisted_lines = []  # 這次同步中新發現官網 404(已下架)、剛標記缺貨的商品
 
 
 def send_line(message):
@@ -481,22 +482,55 @@ def extract_aape_price(html):
     return float(m.group(1).replace(",", "")) if m else None
 
 
+def fetch_or_none_if_404(url, retries=4, timeout=30):
+    """跟 fetch() 一樣會重試暫時性錯誤,但 404 例外:代表商品在官網已經
+    真的下架了,重試不會讓一個不存在的網址變回 200,直接回傳 None 讓
+    呼叫端把它標記成缺貨,不要當成普通的讀取失敗浪費時間重試。"""
+    for attempt in range(retries):
+        try:
+            res = requests.get(url, headers=HEADERS, timeout=timeout)
+            if res.status_code == 404:
+                return None
+            res.raise_for_status()
+            return res
+        except Exception:
+            if attempt == retries - 1:
+                raise
+            time.sleep(4 * (attempt + 1))
+
+
+def mark_all_sold_out(card):
+    for color in card.get("colors", []):
+        color["stock"] = {s: 0 for s in color.get("sizes", [])}
+
+
 def sync_price_only(items, brand, extractor):
     print(f"=== {brand} 價格同步開始 ===")
     cards = [p for p in items if p.get("brand") == brand]
-    changed = errors = 0
+    changed = errors = delisted = 0
     for idx, card in enumerate(cards):
         link = card.get("link")
         if not link:
             continue
         try:
-            html = fetch(link, timeout=25).text
+            res = fetch_or_none_if_404(link, timeout=25)
             time.sleep(0.4)
         except Exception as e:
             print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
             errors += 1
             continue
-        new_jpy = extractor(html)
+        if res is None:
+            # 官網 404,商品已下架。之前的做法是整個略過,結果客人在網站
+            # 上還是看得到、點得到「現貨」的商品,但連到官網的連結其實
+            # 已經失效——這裡改成跟 Salomon/BAPE 對不到商品時一樣的做法,
+            # 把所有顏色的庫存都歸零,不刪資料,網站上會自動顯示缺貨。
+            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+                mark_all_sold_out(card)
+                delisted += 1
+                print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
+                delisted_lines.append(f"[{brand}] {card.get('name')}")
+            continue
+        new_jpy = extractor(res.text)
         if new_jpy and int(new_jpy) != card.get("jpy"):
             new_jpy = int(new_jpy)
             print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
@@ -504,8 +538,8 @@ def sync_price_only(items, brand, extractor):
             card["jpy"] = new_jpy
             changed += 1
         if (idx + 1) % 200 == 0:
-            print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},讀取失敗 {errors})")
-    print(f"{brand} 完成:{len(cards)} 張卡,價格變動 {changed} 件,讀取失敗 {errors} 件")
+            print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},新標記下架 {delisted},讀取失敗 {errors})")
+    print(f"{brand} 完成:{len(cards)} 張卡,價格變動 {changed} 件,新標記下架 {delisted} 件,讀取失敗 {errors} 件")
     merge_and_save(cards)
 
 
@@ -535,6 +569,11 @@ def main():
         # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
         head = f"📋 今日價格同步:共 {len(price_change_lines)} 件官網改價,網站售價已自動更新\n\n"
         send_line(head + "\n".join(price_change_lines[:60]))
+    if delisted_lines:
+        # 官網 404 的商品已經自動標記全面缺貨,這則通知讓老闆知道是哪幾件,
+        # 之後可以自行決定要不要整個下架
+        head = f"🚫 今日發現 {len(delisted_lines)} 件商品官網已下架,已自動標記缺貨\n\n"
+        send_line(head + "\n".join(delisted_lines[:60]))
 
 
 if __name__ == "__main__":

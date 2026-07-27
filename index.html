@@ -111,6 +111,11 @@
   .board-meta{ text-align:right; }
   .ship-line{ font-size:13px; color:var(--muted-onlight); }
   .ship-line b{ color:var(--text-page); font-family:'JetBrains Mono',monospace; }
+  .batch-status{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700;
+    color:var(--stamp); background:rgba(166,57,44,0.08); border:1px solid rgba(166,57,44,0.25);
+    padding:6px 12px; border-radius:8px; margin-bottom:10px;
+  }
 
   /* ===== Products ===== */
   .section-title{
@@ -452,6 +457,7 @@
         </div>
       </div>
       <div class="board-meta">
+        <div class="batch-status" id="batchStatusLine" style="display:none;">📦 <span id="batchStatusText"></span></div>
         <div class="rate-sub" id="rateUpdated">上次更新:—</div>
         <div class="ship-line">每公斤運費 <b id="shipRateShow">150</b> 元</div>
         <div class="ship-line" style="margin-top:4px;">下單需先付 <b>50%</b> 訂金</div>
@@ -740,6 +746,8 @@
         <div><label>已完成訂單數(信任感區塊顯示)</label><input type="number" id="completedOrdersInput" placeholder="100"></div>
         <div><label>LINE 社群人數(選填,自己去社群看人數填寫)</label><input type="number" id="lineCommunityMembersInput" placeholder="例如 1500"></div>
       </div>
+      <label style="margin-top:16px;">本期時程精簡版(直接顯示在首頁看板上,不用點按鈕客人就看得到;例如「收單至 6/29・6/8 從日本出貨・預計 7/3 抵台」,留空則不顯示,每次開新一團記得回來更新)</label>
+      <input type="text" id="batchStatusInput" placeholder="收單至 6/29・6/8 從日本出貨・預計 7/3 抵台">
       <label style="margin-top:16px;">代購須知(本期收單期間、可代購品項、下單流程等,客人點「代購須知」按鈕會看到這段文字;每次開新一團記得回來更新日期)</label>
       <textarea id="purchaseGuideInput" style="min-height:220px;"></textarea>
       <label style="margin-top:16px;">國內取貨方式與運費(結帳時客人可以選,金額會自動加進訂單總額;一行一個,格式是「名稱,金額」)</label>
@@ -771,6 +779,9 @@ const DEFAULT_SETTINGS = {
   // 之後如果韓幣商品也需要分級,可以比照這個做法另外加一個 priceTiersKRW。
   priceTiers: `10000,0.30\n50000,0.28\n100000,0.26\n200000,0.25\n,0.25`,
   shippingPerKg: 150,
+  // 本期收單/出貨/抵台時程的精簡版,會直接顯示在首頁看板上(不用點「代購須知」
+  // 才看得到),每次開新一團記得回來更新;詳細版規則還是寫在 purchaseGuide 裡。
+  batchStatus: '收單至 6/29・6/8 從日本出貨・預計 7/3 抵台',
   pin: '0000',
   payment: '第一銀行(007) 123-456-789　户名:王小姐\n轉帳後請截圖給老闆確認,謝謝您!',
   lineGroupUrl: 'https://line.me/ti/g2/khKQ6_1RbId40z6zQpTLA37XQNXEa4tT9vPd5w?utm_source=invitation&utm_medium=link_copy&utm_campaign=default',
@@ -1114,6 +1125,13 @@ function render(){
   document.getElementById('rateDisplayKRW').textContent = `1 KRW = ${Number(settings.rateKRW).toFixed(4)} TWD`;
   document.getElementById('shipRateShow').textContent = settings.shippingPerKg;
   document.getElementById('rateUpdated').textContent = '上次更新:' + (settings.lastUpdated ? new Date(settings.lastUpdated).toLocaleString('zh-TW') : '尚未更新過');
+  const batchLine = document.getElementById('batchStatusLine');
+  if(settings.batchStatus && settings.batchStatus.trim()){
+    document.getElementById('batchStatusText').textContent = settings.batchStatus.trim();
+    batchLine.style.display = '';
+  } else {
+    batchLine.style.display = 'none';
+  }
   soldMaps = computeSoldMaps();
   renderSocialLinks();
   renderTrustSection();
@@ -1858,6 +1876,7 @@ function openAdmin(){
   document.getElementById('threadsUrlInput').value = settings.threadsUrl || '';
   document.getElementById('completedOrdersInput').value = settings.completedOrders || '';
   document.getElementById('lineCommunityMembersInput').value = settings.lineCommunityMembers || '';
+  document.getElementById('batchStatusInput').value = settings.batchStatus || '';
   document.getElementById('purchaseGuideInput').value = settings.purchaseGuide || '';
   document.getElementById('deliveryOptionsInput').value = settings.deliveryOptions || '';
   document.getElementById('faqInput').value = settings.faq || '';
@@ -1947,6 +1966,7 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.completedOrders = isNaN(completedOrdersVal) ? null : completedOrdersVal;
   const lineMembersVal = parseInt(document.getElementById('lineCommunityMembersInput').value, 10);
   settings.lineCommunityMembers = isNaN(lineMembersVal) ? null : lineMembersVal;
+  settings.batchStatus = document.getElementById('batchStatusInput').value.trim();
   settings.purchaseGuide = document.getElementById('purchaseGuideInput').value;
   settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
   settings.faq = document.getElementById('faqInput').value;
