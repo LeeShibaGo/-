@@ -662,8 +662,8 @@
       <label style="margin-top:16px;">目前匯率(1 韓元 = 多少台幣)</label>
       <input type="number" step="0.0001" id="rateKRWInput" placeholder="0.024">
       <button type="button" class="ghost-btn" id="fetchRateBtn" style="margin-top:8px;">帶入即時匯率(日圓+韓元,每日更新)</button>
-      <label style="margin-top:16px;">日幣商品分級匯率(每行一個級距:「這個級距的原幣價格上限,匯率」,最後一行價格上限留空代表以上都算這一級。便宜商品可以用高一點的匯率賺工本費,精品用低一點的匯率避免比台灣專櫃還貴。採累進制計算,像所得稅級距一樣——每個級距只對落在該級距內的那一段金額套用對應匯率,不是整筆金額都套同一個匯率,價格才會隨原幣價格平滑增加,不會在級距交界處忽然變便宜)</label>
-      <textarea id="priceTiersInput" style="min-height:100px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="10000,0.30&#10;50000,0.28&#10;100000,0.26&#10;200000,0.25&#10;,0.25"></textarea>
+      <label style="margin-top:16px;">日幣商品分級加價(每行一個級距:「這個級距的原幣價格上限,加價百分比」,最後一行價格上限留空代表以上都算這一級。便宜商品可以加價高一點賺工本費,精品加價低一點避免比台灣專櫃還貴。這裡填的是「加價幾%」,不是匯率本身——實際匯率 = 上面的即時匯率 ×(1+這裡的加價%),之後即時匯率更新,毛利率會自動維持不變,不用回來重算這幾個數字。採累進制計算,像所得稅級距一樣——每個級距只對落在該級距內的那一段金額套用對應加價,不是整筆金額都套同一個級距,價格才會隨原幣價格平滑增加,不會在級距交界處忽然變便宜)</label>
+      <textarea id="priceTiersInput" style="min-height:100px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="10000,50&#10;50000,40&#10;100000,30&#10;200000,25&#10;,25"></textarea>
       <label style="margin-top:16px;">每公斤運費(台幣)</label>
       <input type="number" step="1" id="shipInput" placeholder="150">
       <button class="primary-btn" id="saveRateBtn">儲存並更新看板</button>
@@ -906,12 +906,17 @@ const DEFAULT_SETTINGS = {
   shopName: '柴代購 ShibaGo',
   rate: 0.25,       // 1 JPY = ? TWD(統一比例定價用不到級距時的備援匯率)
   rateKRW: 0.029,   // 1 KRW = ? TWD
-  // 日幣商品的分級匯率:同一個比例套用在便宜小物跟精品上,便宜商品賺不到工本費、
-  // 精品又會比台灣專櫃還貴,所以改成依「原幣價格」分級距,各自套用不同匯率。
-  // 每行一個級距,格式「這個級距的價格上限(日幣),這個級距的匯率」,由小到大排列,
-  // 最後一行價格上限留空代表「以上都算這一級」。韓幣商品目前還是用上面單一的 rateKRW,
-  // 之後如果韓幣商品也需要分級,可以比照這個做法另外加一個 priceTiersKRW。
-  priceTiers: `10000,0.30\n50000,0.28\n100000,0.26\n200000,0.25\n,0.25`,
+  // 日幣商品的分級加價:同一個比例套用在便宜小物跟精品上,便宜商品賺不到工本費、
+  // 精品又會比台灣專櫃還貴,所以改成依「原幣價格」分級距,各自套用不同加價幅度。
+  // 每行一個級距,格式「這個級距的價格上限(日幣),這個級距的加價百分比」,由小到大排列,
+  // 最後一行價格上限留空代表「以上都算這一級」。
+  // 2026-07-28 改成存「加價百分比」而不是絕對匯率數字:之前是直接存「1 JPY=?TWD」,
+  // 點「帶入即時匯率」只會更新上面那個備援用的 rate,不會動到這幾個數字,等於實際
+  // 匯率漲跌時,這裡的毛利率會悄悄跟著變動而不會發現。改成存百分比之後,實際套用的
+  // 匯率 = rate(每次帶入即時匯率都會更新) × (1+加價百分比),毛利率不會再受匯率波動影響。
+  // 韓幣商品目前還是用上面單一的 rateKRW,之後如果韓幣商品也需要分級,可以比照這個
+  // 做法另外加一個 priceTiersKRW。
+  priceTiers: `10000,50\n50000,40\n100000,30\n200000,25\n,25`,
   shippingPerKg: 150,
   // 本期收單/出貨/抵台時程的精簡版,會直接顯示在首頁看板上(不用點「代購須知」
   // 才看得到),每次開新一團記得回來更新;詳細版規則還是寫在 purchaseGuide 裡。
@@ -1064,14 +1069,17 @@ function subtypeGroup(subtype){ return subtype ? (SUBTYPE_GROUP[subtype] || subt
 
 // 把「10000,0.30」這種一行一個級距的文字,解析成 [{maxJpy:10000, rate:0.30}, ...]
 // maxJpy 留空(該行只有逗號後面有值)代表「以上都算這一級」,解析成 null,務必排在最後一行。
+// 回傳每個級距實際套用的匯率(不是儲存格式本身)。priceTiers 存的是加價百分比,
+// 這裡每次呼叫都用「當下」的 settings.rate 現算,rate 只要透過「帶入即時匯率」
+// 更新過,所有級距的實際匯率會自動跟著調整,加價百分比本身不用手動改。
 function parsePriceTiers(){
   const raw = (settings.priceTiers || '').split('\n')
     .map(line => {
-      const [maxStr, rateStr] = line.split(',');
-      const rate = parseFloat(rateStr);
-      if(isNaN(rate)) return null;
+      const [maxStr, markupStr] = line.split(',');
+      const markupPct = parseFloat(markupStr);
+      if(isNaN(markupPct)) return null;
       const maxTrim = (maxStr || '').trim();
-      return { maxJpy: maxTrim ? parseFloat(maxTrim) : null, rate };
+      return { maxJpy: maxTrim ? parseFloat(maxTrim) : null, rate: settings.rate * (1 + markupPct / 100) };
     })
     .filter(Boolean);
   return raw.length ? raw : [{ maxJpy: null, rate: settings.rate }];
