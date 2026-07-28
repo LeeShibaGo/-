@@ -768,6 +768,7 @@
 const SETTINGS_KEY = 'daigou-settings-v1';
 const PRODUCTS_KEY = 'daigou-products-v1';
 const ORDERS_KEY = 'daigou-orders-v1';
+const CART_KEY = 'daigou-cart-v1'; // 只存本機瀏覽器,換裝置/清瀏覽器資料還是會不見(見 loadCart 說明)
 
 const DEFAULT_SETTINGS = {
   shopName: '柴代購 ShibaGo',
@@ -982,6 +983,22 @@ let settings = { ...DEFAULT_SETTINGS };
 let products = [...DEFAULT_PRODUCTS];
 let orders = [];
 let cart = {}; // { 'productId::size': { productId, size, qty } }
+
+// 購物車原本只存在記憶體裡,重新整理、關掉分頁就會不見(跟有沒有登入無關,
+// 同一台裝置、同一個瀏覽器也一樣會不見)。存進 localStorage 至少讓「同一台
+// 裝置、同一個瀏覽器」重新整理或晚點回來還在,換裝置或換瀏覽器目前還是
+// 不會同步——真的要跨裝置同步要等會員登入功能做好,把購物車存進 Firebase
+// 綁在帳號上。
+function loadCart(){
+  try{
+    const raw = localStorage.getItem(CART_KEY);
+    cart = raw ? (JSON.parse(raw) || {}) : {};
+  }catch(e){ cart = {}; }
+}
+function saveCart(){
+  try{ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }catch(e){}
+}
+
 let isOwner = false;
 let currentTier = 'all'; // 'all' | '精品' | '運動品牌' | '潮流品牌' | '生活選物'
 let currentBrand = 'all';
@@ -1071,6 +1088,7 @@ async function loadAll(){
   // products.map()/orders.map() 直接整頁壞掉。
   if(p) products = Array.isArray(p) ? p : Object.values(p);
   if(o) orders = Array.isArray(o) ? o : Object.values(o);
+  loadCart();
   applyUrlParams();
   render();
 }
@@ -1534,6 +1552,7 @@ function changeQty(id, color, delta, size){
   const next = Math.max(0, cur + delta);
   if(next === 0) delete cart[key];
   else cart[key] = { productId: id, color: color || null, size: size || null, qty: next };
+  saveCart();
   renderProducts();
   renderCartBar();
 }
@@ -1541,6 +1560,7 @@ function addToCart(id, color, size){
   const key = cartKey(id, color, size);
   const cur = (cart[key] && cart[key].qty) || 0;
   cart[key] = { productId: id, color: color || null, size: size || null, qty: cur + 1 };
+  saveCart();
   renderProducts();
   renderCartBar();
   toast('已加入清單');
@@ -1661,6 +1681,7 @@ function renderCartDrawer(){
 
 function removeLine(key){
   delete cart[key];
+  saveCart();
   renderCartDrawer();
   renderProducts();
   renderCartBar();
@@ -1718,6 +1739,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   await storageSet(ORDERS_KEY, orders, true);
   notifyOrderInstant(order);
   cart = {};
+  saveCart();
   renderProducts();
   renderCartBar();
   document.getElementById('cartOverlay').classList.remove('open');
