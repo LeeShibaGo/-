@@ -442,6 +442,12 @@
       <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); display:none;">客戶真實回饋</button>
       <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong-onlight); color:var(--text-page); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">查詢訂單</button>
+      <button class="ghost-btn" id="loginBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">LINE 登入</button>
+      <div id="userBadge" style="display:none; align-items:center; gap:6px;">
+        <img id="userAvatar" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
+        <span id="userName" style="font-size:13px; font-weight:600; color:var(--text-page);"></span>
+        <button class="ghost-btn" id="logoutBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); padding:4px 10px; font-size:12px;">登出</button>
+      </div>
       <button class="gear-btn" id="gearBtn" title="老闆設定" aria-label="老闆設定">⚙</button>
     </div>
   </div>
@@ -769,6 +775,119 @@ const SETTINGS_KEY = 'daigou-settings-v1';
 const PRODUCTS_KEY = 'daigou-products-v1';
 const ORDERS_KEY = 'daigou-orders-v1';
 const CART_KEY = 'daigou-cart-v1'; // 只存本機瀏覽器,換裝置/清瀏覽器資料還是會不見(見 loadCart 說明)
+const USER_KEY = 'daigou-user-v1'; // 登入後記住身分用,只是「這台裝置記得你登入過」,不是安全機制
+
+// ===== LINE Login(會員登入,讓購物車能跨裝置同步)=====
+// Channel ID 不是密鑰,LINE Login 的規格本來就要放在前端網址上,可以放心寫在這裡。
+// Channel Secret 絕對不能出現在這裡——那把金鑰只存在 Google Apps Script 專案的
+// 「指令碼屬性」裡,前端只負責把 LINE 給的授權碼(code)轉送給 Apps Script,
+// 真正拿 code 換使用者資料那一步(需要用到 Secret)全部在 Apps Script 裡完成。
+const LINE_LOGIN_CHANNEL_ID = '2010874876';
+const LINE_LOGIN_REDIRECT_URI = 'https://leeshibago.github.io/-/';
+const LINE_LOGIN_RELAY_URL = 'https://script.google.com/macros/s/AKfycbx-12ovUxkcWtf8ZE-m7Yb-ZGOnDwR3aVdqzw-VjaYqzdizf96ob8SfTrY7bglJQfQJcw/exec';
+
+let currentUser = null; // { userId, displayName, pictureUrl } 或 null(訪客)
+
+function loadUser(){
+  try{
+    const raw = localStorage.getItem(USER_KEY);
+    currentUser = raw ? JSON.parse(raw) : null;
+  }catch(e){ currentUser = null; }
+}
+function saveUser(){
+  try{
+    if(currentUser) localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+    else localStorage.removeItem(USER_KEY);
+  }catch(e){}
+}
+function renderUserBadge(){
+  const loginBtn = document.getElementById('loginBtn');
+  const badge = document.getElementById('userBadge');
+  if(currentUser){
+    loginBtn.style.display = 'none';
+    badge.style.display = 'flex';
+    const avatar = document.getElementById('userAvatar');
+    avatar.style.display = currentUser.pictureUrl ? '' : 'none';
+    avatar.src = currentUser.pictureUrl || '';
+    document.getElementById('userName').textContent = currentUser.displayName || '會員';
+  } else {
+    loginBtn.style.display = '';
+    badge.style.display = 'none';
+  }
+}
+function startLineLogin(){
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  try{ sessionStorage.setItem('line_login_state', state); }catch(e){}
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: LINE_LOGIN_CHANNEL_ID,
+    redirect_uri: LINE_LOGIN_REDIRECT_URI,
+    state,
+    scope: 'openid profile',
+  });
+  location.href = 'https://access.line.me/oauth2/v2.1/authorize?' + params.toString();
+}
+function logoutUser(){
+  currentUser = null;
+  saveUser();
+  renderUserBadge();
+  toast('已登出');
+}
+// 從網址列的 ?code=...&state=... 判斷是不是剛從 LINE 登入導回來的,
+// 是的話跟 Apps Script 中繼站換使用者資料;不是就什麼都不做。
+async function handleLineLoginCallback(){
+  const q = new URLSearchParams(location.search);
+  const code = q.get('code');
+  const state = q.get('state');
+  if(!code) return;
+  history.replaceState(null, '', location.pathname); // 用完就把 code 從網址上清掉,避免重新整理重複觸發
+  let expected = null;
+  try{ expected = sessionStorage.getItem('line_login_state'); }catch(e){}
+  if(!state || state !== expected){ toast('登入驗證失敗,請重新登入一次'); return; }
+  try{ sessionStorage.removeItem('line_login_state'); }catch(e){}
+  try{
+    const res = await fetch(LINE_LOGIN_RELAY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ code, redirectUri: LINE_LOGIN_REDIRECT_URI }),
+    });
+    const data = await res.json();
+    if(data.error){ toast('登入失敗:' + (data.error_description || data.error)); return; }
+    currentUser = { userId: data.userId, displayName: data.displayName, pictureUrl: data.pictureUrl };
+    saveUser();
+    toast('登入成功,歡迎 ' + (currentUser.displayName || ''));
+  }catch(e){ toast('登入時發生連線錯誤,請稍後再試'); }
+}
+
+// ===== 購物車雲端同步(登入後,用 LINE userId 當 key 存進 Firebase)=====
+function cartCloudPath(){ return `daigou-carts-v1/${currentUser.userId}`; }
+async function pushCartToCloud(){
+  if(!currentUser) return;
+  try{
+    await fetch(`${FIREBASE_DB_URL}/${cartCloudPath()}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cart),
+    });
+  }catch(e){}
+}
+// 登入當下(或者本來就記得已登入)跟雲端的購物車合併一次:雲端有、本機沒有的直接
+// 補進來;兩邊都有同一件商品就把數量加總,不用猜哪一邊才是「對的」,寧可多不要遺漏。
+async function mergeCartWithCloud(){
+  if(!currentUser) return;
+  try{
+    const res = await fetch(`${FIREBASE_DB_URL}/${cartCloudPath()}.json`);
+    const cloud = await res.json();
+    if(cloud){
+      for(const key in cloud){
+        if(cart[key]) cart[key] = { ...cart[key], qty: cart[key].qty + cloud[key].qty };
+        else cart[key] = cloud[key];
+      }
+      saveCart();
+    }
+    await pushCartToCloud();
+  }catch(e){}
+}
 
 const DEFAULT_SETTINGS = {
   shopName: '柴代購 ShibaGo',
@@ -997,6 +1116,7 @@ function loadCart(){
 }
 function saveCart(){
   try{ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }catch(e){}
+  if(currentUser) pushCartToCloud(); // 有登入的話順便同步一份到雲端,換裝置才找得回來
 }
 
 let isOwner = false;
@@ -1088,9 +1208,13 @@ async function loadAll(){
   // products.map()/orders.map() 直接整頁壞掉。
   if(p) products = Array.isArray(p) ? p : Object.values(p);
   if(o) orders = Array.isArray(o) ? o : Object.values(o);
+  loadUser();
   loadCart();
+  await handleLineLoginCallback(); // 如果是剛從 LINE 登入導回來的,這裡會設定好 currentUser
+  if(currentUser) await mergeCartWithCloud(); // 不管是剛登入還是本來就記得已登入,都跟雲端合併一次
   applyUrlParams();
   render();
+  renderUserBadge();
 }
 
 // 支援分享用的直達連結:?brand=On&subtype=路跑鞋&series=Cloudmonster 3,或 ?p=商品id。
@@ -1761,6 +1885,8 @@ document.getElementById('orderLookupBtn').onclick = () => {
   document.getElementById('lookupOverlay').classList.add('open');
 };
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
+document.getElementById('loginBtn').onclick = startLineLogin;
+document.getElementById('logoutBtn').onclick = logoutUser;
 
 document.getElementById('purchaseGuideBtn').onclick = () => {
   document.getElementById('purchaseGuideContent').textContent = settings.purchaseGuide || '老闆還沒填寫代購須知。';
