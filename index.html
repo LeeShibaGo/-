@@ -445,7 +445,7 @@
 
 <div class="board-outer">
   <div class="board-top">
-    <div>
+    <div id="logoHomeLink" style="cursor:pointer;" title="回到首頁">
       <h1 class="shop-name" id="shopName">柴代購網站</h1>
       <div class="shop-tag">Daigou Exchange Board</div>
     </div>
@@ -1917,6 +1917,9 @@ document.getElementById('orderLookupBtn').onclick = () => {
   document.getElementById('lookupOverlay').classList.add('open');
 };
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
+document.getElementById('logoHomeLink').onclick = () => {
+  location.href = location.pathname;
+};
 document.getElementById('loginBtn').onclick = startLineLogin;
 document.getElementById('logoutBtn').onclick = logoutUser;
 
