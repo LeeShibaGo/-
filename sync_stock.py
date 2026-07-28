@@ -543,6 +543,63 @@ def sync_price_only(items, brand, extractor):
     merge_and_save(cards)
 
 
+# ---------- HONMA(價格是頁面載入後才用 JS 算出來,一般 HTTP 請求抓不到,
+# 要用真的瀏覽器把 JS 跑完再讀畫面上顯示的價格;跟其他品牌不同,只有這支
+# 需要 playwright,所以在函式內才 import,沒有要跑 HONMA 的話不需要裝這個套件)----------
+
+def extract_honma_price(page):
+    # .item-price 這個 class 確認過同一頁只會出現「自己這件商品」的價格
+    # (可能重複兩次,一次含税、一次不含,數字一樣),不會混到其他商品。
+    # 顯示格式可能是單一價格,也可能是「¥ 137,500 ～ ¥ 170,500」這種
+    # 依配置(桿身等)而變動的區間,抓區間裡最低的那個當作基準價。
+    el = page.locator(".item-price").first
+    text = el.text_content(timeout=10000)
+    prices = re.findall(r"[\d,]+", text or "")
+    if not prices:
+        return None
+    return int(prices[0].replace(",", ""))
+
+
+def sync_honma(items):
+    print("=== HONMA 價格同步開始(使用瀏覽器渲染 JS)===")
+    from playwright.sync_api import sync_playwright
+
+    cards = [p for p in items if p.get("brand") == "HONMA"]
+    changed = errors = delisted = 0
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page = browser.new_page(user_agent=HEADERS["User-Agent"])
+        for idx, card in enumerate(cards):
+            link = card.get("link")
+            if not link:
+                continue
+            try:
+                res = page.goto(link, timeout=30000, wait_until="domcontentloaded")
+                if res is not None and res.status == 404:
+                    if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+                        mark_all_sold_out(card)
+                        delisted += 1
+                        print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
+                        delisted_lines.append(f"[HONMA] {card.get('name')}")
+                    continue
+                new_jpy = extract_honma_price(page)
+            except Exception as e:
+                print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+                errors += 1
+                continue
+            if new_jpy and new_jpy != card.get("jpy"):
+                print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+                price_change_lines.append(f"[HONMA] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+                card["jpy"] = new_jpy
+                changed += 1
+            time.sleep(0.3)
+            if (idx + 1) % 50 == 0:
+                print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},新標記下架 {delisted},讀取失敗 {errors})")
+        browser.close()
+    print(f"HONMA 完成:{len(cards)} 張卡,價格變動 {changed} 件,新標記下架 {delisted} 件,讀取失敗 {errors} 件")
+    merge_and_save(cards)
+
+
 def main():
     only = sys.argv[1].lower() if len(sys.argv) > 1 else None
     items = load_products()
@@ -555,6 +612,8 @@ def main():
         sync_on(items)
     if only in (None, "onitsuka"):
         sync_onitsuka(items)
+    if only in (None, "honma"):
+        sync_honma(items)
     if only in (None, "bape"):
         sync_bape(items)
     if only in (None, "aape"):
