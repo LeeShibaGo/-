@@ -746,6 +746,7 @@
         <input type="checkbox" id="showCompletedOrdersToggle" style="width:auto;">
         顯示已出貨(完成)的訂單
       </label>
+      <div class="cart-item-sub" id="ordersDeviceSummary" style="margin-bottom:10px;"></div>
       <div id="ordersList"></div>
       <div class="empty-note" id="ordersEmpty" style="display:none;">目前還沒有訂單。</div>
     </div>
@@ -1869,7 +1870,10 @@ document.getElementById('submitOrderBtn').onclick = async () => {
     items: lines.map(l => ({ productId: l.id, name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP', purchased: false })),
     subtotal, shipping, deliveryMethod: deliveryOption ? deliveryOption.label : null, deliveryFee, total, deposit,
     status: '待確認訂金',
-    statusTimestamps: { '待確認訂金': Date.now() }
+    statusTimestamps: { '待確認訂金': Date.now() },
+    // 跟網站本身判斷手機版/電腦版用同一個標準(視窗寬度是否 <=640px),
+    // 只是記錄下單當下的畫面寬度,不是真的去讀裝置型號。
+    device: window.innerWidth <= 640 ? '手機' : '電腦',
   };
   orders = [order, ...orders];
   await storageSet(ORDERS_KEY, orders, true);
@@ -2503,6 +2507,14 @@ document.getElementById('addProdBtn').onclick = async () => {
 function renderOrdersAdminList(){
   const box = document.getElementById('ordersList');
   const empty = document.getElementById('ordersEmpty');
+  // 訂單下單當下的畫面寬度(跟網站響應式排版判斷手機/電腦是同一個標準),
+  // 舊訂單沒有這個欄位,就不算進統計裡,不用猜。
+  const withDevice = orders.filter(o => o.device);
+  const mobileCount = withDevice.filter(o => o.device === '手機').length;
+  const desktopCount = withDevice.filter(o => o.device === '電腦').length;
+  document.getElementById('ordersDeviceSummary').textContent = withDevice.length
+    ? `下單裝置:手機 ${mobileCount} 筆・電腦 ${desktopCount} 筆(${orders.length - withDevice.length} 筆較舊的訂單沒有記錄)`
+    : '';
   // 已出貨代表這筆訂單流程走完了,預設先隱藏讓清單只顯示還需要處理的訂單,
   // 勾選上面的顯示選項才會列出來(不會刪除資料,只是畫面上先濾掉)。
   const showCompleted = document.getElementById('showCompletedOrdersToggle').checked;
@@ -2524,7 +2536,7 @@ function renderOrdersAdminList(){
     return `
     <div class="order-card">
       <div class="order-top">
-        <span>${new Date(o.time).toLocaleString('zh-TW')}</span>
+        <span>${new Date(o.time).toLocaleString('zh-TW')}${o.device ? `　<span class="cart-item-sub">${o.device}</span>` : ''}</span>
         <div style="display:flex; align-items:center; gap:8px;">
           <select class="status-chip" style="cursor:pointer;" onchange="setOrderStatus('${o.id}', this.value)">
             ${statuses.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
