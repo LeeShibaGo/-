@@ -704,6 +704,8 @@
       </div>
       <label>手動指定台幣售價(選填,填了就不用級距匯率換算,精品建議直接對照台灣專櫃價)</label>
       <input type="number" id="newProdTwdOverride" placeholder="例如:88000(留空則依原幣價格自動換算)">
+      <label>手動加成已售件數(選填,用於官網下單系統之外賣出的件數,例如面交、私訊成交,會加進商品卡片的「已售 N 件」)</label>
+      <input type="number" id="newProdExtraSold" placeholder="例如:7(留空或 0 代表沒有額外件數)">
       <div class="field-row">
         <div><label>品牌(選填)</label><input type="text" id="newProdBrand" placeholder="例如:UNIQLO、美妝保養"></div>
         <div><label>種類(選填,同品牌底下再細分)</label><input type="text" id="newProdSubtype" placeholder="例如:長袖上衣、短袖上衣"></div>
@@ -1332,7 +1334,7 @@ function computeSoldMaps(){
   return { byId, byName };
 }
 function getSoldQty(p){
-  return (soldMaps.byId.get(p.id) || 0) + (soldMaps.byName.get(p.name) || 0);
+  return (soldMaps.byId.get(p.id) || 0) + (soldMaps.byName.get(p.name) || 0) + (p.extraSoldQty || 0);
 }
 
 function escapeHtml(str){
@@ -2361,6 +2363,7 @@ function resetProductForm(){
   document.getElementById('newProdName').value = '';
   document.getElementById('newProdPrice').value = '';
   document.getElementById('newProdTwdOverride').value = '';
+  document.getElementById('newProdExtraSold').value = '';
   document.getElementById('newProdWeight').value = '';
   document.getElementById('newProdDesc').value = '';
   document.getElementById('newProdLink').value = '';
@@ -2386,6 +2389,7 @@ window.startEditProduct = function(id){
   document.getElementById('newProdName').value = p.name;
   document.getElementById('newProdPrice').value = p.jpy;
   document.getElementById('newProdTwdOverride').value = (p.twdOverride != null) ? p.twdOverride : '';
+  document.getElementById('newProdExtraSold').value = p.extraSoldQty || '';
   document.getElementById('newProdWeight').value = p.weight;
   document.getElementById('newProdBrand').value = p.brand || p.category || '';
   document.getElementById('newProdSubtype').value = p.subtype || '';
@@ -2462,6 +2466,8 @@ document.getElementById('addProdBtn').onclick = async () => {
   const price = parseFloat(document.getElementById('newProdPrice').value);
   const twdOverrideRaw = document.getElementById('newProdTwdOverride').value.trim();
   const twdOverride = twdOverrideRaw ? parseFloat(twdOverrideRaw) : null;
+  const extraSoldRaw = document.getElementById('newProdExtraSold').value.trim();
+  const extraSoldQty = extraSoldRaw ? parseInt(extraSoldRaw, 10) : null;
   const weight = parseFloat(document.getElementById('newProdWeight').value);
   const desc = document.getElementById('newProdDesc').value.trim();
   const link = document.getElementById('newProdLink').value.trim();
@@ -2494,6 +2500,7 @@ document.getElementById('addProdBtn').onclick = async () => {
     if(image) updated.image = image;
     if(link) updated.link = link;
     if(twdOverride != null && !isNaN(twdOverride)) updated.twdOverride = twdOverride;
+    if(extraSoldQty != null && !isNaN(extraSoldQty)) updated.extraSoldQty = extraSoldQty;
     products[idx] = updated;
     const ok = await storageSet(PRODUCTS_KEY, products, true);
     if(!ok){ toast('儲存失敗,圖片可能太大,建議換更小的圖片或改用圖片網址'); }
@@ -2507,6 +2514,7 @@ document.getElementById('addProdBtn').onclick = async () => {
     if(image) newProd.image = image;
     if(link) newProd.link = link;
     if(twdOverride != null && !isNaN(twdOverride)) newProd.twdOverride = twdOverride;
+    if(extraSoldQty != null && !isNaN(extraSoldQty)) newProd.extraSoldQty = extraSoldQty;
     products = [...products, newProd];
     const ok = await storageSet(PRODUCTS_KEY, products, true);
     if(!ok){ toast('儲存失敗,圖片可能太大,建議換更小的圖片或改用圖片網址'); }
