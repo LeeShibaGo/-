@@ -111,6 +111,7 @@
   .board-meta{ text-align:right; }
   .ship-line{ font-size:13px; color:var(--muted-onlight); }
   .ship-line b{ color:var(--text-page); font-family:'JetBrains Mono',monospace; }
+  .rate-disclaimer{ font-size:11px; color:var(--muted-onlight); margin-top:6px; }
   .batch-status{
     display:flex; align-items:center; justify-content:center; gap:6px; text-align:center;
     font-size:13px; font-weight:700; color:var(--stamp);
@@ -471,11 +472,12 @@
           <div class="board-label"><span class="dot"></span>JPY → TWD</div>
           <div class="rate-display" id="rateDisplayJPY">1 JPY = 0.220 TWD</div>
         </div>
-        <div>
+        <div id="krwRateCol">
           <div class="board-label"><span class="dot"></span>KRW → TWD</div>
           <div class="rate-display" id="rateDisplayKRW">1 KRW = 0.024 TWD</div>
         </div>
       </div>
+      <div class="rate-disclaimer">為即時參考匯率,已含代購服務費,實際售價請見商品卡片</div>
       <div class="board-meta">
         <div class="rate-sub" id="rateUpdated">上次更新:—</div>
         <div class="ship-line">每公斤運費 <b id="shipRateShow">150</b> 元</div>
@@ -1296,6 +1298,10 @@ function render(){
   } else {
     batchLine.style.display = 'none';
   }
+  // 目前沒有韓幣商品的話,看板不需要顯示 KRW 匯率,不然客人會誤以為有韓國代購。
+  // 之後如果又上架韓國商品,這裡會自動偵測到、自己重新顯示,不用手動切換。
+  const hasKrProducts = products.some(p => (p.country || 'JP') === 'KR');
+  document.getElementById('krwRateCol').style.display = hasKrProducts ? '' : 'none';
   soldMaps = computeSoldMaps();
   renderSocialLinks();
   renderTrustSection();
