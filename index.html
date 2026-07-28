@@ -224,13 +224,25 @@
   }
   .shop-main{ flex:1; min-width:0; }
 
+  /* 手機版:直式選單改成一整排橫向捲動的分類列,不然側邊欄長期佔掉螢幕寬度,
+     商品卡片會被擠得很窄。改成堆疊在商品區「上方」,自然不佔用內容寬度,
+     也不用 sticky 釘住(手機螢幕本來就小,釘住反而讓分類列一路佔到頁尾)。 */
   @media (max-width: 640px){
-    .shop-layout{ gap:10px; }
-    .cat-sidebar{ flex:0 0 84px; gap:8px; }
-    .cat-sidebar .cat-tab{ font-size:11px; padding:6px 8px; }
-    .cat-sidebar .cat-tabs.subcat{ padding-top:8px; }
-    .cat-sidebar .cat-tabs.subcat .cat-tab{ font-size:10px; padding:5px 6px; }
-    .shop-main .grid{ grid-template-columns: 1fr; }
+    .shop-layout{ flex-direction:column; gap:10px; }
+    .cat-sidebar{
+      flex:0 0 auto; width:100%; position:static; max-height:none; overflow-y:visible; gap:8px;
+    }
+    .cat-sidebar .cat-tabs{
+      flex-direction:row; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      gap:6px; padding-bottom:4px;
+    }
+    .cat-sidebar .cat-tabs.subcat{
+      padding-top:8px; border-top:1px dashed var(--line-strong-onlight);
+    }
+    .cat-sidebar .cat-tab{
+      width:auto; white-space:nowrap; flex:0 0 auto; font-size:12px; padding:6px 10px;
+    }
+    .shop-main .grid{ grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   }
 
   .cat-badge{ font-size:10px; letter-spacing:0.08em; color:var(--gold-dim); text-transform:uppercase; font-weight:700; }
