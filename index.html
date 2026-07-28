@@ -34,6 +34,16 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  .mobile-sticky-bar{ display:none; }
+  @media (max-width: 640px){
+    .mobile-sticky-bar{
+      display:flex; align-items:center; justify-content:center;
+      position:sticky; top:0; z-index:50; cursor:pointer;
+      padding:12px 16px; background:var(--paper, #fff);
+      border-bottom:1px solid var(--line-onlight);
+      font-family:'Noto Serif TC', serif; font-weight:900; font-size:17px; color:var(--text-page);
+    }
+  }
   body{
     background: var(--bg-page);
     color: var(--text-page);
@@ -244,6 +254,18 @@
       width:auto; white-space:nowrap; flex:0 0 auto; font-size:12px; padding:6px 10px;
     }
     .shop-main .grid{ grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    /* 手機版兩欄卡片較窄,商品名稱/說明用原本電腦版的字級會一直換行、
+       整張卡都被文字塞滿,圖片反而不明顯。限制行數+縮小字級,圖片為主。 */
+    .card{ padding:12px; gap:6px; }
+    .card h3{
+      font-size:13px; padding-right:44px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .card .desc{
+      display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .price-twd{ font-size:18px; }
+    .stamp{ width:42px; height:42px; font-size:9px; top:10px; right:10px; }
   }
 
   .cat-badge{ font-size:10px; letter-spacing:0.08em; color:var(--gold-dim); text-transform:uppercase; font-weight:700; }
@@ -442,6 +464,8 @@
 </style>
 </head>
 <body>
+
+<div class="mobile-sticky-bar" id="mobileStickyBar" title="回到首頁">柴代購 ShibaGo</div>
 
 <div class="board-outer">
   <div class="board-top">
@@ -1919,6 +1943,9 @@ document.getElementById('orderLookupBtn').onclick = () => {
 };
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
 document.getElementById('logoHomeLink').onclick = () => {
+  location.href = location.pathname;
+};
+document.getElementById('mobileStickyBar').onclick = () => {
   location.href = location.pathname;
 };
 document.getElementById('loginBtn').onclick = startLineLogin;
