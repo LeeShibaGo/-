@@ -1133,13 +1133,29 @@ function tieredJpyToTwd(jpy){
   return total;
 }
 
+// 鞋類在台灣代購/背貨市場競爭比較激烈,分級匯率表對這個價位帶(¥1萬-9萬,
+// 鞋子大宗都落在這裡)算出來的加價都比 20% 高,容易比同業貴。2026-07-29
+// 改成鞋類統一抓「成本(日幣原價換算+運費) × 1.2」,不再套用一般的分級匯率表。
+const SHOE_SUBTYPES = new Set([
+  '運動休閒鞋','越野跑鞋','健行鞋','皮革運動鞋','路跑鞋','跑鞋','涼鞋',
+  '運動鞋','鞋類','網球鞋','靴類','樂福鞋','帆布鞋','芭蕾鞋','高爾夫球鞋',
+]);
+function shoeMarginPrice(p){
+  const cost = p.jpy * settings.rate + (p.weight || 0) * settings.shippingPerKg;
+  return cost * 1.2;
+}
+
 // 商品實際賣給客人的台幣價格。優先順序:
-// 1. 商品自己填了 twdOverride(手動對照台灣專櫃價,通常用在精品)就直接用這個數字。
-// 2. 韓幣商品維持原本單一 rateKRW 換算(目前沒有分級需求)。
-// 3. 日幣商品依原幣價格,用累進級距匯率換算(見 tieredJpyToTwd)。
+// 1. 商品自己填了 twdOverride(手動對照台灣專櫃價或個別談好的價格)就直接用這個數字。
+// 2. 鞋類(見上面 SHOE_SUBTYPES)固定抓成本 × 1.2,不套用分級匯率表。
+// 3. 韓幣商品維持原本單一 rateKRW 換算(目前沒有分級需求)。
+// 4. 其他日幣商品依原幣價格,用累進級距匯率換算(見 tieredJpyToTwd)。
 function sellPriceTwd(p){
   if(p.twdOverride != null && p.twdOverride !== '' && !isNaN(p.twdOverride)){
     return Number(p.twdOverride);
+  }
+  if(SHOE_SUBTYPES.has(p.subtype)){
+    return shoeMarginPrice(p);
   }
   if((p.country || 'JP') === 'KR'){
     return p.jpy * settings.rateKRW;
