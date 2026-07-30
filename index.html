@@ -1279,6 +1279,9 @@ async function loadAll(){
 // 網址參數只在進站時讀一次,之後瀏覽時由 updateUrl() 反向把目前位置寫回網址列。
 function applyUrlParams(){
   const q = new URLSearchParams(location.search);
+  if(q.get('owner') === '1'){
+    openPinOverlay();
+  }
   const pid = q.get('p');
   if(pid){
     const prod = products.find(x => x.id === pid);
@@ -1509,7 +1512,7 @@ function renderProducts(){
   renderSeriesTabs();
   const grid = document.getElementById('productGrid');
   if(products.length === 0){
-    grid.innerHTML = '<div class="empty-note">目前尚未上架商品,請長按網站名稱進入老闆模式新增。</div>';
+    grid.innerHTML = '<div class="empty-note">目前尚未上架商品。</div>';
     return;
   }
   let list = products;
@@ -2070,39 +2073,13 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
 };
 
 // ===== Owner PIN flow =====
-// 齒輪按鈕拿掉了,改成長按網站名稱(或手機版的置頂列)1.2秒觸發,
-// 一般點擊(放開時間 < 1.2秒)維持原本「回到首頁」的行為不受影響。
+// 齒輪按鈕拿掉了,改成網址後面加 ?owner=1 才會跳密碼框(見 applyUrlParams()),
+// 頁面上沒有任何看得到、點得到的入口。這個參數只在進站當下讀一次,
+// updateUrl() 每次都會用目前的瀏覽狀態整個重寫網址列,owner 參數用過後就會自動被洗掉。
 function openPinOverlay(){
   document.getElementById('pinInput').value = '';
   document.getElementById('pinOverlay').classList.add('open');
 }
-function attachLongPressForOwner(el){
-  let pressTimer = null;
-  let longPressFired = false;
-  const start = () => {
-    longPressFired = false;
-    pressTimer = setTimeout(() => {
-      longPressFired = true;
-      openPinOverlay();
-    }, 1200);
-  };
-  const cancel = () => clearTimeout(pressTimer);
-  el.addEventListener('mousedown', start);
-  el.addEventListener('touchstart', start, { passive: true });
-  el.addEventListener('mouseup', cancel);
-  el.addEventListener('mouseleave', cancel);
-  el.addEventListener('touchend', cancel);
-  el.addEventListener('touchcancel', cancel);
-  el.addEventListener('click', (e) => {
-    if(longPressFired){
-      longPressFired = false;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-    }
-  }, true);
-}
-attachLongPressForOwner(document.getElementById('logoHomeLink'));
-attachLongPressForOwner(document.getElementById('mobileStickyBar'));
 document.getElementById('closePin').onclick = () => document.getElementById('pinOverlay').classList.remove('open');
 document.getElementById('pinSubmit').onclick = () => {
   const val = document.getElementById('pinInput').value.trim();
