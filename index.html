@@ -193,6 +193,17 @@
   .add-btn:hover{ transform: translateY(-1px); background: var(--stamp); }
   .empty-note{ color:var(--muted-onlight); font-size:14px; padding: 20px 0; }
 
+  .quote-badge{
+    font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; color: var(--stamp);
+  }
+  .quote-btn{
+    display:block; text-align:center; text-decoration:none;
+    background: var(--ink); color:var(--paper); border:none; border-radius:10px;
+    padding:10px 14px; font-weight:700; cursor:pointer; font-size:13px;
+    transition: transform .15s ease;
+  }
+  .quote-btn:hover{ transform: translateY(-1px); background: var(--stamp); }
+
   .cat-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
   .cat-tabs.subcat{ margin-top:-10px; padding-left:4px; }
   .cat-tabs.subcat .cat-tab{ font-size:12px; padding:5px 12px; border-style:dashed; }
@@ -731,6 +742,10 @@
         <option value="instock">現貨</option>
         <option value="preorder">預購</option>
       </select>
+      <label style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+        <input type="checkbox" id="newProdQuoteOnly" style="width:auto;">
+        私訊報價(勾選後商品卡不顯示價格、不能直接加入清單,改成「私訊詢問報價」按鈕,適合大型/客製商品)
+      </label>
       <label>尺寸(選填,逗號分隔;若下方有加顏色,以顏色內設定的尺寸為主)</label>
       <input type="text" id="newProdSizes" placeholder="例如:S,M,L">
 
@@ -1600,11 +1615,13 @@ function buildCardHTML(p){
       <span class="sale-badge ${saleType}">${saleType === 'preorder' ? '預購' : '現貨'}</span>
       ${p.origJpy && p.origJpy > p.jpy ? `<span class="sale-badge discount">特價</span>` : ''}
       <h3>${escapeHtml(p.name)}</h3>
-      <div class="price-row">
+      ${p.quoteOnly
+        ? `<div class="price-row"><span class="quote-badge">私訊報價</span></div>`
+        : `<div class="price-row">
         ${p.origJpy && p.origJpy > p.jpy ? `<span class="price-jpy was">${currencySymbol(country)}${p.origJpy.toLocaleString('en-US')}</span>` : ''}
         <span class="price-jpy">${currencySymbol(country)}${p.jpy.toLocaleString('en-US')}</span>
         <span class="price-twd">${fmtMoney(twd)}</span>
-      </div>
+      </div>`}
       ${soldQty > 0 ? `<div class="sold-badge">🔥 已售 ${soldQty} 件</div>` : ''}
       ${p.desc ? `<div class="desc">${escapeHtml(p.desc)}</div>` : ''}
       ${p.note ? `<div class="notice-box" style="margin-top:0;">⚠ ${escapeHtml(p.note)}</div>` : ''}
@@ -1623,14 +1640,16 @@ function buildCardHTML(p){
             return `<button type="button" class="size-pill ${s===chosenSize?'active':''} ${outOfStock?'disabled':''}" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${escapeHtml(s)}" ${outOfStock ? 'disabled' : ''}>${escapeHtml(s)}${outOfStock ? '(缺)' : ''}</button>`;
           }).join('')}</div>`
       ) : ''}
-      <div class="qty-row">
+      ${p.quoteOnly
+        ? `<a class="quote-btn" href="${escapeHtml(lineOfficialUrl(settings.lineOfficialId))}" target="_blank" rel="noopener noreferrer">私訊詢問報價</a>`
+        : `<div class="qty-row">
         <div class="stepper">
           <button aria-label="減少" class="qty-btn" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${chosenSize ? escapeHtml(chosenSize) : ''}" data-delta="-1">－</button>
           <span>${qty}</span>
           <button aria-label="增加" class="qty-btn" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${chosenSize ? escapeHtml(chosenSize) : ''}" data-delta="1" ${soldOut ? 'disabled' : ''}>＋</button>
         </div>
         <button class="add-btn" data-id="${p.id}" data-color="${chosenColor ? escapeHtml(chosenColor) : ''}" data-size="${chosenSize ? escapeHtml(chosenSize) : ''}" ${soldOut ? 'disabled' : ''}>${soldOut ? '已售完' : '加入清單'}</button>
-      </div>
+      </div>`}
     </div>`;
 }
 
@@ -2417,6 +2436,7 @@ function resetProductForm(){
   document.getElementById('newProdBrand').value = '';
   document.getElementById('newProdSubtype').value = '';
   document.getElementById('newProdSaleType').value = 'instock';
+  document.getElementById('newProdQuoteOnly').checked = false;
   document.getElementById('newProdSizes').value = '';
   clearColorRows();
   document.getElementById('newProdImageUrl').value = '';
@@ -2441,6 +2461,7 @@ window.startEditProduct = function(id){
   document.getElementById('newProdBrand').value = p.brand || p.category || '';
   document.getElementById('newProdSubtype').value = p.subtype || '';
   document.getElementById('newProdSaleType').value = p.saleType || 'instock';
+  document.getElementById('newProdQuoteOnly').checked = !!p.quoteOnly;
   document.getElementById('newProdSizes').value = (p.sizes || []).join(',');
   clearColorRows();
   (p.colors || []).forEach(c => addColorRow(c));
@@ -2521,6 +2542,7 @@ document.getElementById('addProdBtn').onclick = async () => {
   const brand = document.getElementById('newProdBrand').value.trim();
   const subtype = document.getElementById('newProdSubtype').value.trim();
   const saleType = document.getElementById('newProdSaleType').value;
+  const quoteOnly = document.getElementById('newProdQuoteOnly').checked;
   const sizesRaw = document.getElementById('newProdSizes').value.trim();
   const sizes = sizesRaw ? sizesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
   const colors = readColorRowsFromForm();
@@ -2548,6 +2570,7 @@ document.getElementById('addProdBtn').onclick = async () => {
     if(link) updated.link = link;
     if(twdOverride != null && !isNaN(twdOverride)) updated.twdOverride = twdOverride;
     if(extraSoldQty != null && !isNaN(extraSoldQty)) updated.extraSoldQty = extraSoldQty;
+    if(quoteOnly) updated.quoteOnly = true;
     products[idx] = updated;
     const ok = await storageSet(PRODUCTS_KEY, products, true);
     if(!ok){ toast('儲存失敗,圖片可能太大,建議換更小的圖片或改用圖片網址'); }
@@ -2562,6 +2585,7 @@ document.getElementById('addProdBtn').onclick = async () => {
     if(link) newProd.link = link;
     if(twdOverride != null && !isNaN(twdOverride)) newProd.twdOverride = twdOverride;
     if(extraSoldQty != null && !isNaN(extraSoldQty)) newProd.extraSoldQty = extraSoldQty;
+    if(quoteOnly) newProd.quoteOnly = true;
     products = [...products, newProd];
     const ok = await storageSet(PRODUCTS_KEY, products, true);
     if(!ok){ toast('儲存失敗,圖片可能太大,建議換更小的圖片或改用圖片網址'); }
