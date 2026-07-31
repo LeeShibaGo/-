@@ -564,14 +564,15 @@
   </div>
 </div>
 
-<!-- 商品分類選單(品牌),點右上角 ☰ 展開 -->
+<!-- 商品分類選單(品牌/大分類),點右上角 ☰ 展開 -->
 <div class="overlay" id="categoryMenuOverlay">
   <div class="sheet">
     <div class="sheet-head">
-      <h2>品牌</h2>
+      <h2>商品分類</h2>
       <button class="close-x" id="closeCategoryMenu">✕</button>
     </div>
     <div class="cat-tabs" id="brandTabs"></div>
+    <div class="cat-tabs subcat" id="groupTabs"></div>
   </div>
 </div>
 
@@ -595,8 +596,7 @@
   <h2 class="section-title">所有商品 <span>價格已依即時匯率換算,重量為預估空運/海運重量</span></h2>
   <div class="shop-layout">
     <aside class="cat-sidebar">
-      <div class="cat-tabs" id="groupTabs"></div>
-      <div class="cat-tabs subcat" id="countryTabs"></div>
+      <div class="cat-tabs" id="countryTabs"></div>
       <div class="cat-tabs subcat" id="subtypeTabs"></div>
       <div class="cat-tabs subcat" id="seriesTabs"></div>
     </aside>
@@ -1564,20 +1564,24 @@ function renderBrandTabs(){
       currentPage = 1;
       renderProducts();
       triggerPageTransition();
-      document.getElementById('categoryMenuOverlay').classList.remove('open');
+      // 選完品牌後,如果底下沒有多個大分類可以再挑,就直接關掉選單;
+      // 有的話留著選單開著,讓客人接著點大分類。
+      if(document.getElementById('groupTabs').innerHTML.trim() === ''){
+        document.getElementById('categoryMenuOverlay').classList.remove('open');
+      }
     });
   });
 }
 
-// 大分類現在是左側常駐的主要導覽清單(參考頁面左邊那排),不再依附品牌選單,
-// 客人不用先選品牌/大分類(國家)也能直接點,獨立套用篩選。
 function renderGroupTabs(){
   const wrap = document.getElementById('groupTabs');
-  let scoped = products;
+  // 只有選定某個品牌(不是「全部」)時,才顯示底下的大分類標籤
+  if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
+  let scoped = products.filter(p => productBrand(p) === currentBrand);
   if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
-  if(currentBrand !== 'all') scoped = scoped.filter(p => productBrand(p) === currentBrand);
-  const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean))).sort((a,b) => a.localeCompare(b));
-  if(groups.length === 0){ wrap.innerHTML = ''; return; }
+  const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean)));
+  // 這個品牌底下只有一種大分類,沒必要多一排標籤
+  if(groups.length < 2){ wrap.innerHTML = ''; return; }
   const all = ['all', ...groups];
   wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentGroup===c?'active':''}" data-group="${escapeHtml(c)}">${c==='all' ? '全部分類' : escapeHtml(c)}</button>`).join('');
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
@@ -1588,6 +1592,7 @@ function renderGroupTabs(){
       currentPage = 1;
       renderProducts();
       triggerPageTransition();
+      document.getElementById('categoryMenuOverlay').classList.remove('open');
     });
   });
 }
