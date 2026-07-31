@@ -90,14 +90,14 @@
   /* 手機版按鈕縮小,盡量擠在同一排,擠不下的話用橫向捲動而不是換行 */
   @media (max-width: 640px){
     .board-top-nav{
-      flex-wrap:nowrap; justify-content:flex-start; width:100%;
-      overflow-x:auto; -webkit-overflow-scrolling:touch; gap:4px; padding-bottom:2px;
+      flex-wrap:nowrap; justify-content:center; width:100%;
+      overflow-x:auto; -webkit-overflow-scrolling:touch; gap:2px; padding-bottom:2px;
     }
     .board-top-nav .ghost-btn{
-      padding:5px 7px; font-size:10px; white-space:nowrap; flex-shrink:0;
+      padding:6px 6px; font-size:11px; white-space:nowrap; flex-shrink:0;
     }
     .board-top-nav .hamburger-btn{
-      width:28px; height:28px; font-size:13px; flex-shrink:0;
+      width:30px; height:30px; font-size:14px; flex-shrink:0;
     }
     #userBadge{ flex-shrink:0; }
     #userBadge span{ white-space:nowrap; font-size:11px !important; }
