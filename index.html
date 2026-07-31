@@ -2197,8 +2197,8 @@ function renderSocialLinks(){
   // 頁尾上排的社群卡片,只列這個店真正有在經營的管道(LINE 社群/官方帳號/Threads),
   // 沒有粉專/IG 就不硬湊。
   const cards = [];
-  if(settings.lineOfficialId) cards.push({ icon: '💬', title: 'LINE 官方帳號', tagline: '加入官方帳號,小柴在等你', url: lineOfficialUrl(settings.lineOfficialId) });
-  if(settings.lineGroupUrl) cards.push({ icon: '👥', title: 'LINE 社群', tagline: '加入社群,搶先看新品資訊', url: settings.lineGroupUrl });
+  if(settings.lineOfficialId) cards.push({ icon: '💬', title: 'LINE 官方帳號', tagline: '加入官方帳號,總柴在等你', url: lineOfficialUrl(settings.lineOfficialId) });
+  if(settings.lineGroupUrl) cards.push({ icon: '👥', title: 'LINE 社群', tagline: '加入社群,搶先知道搶手商品', url: settings.lineGroupUrl });
   if(settings.threadsUrl) cards.push({ icon: '🧵', title: 'THREADS', tagline: '追蹤帳號,最新消息不錯過', url: settings.threadsUrl });
   document.getElementById('footerSocialCards').innerHTML = cards
     .map(c => `<a href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer" class="footer-social-card">
