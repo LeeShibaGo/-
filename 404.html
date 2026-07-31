@@ -1398,7 +1398,7 @@ function applyUrlParams(){
 
 function updateUrl(){
   let path = SITE_BASE_PATH;
-  if(currentBrand !== 'all'){
+  if(currentTier !== 'all' && currentBrand !== 'all'){
     path += encodeURIComponent(currentBrand);
     if(currentSubtype !== 'all'){
       path += '/' + encodeURIComponent(currentSubtype);
@@ -1530,13 +1530,6 @@ function renderBrandTabs(){
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       currentBrand = btn.dataset.brand;
-      // 品牌現在不用先選大分類(國家)就能直接點,這裡順便把大分類(國家)
-      // 設成這個品牌對應的分類,不然網址列不會寫入品牌、畫面上的大分類分頁
-      // 也不會跟著反白,兩邊會對不起來。
-      if(currentBrand !== 'all'){
-        const sample = products.find(p => productBrand(p) === currentBrand);
-        currentTier = sample ? productTier(sample) : 'all';
-      }
       currentGroup = 'all'; // 換品牌時,大分類/種類/系列篩選重設
       currentSubtype = 'all';
       currentSeries = 'all';
