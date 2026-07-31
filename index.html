@@ -1480,9 +1480,9 @@ function renderCountryTabs(){
 
 function renderBrandTabs(){
   const wrap = document.getElementById('brandTabs');
-  // 只有選定某個大分類(不是「全部」)時,才顯示底下的品牌標籤
-  if(currentTier === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => productTier(p) === currentTier);
+  // 品牌選單現在收在右上角的獨立選單裡(跟頁面上的大分類篩選分開),
+  // 沒選大分類時就顯示全部品牌,不然選單一打開會是空的,手機上完全看不到內容。
+  const scoped = currentTier === 'all' ? products : products.filter(p => productTier(p) === currentTier);
   const brands = Array.from(new Set(scoped.map(productBrand).filter(Boolean)));
   if(brands.length === 0){ wrap.innerHTML = ''; return; }
   const all = ['all', ...brands];
@@ -1508,7 +1508,8 @@ function renderGroupTabs(){
   const wrap = document.getElementById('groupTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的大分類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  let scoped = products.filter(p => productBrand(p) === currentBrand);
+  if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
   const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean)));
   // 這個品牌底下只有一種大分類,沒必要多一排標籤
   if(groups.length < 2){ wrap.innerHTML = ''; return; }
@@ -1530,7 +1531,8 @@ function renderSubtypeTabs(){
   const wrap = document.getElementById('subtypeTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的種類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  let scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  let scoped = products.filter(p => productBrand(p) === currentBrand);
+  if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
   }
@@ -1553,7 +1555,8 @@ function renderSeriesTabs(){
   const wrap = document.getElementById('seriesTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的系列標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  let scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  let scoped = products.filter(p => productBrand(p) === currentBrand);
+  if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
   }
@@ -1585,21 +1588,24 @@ function renderProducts(){
     grid.innerHTML = '<div class="empty-note">目前尚未上架商品。</div>';
     return;
   }
+  // 各層篩選(大分類/品牌/種類分類/種類/系列)各自獨立套用,不互相依賴選擇順序——
+  // 品牌選單現在可以在還沒選大分類時就直接選品牌,所以不能像以前那樣把品牌以下的
+  // 篩選都包在「有選大分類」的條件裡面,不然沒選大分類時選品牌會完全沒作用。
   let list = products;
   if(currentTier !== 'all'){
     list = list.filter(p => productTier(p) === currentTier);
-    if(currentBrand !== 'all'){
-      list = list.filter(p => productBrand(p) === currentBrand);
-      if(currentGroup !== 'all'){
-        list = list.filter(p => subtypeGroup(p.subtype) === currentGroup);
-      }
-      if(currentSubtype !== 'all'){
-        list = list.filter(p => p.subtype === currentSubtype);
-      }
-      if(currentSeries !== 'all'){
-        list = list.filter(p => p.series === currentSeries);
-      }
-    }
+  }
+  if(currentBrand !== 'all'){
+    list = list.filter(p => productBrand(p) === currentBrand);
+  }
+  if(currentGroup !== 'all'){
+    list = list.filter(p => subtypeGroup(p.subtype) === currentGroup);
+  }
+  if(currentSubtype !== 'all'){
+    list = list.filter(p => p.subtype === currentSubtype);
+  }
+  if(currentSeries !== 'all'){
+    list = list.filter(p => p.series === currentSeries);
   }
   const q = searchQuery.trim().toLowerCase();
   if(q){
