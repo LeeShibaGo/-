@@ -62,6 +62,20 @@
     background: linear-gradient(180deg, #FFFFFF, var(--bg-page));
     border-bottom: 1px solid var(--line-onlight);
   }
+  .flight-banner{ background: var(--ink); color: var(--paper); }
+  .flight-banner-inner{
+    max-width:1080px; margin:0 auto; padding:10px 20px;
+    display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap;
+    font-size:13px; font-weight:600; letter-spacing:0.02em;
+  }
+  .flight-banner-inner b{ font-family:'JetBrains Mono',monospace; font-weight:700; margin-left:6px; }
+  .hamburger-btn{
+    background: transparent; border:1px solid var(--line-strong-onlight); color: var(--text-page);
+    width:40px; height:40px; border-radius:50%; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    transition: all .2s ease; flex-shrink:0;
+  }
+  .hamburger-btn:hover{ border-color:var(--gold); }
   .board-top{
     max-width:1080px; margin:0 auto; padding: 22px 20px 0;
     display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
@@ -472,6 +486,13 @@
 
 <div class="mobile-sticky-bar" id="mobileStickyBar" title="回到首頁">柴代購 ShibaGo</div>
 
+<div class="flight-banner" id="flightBanner" style="display:none;">
+  <div class="flight-banner-inner">
+    <span id="flightDepartureLine" style="display:none;">🛫 起飛時間:<b id="flightDepartureText"></b></span>
+    <span id="flightReturnLine" style="display:none;">🛬 回台時間:<b id="flightReturnText"></b></span>
+  </div>
+</div>
+
 <div class="board-outer">
   <div class="board-top">
     <div id="logoHomeLink" style="cursor:pointer;" title="回到首頁">
@@ -489,9 +510,10 @@
         <span id="userName" style="font-size:13px; font-weight:600; color:var(--text-page);"></span>
         <button class="ghost-btn" id="logoutBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); padding:4px 10px; font-size:12px;">登出</button>
       </div>
+      <button class="hamburger-btn" id="categoryMenuBtn" aria-label="商品分類" title="商品分類">☰</button>
     </div>
   </div>
-  <div class="board">
+  <div class="board" style="display:none;">
     <div class="board-panel">
       <div class="batch-status" id="batchStatusLine" style="display:none;">📦 <span id="batchStatusText"></span></div>
       <div class="rate-cols">
@@ -511,6 +533,18 @@
         <div class="ship-line" style="margin-top:4px;">下單需先付 <b>50%</b> 訂金</div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 商品分類選單(品牌/大分類),點右上角 ☰ 展開 -->
+<div class="overlay" id="categoryMenuOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>商品分類</h2>
+      <button class="close-x" id="closeCategoryMenu">✕</button>
+    </div>
+    <div class="cat-tabs" id="brandTabs"></div>
+    <div class="cat-tabs subcat" id="groupTabs"></div>
   </div>
 </div>
 
@@ -535,8 +569,6 @@
   <div class="shop-layout">
     <aside class="cat-sidebar">
       <div class="cat-tabs" id="countryTabs"></div>
-      <div class="cat-tabs subcat" id="brandTabs"></div>
-      <div class="cat-tabs subcat" id="groupTabs"></div>
       <div class="cat-tabs subcat" id="subtypeTabs"></div>
       <div class="cat-tabs subcat" id="seriesTabs"></div>
     </aside>
@@ -803,6 +835,11 @@
       </div>
       <label style="margin-top:16px;">本期時程精簡版(直接顯示在首頁看板上,不用點按鈕客人就看得到;例如「收單至 6/29・6/8 從日本出貨・預計 7/3 抵台」,留空則不顯示,每次開新一團記得回來更新)</label>
       <input type="text" id="batchStatusInput" placeholder="收單至 6/29・6/8 從日本出貨・預計 7/3 抵台">
+      <label style="margin-top:16px;">起飛/回台時間(顯示在首頁最上面那條橫幅,自由填寫格式;兩個都留空就不顯示這條橫幅)</label>
+      <div class="field-row">
+        <div><label>起飛時間</label><input type="text" id="departureTimeInput" placeholder="例如:2026/08/05 14:20"></div>
+        <div><label>回台時間</label><input type="text" id="returnTimeInput" placeholder="例如:2026/08/12 21:00"></div>
+      </div>
       <label style="margin-top:16px;">代購須知(本期收單期間、可代購品項、下單流程等,客人點「代購須知」按鈕會看到這段文字;每次開新一團記得回來更新日期)</label>
       <textarea id="purchaseGuideInput" style="min-height:220px;"></textarea>
       <label style="margin-top:16px;">國內取貨方式與運費(結帳時客人可以選,金額會自動加進訂單總額;一行一個,格式是「名稱,金額」)</label>
@@ -956,6 +993,10 @@ const DEFAULT_SETTINGS = {
   // 本期收單/出貨/抵台時程的精簡版,會直接顯示在首頁看板上(不用點「代購須知」
   // 才看得到),每次開新一團記得回來更新;詳細版規則還是寫在 purchaseGuide 裡。
   batchStatus: '收單至 6/29・6/8 從日本出貨・預計 7/3 抵台',
+  // 老闆本人出國採購的起飛/回台時間,顯示在首頁最上面那條深色橫幅,
+  // 純文字自由填寫(例如「2026/08/05 14:20」),兩個都留空就不顯示整條橫幅。
+  departureTime: '',
+  returnTime: '',
   pin: '0000',
   payment: '第一銀行(007) 123-456-789　户名:王小姐\n轉帳後請截圖給老闆確認,謝謝您!',
   lineGroupUrl: 'https://line.me/ti/g2/khKQ6_1RbId40z6zQpTLA37XQNXEa4tT9vPd5w?utm_source=invitation&utm_medium=link_copy&utm_campaign=default',
@@ -1351,6 +1392,14 @@ function render(){
   } else {
     batchLine.style.display = 'none';
   }
+  // 起飛/回台時間橫幅:兩個都沒填就整條隱藏,填了哪個就顯示哪行。
+  const hasDeparture = settings.departureTime && settings.departureTime.trim();
+  const hasReturn = settings.returnTime && settings.returnTime.trim();
+  document.getElementById('flightBanner').style.display = (hasDeparture || hasReturn) ? '' : 'none';
+  document.getElementById('flightDepartureLine').style.display = hasDeparture ? '' : 'none';
+  document.getElementById('flightReturnLine').style.display = hasReturn ? '' : 'none';
+  if(hasDeparture) document.getElementById('flightDepartureText').textContent = settings.departureTime.trim();
+  if(hasReturn) document.getElementById('flightReturnText').textContent = settings.returnTime.trim();
   // 目前沒有韓幣商品的話,看板不需要顯示 KRW 匯率,不然客人會誤以為有韓國代購。
   // 之後如果又上架韓國商品,這裡會自動偵測到、自己重新顯示,不用手動切換。
   const hasKrProducts = products.some(p => (p.country || 'JP') === 'KR');
@@ -1446,6 +1495,11 @@ function renderBrandTabs(){
       currentSeries = 'all';
       currentPage = 1;
       renderProducts();
+      // 選完品牌後,如果底下沒有多個大分類可以再挑,就直接關掉選單;
+      // 有的話留著選單開著,讓客人接著點大分類。
+      if(document.getElementById('groupTabs').innerHTML.trim() === ''){
+        document.getElementById('categoryMenuOverlay').classList.remove('open');
+      }
     });
   });
 }
@@ -1467,6 +1521,7 @@ function renderGroupTabs(){
       currentSeries = 'all';
       currentPage = 1;
       renderProducts();
+      document.getElementById('categoryMenuOverlay').classList.remove('open');
     });
   });
 }
@@ -1977,6 +2032,12 @@ document.getElementById('closeLookup').onclick = () => document.getElementById('
 document.getElementById('logoHomeLink').onclick = () => {
   location.href = location.pathname;
 };
+document.getElementById('categoryMenuBtn').onclick = () => {
+  document.getElementById('categoryMenuOverlay').classList.add('open');
+};
+document.getElementById('closeCategoryMenu').onclick = () => {
+  document.getElementById('categoryMenuOverlay').classList.remove('open');
+};
 document.getElementById('mobileStickyBar').onclick = () => {
   location.href = location.pathname;
 };
@@ -2124,6 +2185,8 @@ function openAdmin(){
   document.getElementById('completedOrdersInput').value = settings.completedOrders || '';
   document.getElementById('lineCommunityMembersInput').value = settings.lineCommunityMembers || '';
   document.getElementById('batchStatusInput').value = settings.batchStatus || '';
+  document.getElementById('departureTimeInput').value = settings.departureTime || '';
+  document.getElementById('returnTimeInput').value = settings.returnTime || '';
   document.getElementById('purchaseGuideInput').value = settings.purchaseGuide || '';
   document.getElementById('deliveryOptionsInput').value = settings.deliveryOptions || '';
   document.getElementById('faqInput').value = settings.faq || '';
@@ -2214,6 +2277,8 @@ document.getElementById('saveShopBtn').onclick = async () => {
   const lineMembersVal = parseInt(document.getElementById('lineCommunityMembersInput').value, 10);
   settings.lineCommunityMembers = isNaN(lineMembersVal) ? null : lineMembersVal;
   settings.batchStatus = document.getElementById('batchStatusInput').value.trim();
+  settings.departureTime = document.getElementById('departureTimeInput').value.trim();
+  settings.returnTime = document.getElementById('returnTimeInput').value.trim();
   settings.purchaseGuide = document.getElementById('purchaseGuideInput').value;
   settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
   settings.faq = document.getElementById('faqInput').value;
