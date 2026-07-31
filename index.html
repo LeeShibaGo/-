@@ -69,13 +69,6 @@
     font-size:13px; font-weight:600; letter-spacing:0.02em;
   }
   .flight-banner-inner b{ font-family:'JetBrains Mono',monospace; font-weight:700; margin-left:6px; }
-  .hamburger-btn{
-    background: transparent; border:1px solid var(--line-strong-onlight); color: var(--text-page);
-    width:40px; height:40px; border-radius:50%; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; font-size:18px;
-    transition: all .2s ease; flex-shrink:0;
-  }
-  .hamburger-btn:hover{ border-color:var(--gold); }
   /* 換品牌/大分類時,商品區塊淡入+輕微位移一下,感覺比較像換了一頁,
      而不是同一頁的內容瞬間被替換掉。 */
   @keyframes pageFade{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
@@ -95,9 +88,6 @@
     }
     .board-top-nav .ghost-btn{
       padding:6px 6px; font-size:11px; white-space:nowrap; flex-shrink:0;
-    }
-    .board-top-nav .hamburger-btn{
-      width:30px; height:30px; font-size:14px; flex-shrink:0;
     }
     #userBadge{ flex-shrink:0; }
     #userBadge span{ white-space:nowrap; font-size:11px !important; }
@@ -538,7 +528,6 @@
         <span id="userName" style="font-size:13px; font-weight:600; color:var(--text-page);"></span>
         <button class="ghost-btn" id="logoutBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); padding:4px 10px; font-size:12px;">登出</button>
       </div>
-      <button class="hamburger-btn" id="categoryMenuBtn" aria-label="商品分類" title="商品分類">☰</button>
     </div>
   </div>
   <div class="board" style="display:none;">
@@ -564,18 +553,6 @@
   </div>
 </div>
 
-<!-- 商品分類選單(品牌/大分類),點右上角 ☰ 展開 -->
-<div class="overlay" id="categoryMenuOverlay">
-  <div class="sheet">
-    <div class="sheet-head">
-      <h2>商品分類</h2>
-      <button class="close-x" id="closeCategoryMenu">✕</button>
-    </div>
-    <div class="cat-tabs" id="brandTabs"></div>
-    <div class="cat-tabs subcat" id="groupTabs"></div>
-  </div>
-</div>
-
 <div class="wrap">
   <div class="trust-section">
     <div class="trust-stats" id="trustStats"></div>
@@ -597,6 +574,8 @@
   <div class="shop-layout">
     <aside class="cat-sidebar">
       <div class="cat-tabs" id="countryTabs"></div>
+      <div class="cat-tabs subcat" id="brandTabs"></div>
+      <div class="cat-tabs subcat" id="groupTabs"></div>
       <div class="cat-tabs subcat" id="subtypeTabs"></div>
       <div class="cat-tabs subcat" id="seriesTabs"></div>
     </aside>
@@ -1541,9 +1520,9 @@ function renderCountryTabs(){
 
 function renderBrandTabs(){
   const wrap = document.getElementById('brandTabs');
-  // 品牌選單現在收在右上角的獨立選單裡(跟頁面上的大分類篩選分開),
-  // 沒選大分類時就顯示全部品牌,不然選單一打開會是空的,手機上完全看不到內容。
-  const scoped = currentTier === 'all' ? products : products.filter(p => productTier(p) === currentTier);
+  // 只有選定某個大分類(不是「全部」)時,才顯示底下的品牌標籤
+  if(currentTier === 'all'){ wrap.innerHTML = ''; return; }
+  const scoped = products.filter(p => productTier(p) === currentTier);
   const brands = Array.from(new Set(scoped.map(productBrand).filter(Boolean)));
   if(brands.length === 0){ wrap.innerHTML = ''; return; }
   const all = ['all', ...brands];
@@ -1551,24 +1530,12 @@ function renderBrandTabs(){
   wrap.querySelectorAll('.cat-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       currentBrand = btn.dataset.brand;
-      // 品牌現在不用先選大分類(國家)就能直接點,這裡順便把大分類(國家)
-      // 設成這個品牌對應的分類,不然網址列不會寫入品牌、畫面上的大分類分頁
-      // 也不會跟著反白,兩邊會對不起來。
-      if(currentBrand !== 'all'){
-        const sample = products.find(p => productBrand(p) === currentBrand);
-        currentTier = sample ? productTier(sample) : 'all';
-      }
       currentGroup = 'all'; // 換品牌時,大分類/種類/系列篩選重設
       currentSubtype = 'all';
       currentSeries = 'all';
       currentPage = 1;
       renderProducts();
       triggerPageTransition();
-      // 選完品牌後,如果底下沒有多個大分類可以再挑,就直接關掉選單;
-      // 有的話留著選單開著,讓客人接著點大分類。
-      if(document.getElementById('groupTabs').innerHTML.trim() === ''){
-        document.getElementById('categoryMenuOverlay').classList.remove('open');
-      }
     });
   });
 }
@@ -1577,8 +1544,7 @@ function renderGroupTabs(){
   const wrap = document.getElementById('groupTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的大分類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  let scoped = products.filter(p => productBrand(p) === currentBrand);
-  if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
+  const scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
   const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean)));
   // 這個品牌底下只有一種大分類,沒必要多一排標籤
   if(groups.length < 2){ wrap.innerHTML = ''; return; }
@@ -1592,7 +1558,6 @@ function renderGroupTabs(){
       currentPage = 1;
       renderProducts();
       triggerPageTransition();
-      document.getElementById('categoryMenuOverlay').classList.remove('open');
     });
   });
 }
@@ -2107,12 +2072,6 @@ document.getElementById('orderLookupBtn').onclick = () => {
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
 document.getElementById('logoHomeLink').onclick = () => {
   location.href = location.pathname;
-};
-document.getElementById('categoryMenuBtn').onclick = () => {
-  document.getElementById('categoryMenuOverlay').classList.add('open');
-};
-document.getElementById('closeCategoryMenu').onclick = () => {
-  document.getElementById('categoryMenuOverlay').classList.remove('open');
 };
 document.getElementById('mobileStickyBar').onclick = () => {
   location.href = location.pathname;
