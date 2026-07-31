@@ -342,15 +342,38 @@
   }
   .testimonial-grid a:hover img{ transform:scale(1.05); }
 
-  .site-footer{ border-top:1px solid var(--line-onlight); padding: 28px 20px 120px; }
-  .site-footer-inner{ max-width:1080px; margin:0 auto; text-align:center; }
-  .site-footer-title{ font-size:12px; letter-spacing:0.12em; color:var(--muted-onlight); text-transform:uppercase; margin-bottom:14px; }
-  .social-links{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
-  .social-link{
-    display:inline-flex; align-items:center; gap:8px; background:transparent; border:1px solid var(--line-strong-onlight);
-    color:var(--text-page); padding:9px 16px; border-radius:20px; font-size:13px; text-decoration:none; transition:all .15s ease;
+  .site-footer{ border-top:1px solid var(--line-onlight); padding: 32px 20px 120px; }
+  .site-footer-inner{ max-width:1080px; margin:0 auto; }
+  .footer-social-cards{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px;
+    margin-bottom:28px;
   }
-  .social-link:hover{ border-color:var(--gold); color:var(--gold-dim); }
+  .footer-social-card{
+    display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+    background:#fff; border-radius:14px; padding:22px 16px; text-decoration:none;
+    box-shadow: var(--shadow); transition: transform .15s ease;
+  }
+  .footer-social-card:hover{ transform: translateY(-2px); }
+  .footer-social-card .card-title{ display:flex; align-items:center; gap:8px; font-weight:900; font-size:17px; color:var(--ink); letter-spacing:0.02em; }
+  .footer-social-card .card-tagline{ font-size:12px; color:var(--muted-onlight); }
+  .footer-divider{ border:none; border-top:1px solid var(--line-onlight); margin:0 0 28px; }
+  .footer-columns{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; text-align:left;
+  }
+  .footer-col-title{
+    font-size:13px; font-weight:700; letter-spacing:0.1em; color:var(--text-page);
+    text-transform:uppercase; margin-bottom:12px;
+  }
+  .footer-col-link{
+    display:block; width:100%; background:none; border:none; padding:0; margin-bottom:9px;
+    font-size:13px; color:var(--muted-onlight); cursor:pointer; text-decoration:none;
+    text-align:left; font-family:'Noto Sans TC',sans-serif; transition: color .15s ease;
+  }
+  .footer-col-link:hover{ color:var(--gold-dim); }
+  .footer-col-text{ font-size:13px; color:var(--muted-onlight); line-height:1.8; }
+  @media (max-width:640px){
+    .footer-columns{ grid-template-columns: repeat(2, 1fr); }
+  }
   /* 後台是淺色底,分頁按鈕要換成深色文字/邊框才看得清楚 */
   #tab-products .page-btn{ border-color:#D8D2C3; color:#6B7686; }
   #tab-products .page-btn:hover:not(:disabled){ color:var(--ink); border-color:var(--stamp); }
@@ -604,8 +627,24 @@
 
 <footer class="site-footer">
   <div class="site-footer-inner">
-    <div class="site-footer-title">聯繫我們 / 客製化代購</div>
-    <div id="socialLinks" class="social-links"></div>
+    <div class="footer-social-cards" id="footerSocialCards"></div>
+    <hr class="footer-divider">
+    <div class="footer-columns">
+      <div class="footer-col">
+        <div class="footer-col-title">INFORMATION</div>
+        <button type="button" class="footer-col-link" id="footerGuideBtn">代購須知</button>
+        <button type="button" class="footer-col-link" id="footerFaqBtn">FAQ</button>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">CONTACT US</div>
+        <a class="footer-col-link" id="footerCustomRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">客製化代購</a>
+        <button type="button" class="footer-col-link" id="footerLineInquiryBtn">LINE 詢問</button>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">LINE 客服</div>
+        <div class="footer-col-text" id="footerLineIdText"></div>
+      </div>
+    </div>
   </div>
 </footer>
 
@@ -2133,26 +2172,44 @@ document.getElementById('faqBtn').onclick = () => {
 };
 document.getElementById('closeFaq').onclick = () => document.getElementById('faqOverlay').classList.remove('open');
 
+// 頁尾的「代購須知」「FAQ」「LINE 詢問」直接借用上面已經寫好的按鈕邏輯,不重複一份。
+document.getElementById('footerGuideBtn').onclick = () => document.getElementById('purchaseGuideBtn').click();
+document.getElementById('footerFaqBtn').onclick = () => document.getElementById('faqBtn').click();
+document.getElementById('footerLineInquiryBtn').onclick = () => document.getElementById('cartBarLineBtn').click();
+
 // ===== 客製化代購 / 聯繫方式(直接顯示連結,不用再點開視窗) =====
 function lineOfficialUrl(id){
   return `https://line.me/R/ti/p/${encodeURIComponent(id)}`;
 }
 function renderSocialLinks(){
   const customLink = document.getElementById('customRequestLink');
+  const footerCustomLink = document.getElementById('footerCustomRequestLink');
   if(settings.lineOfficialId){
     customLink.href = lineOfficialUrl(settings.lineOfficialId);
     customLink.style.display = '';
+    footerCustomLink.href = lineOfficialUrl(settings.lineOfficialId);
+    footerCustomLink.style.display = '';
   } else {
     customLink.style.display = 'none';
+    footerCustomLink.style.display = 'none';
   }
 
-  const links = [];
-  if(settings.lineGroupUrl) links.push({ label: '加入 LINE 社群', url: settings.lineGroupUrl });
-  if(settings.lineOfficialId) links.push({ label: `LINE 官方帳號(${settings.lineOfficialId})`, url: lineOfficialUrl(settings.lineOfficialId) });
-  if(settings.threadsUrl) links.push({ label: '追蹤 Threads', url: settings.threadsUrl });
-  document.getElementById('socialLinks').innerHTML = links
-    .map(l => `<a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="social-link">${escapeHtml(l.label)}</a>`)
+  // 頁尾上排的社群卡片,只列這個店真正有在經營的管道(LINE 社群/官方帳號/Threads),
+  // 沒有粉專/IG 就不硬湊。
+  const cards = [];
+  if(settings.lineOfficialId) cards.push({ icon: '💬', title: 'LINE 官方帳號', tagline: '加入官方帳號,小柴在等你', url: lineOfficialUrl(settings.lineOfficialId) });
+  if(settings.lineGroupUrl) cards.push({ icon: '👥', title: 'LINE 社群', tagline: '加入社群,搶先看新品資訊', url: settings.lineGroupUrl });
+  if(settings.threadsUrl) cards.push({ icon: '🧵', title: 'THREADS', tagline: '追蹤帳號,最新消息不錯過', url: settings.threadsUrl });
+  document.getElementById('footerSocialCards').innerHTML = cards
+    .map(c => `<a href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer" class="footer-social-card">
+      <div class="card-title">${c.icon} ${escapeHtml(c.title)}</div>
+      <div class="card-tagline">${escapeHtml(c.tagline)}</div>
+    </a>`)
     .join('');
+
+  document.getElementById('footerLineIdText').textContent = settings.lineOfficialId
+    ? `官方 LINE ID:${settings.lineOfficialId}`
+    : '老闆還沒設定 LINE 官方帳號';
 }
 
 // 客戶真實回饋截圖(LINE 對話截圖,證明不是編出來的評價)
