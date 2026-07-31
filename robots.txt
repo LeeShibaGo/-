@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://leeshibago.github.io/-/sitemap.xml

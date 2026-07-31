@@ -911,6 +911,8 @@
       <textarea id="deliveryOptionsInput" style="min-height:90px; font-family:'JetBrains Mono',monospace; font-size:13px;" placeholder="賣貨便,38&#10;7-11 店到店,60&#10;台中市區面交,0"></textarea>
       <label style="margin-top:16px;">常見問題 FAQ(客人點「FAQ」按鈕會看到;每題用一行「---」分隔,每題第一行是問題、下面是答案)</label>
       <textarea id="faqInput" style="min-height:220px; font-size:13px;"></textarea>
+      <label style="margin-top:16px;">品牌介紹文字(給搜尋引擎用的品牌頁面顯示,例如 /brand/aape/;每個品牌用一行「---」分隔,每組第一行要跟商品的品牌名稱完全一樣、其餘是介紹內文,沒寫到的品牌頁面先留空白,之後可以陸續補)</label>
+      <textarea id="brandIntrosInput" style="min-height:160px; font-size:13px;" placeholder="AAPE&#10;AAPE 是 A BATHING APE 旗下的年輕支線,以猿人迷彩、鯊魚拉鍊外套等經典元素聞名...&#10;---&#10;Human Made&#10;Human Made 由 NIGO 創立,融合復古美式與日系工藝..."></textarea>
       <label style="margin-top:16px;">設定密碼(老闆模式進入密碼)</label>
       <input type="text" id="pinChangeInput">
       <button class="primary-btn" id="saveShopBtn">儲存店家資訊</button>
@@ -1062,6 +1064,11 @@ const DEFAULT_SETTINGS = {
   // 純文字自由填寫(例如「2026/08/05 14:20」),兩個都留空就不顯示整條橫幅。
   departureTime: '',
   returnTime: '',
+  // 每個品牌的介紹文字,給 SEO 用的靜態品牌頁面(brand/{品牌}/index.html)顯示。
+  // 格式比照 FAQ,一個品牌一組用 --- 分隔,每組第一行是品牌名稱(要跟商品的
+  // brand 欄位完全一樣才對得到)、其餘是介紹內文。沒寫到的品牌,靜態頁面
+  // 就先留空白讓老闆之後補。
+  brandIntros: '',
   pin: '0000',
   payment: '第一銀行(007) 123-456-789　户名:王小姐\n轉帳後請截圖給老闆確認,謝謝您!',
   lineGroupUrl: 'https://line.me/ti/g2/khKQ6_1RbId40z6zQpTLA37XQNXEa4tT9vPd5w?utm_source=invitation&utm_medium=link_copy&utm_campaign=default',
@@ -2310,6 +2317,7 @@ function openAdmin(){
   document.getElementById('purchaseGuideInput').value = settings.purchaseGuide || '';
   document.getElementById('deliveryOptionsInput').value = settings.deliveryOptions || '';
   document.getElementById('faqInput').value = settings.faq || '';
+  document.getElementById('brandIntrosInput').value = settings.brandIntros || '';
   document.getElementById('pinChangeInput').value = settings.pin;
   resetProductForm();
   renderProductAdminList();
@@ -2402,6 +2410,7 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.purchaseGuide = document.getElementById('purchaseGuideInput').value;
   settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
   settings.faq = document.getElementById('faqInput').value;
+  settings.brandIntros = document.getElementById('brandIntrosInput').value;
   settings.pin = document.getElementById('pinChangeInput').value.trim() || settings.pin;
   await storageSet(SETTINGS_KEY, settings, true);
   render();
