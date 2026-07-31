@@ -398,20 +398,35 @@
   .img-preview-wrap img{ width:56px; height:56px; object-fit:cover; border-radius:8px; border:1px solid #D8D2C3; }
   .admin-thumb{ width:40px; height:40px; object-fit:cover; border-radius:7px; flex-shrink:0; border:1px solid #D8D2C3; }
 
-  /* ===== Floating cart bar ===== */
+  /* ===== Floating action bar:一直固定在畫面最下面,不用等購物車有東西、
+     也不用滑到頁面上面才找得到 ===== */
   .cart-bar{
     position:fixed; left:0; right:0; bottom:0;
     background: #FFFFFF; border-top:1px solid var(--line-onlight);
-    padding: 14px 20px; display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 14px; display:flex; align-items:center; justify-content:center;
     z-index:40; box-shadow: 0 -10px 30px rgba(20,31,43,0.12);
-    transform: translateY(110%); transition: transform .25s ease;
   }
-  .cart-bar.show{ transform: translateY(0); }
-  .cart-bar-inner{ max-width:1080px; margin:0 auto; width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-  .cart-info{ font-size:14px; color:var(--text-page); }
-  .cart-info b{ color:var(--stamp); font-family:'JetBrains Mono',monospace; }
-  .cart-btn{ background:var(--gold); color:var(--ink); border:none; padding:11px 20px; border-radius:10px; font-weight:700; cursor:pointer; }
-  .cart-btn:hover{ background: var(--amber); }
+  .cart-bar-inner{ max-width:1080px; margin:0 auto; width:100%; display:flex; align-items:stretch; gap:8px; }
+  .cart-bar-btn{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
+    padding:12px 6px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer;
+    border:none; text-decoration:none; position:relative; white-space:nowrap;
+    font-family:'Noto Sans TC', sans-serif; transition: transform .15s ease;
+  }
+  .cart-bar-btn:hover{ transform: translateY(-1px); }
+  .cart-bar-btn.line{ background:#EAF7EA; color:#2E7D4F; border:1px solid #BFE6C4; }
+  .cart-bar-btn.add{ background:transparent; color:var(--ink); border:1px solid var(--line-strong-onlight); }
+  .cart-bar-btn.buy{ background:var(--gold); color:var(--ink); }
+  .cart-bar-btn.buy:hover{ background: var(--amber); }
+  .cart-bar-badge{
+    position:absolute; top:-7px; right:-4px; background:var(--stamp); color:#fff;
+    font-size:10px; font-family:'JetBrains Mono',monospace; font-weight:700;
+    min-width:17px; height:17px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    padding:0 3px; border:2px solid #fff;
+  }
+  @media (max-width: 480px){
+    .cart-bar-btn{ font-size:12px; padding:11px 4px; }
+  }
 
   /* ===== Drawer / Modal shared ===== */
   .overlay{
@@ -594,11 +609,15 @@
   </div>
 </footer>
 
-<!-- Floating cart bar -->
+<!-- Floating action bar:一直固定在畫面最下面 -->
 <div class="cart-bar" id="cartBar">
   <div class="cart-bar-inner">
-    <div class="cart-info">已選 <b id="cartCount">0</b> 件・預估總額 <b id="cartSubtotal">NT$0</b></div>
-    <button class="cart-btn" id="openCartBtn">前往結帳 →</button>
+    <button type="button" class="cart-bar-btn line" id="cartBarLineBtn">💬 LINE詢問</button>
+    <button type="button" class="cart-bar-btn add" id="cartBarAddBtn">
+      🛒 加入購物車
+      <span class="cart-bar-badge" id="cartBarBadge" style="display:none;">0</span>
+    </button>
+    <button type="button" class="cart-bar-btn buy" id="openCartBtn">立即購買</button>
   </div>
 </div>
 
@@ -1907,17 +1926,26 @@ function computeTotals(){
 }
 
 function renderCartBar(){
-  const { lines, total } = computeTotals();
+  const { lines } = computeTotals();
   const count = lines.reduce((s,l)=> s+l.qty, 0);
-  document.getElementById('cartCount').textContent = count;
-  document.getElementById('cartSubtotal').textContent = fmtMoney(total);
-  document.getElementById('cartBar').classList.toggle('show', count > 0);
+  const badge = document.getElementById('cartBarBadge');
+  badge.textContent = count;
+  badge.style.display = count > 0 ? '' : 'none';
 }
 
 // ===== Cart drawer =====
+// 底部固定列的「加入購物車」「立即購買」目前先做一樣的事,都打開購物車/結帳畫面
+// (兩者本來就合在同一個畫面裡,沒有分開兩步)。
 document.getElementById('openCartBtn').onclick = () => {
   renderCartDrawer();
   document.getElementById('cartOverlay').classList.add('open');
+};
+document.getElementById('cartBarAddBtn').onclick = () => {
+  renderCartDrawer();
+  document.getElementById('cartOverlay').classList.add('open');
+};
+document.getElementById('cartBarLineBtn').onclick = () => {
+  window.open(lineOfficialUrl(settings.lineOfficialId), '_blank', 'noopener');
 };
 document.getElementById('closeCart').onclick = () => document.getElementById('cartOverlay').classList.remove('open');
 
