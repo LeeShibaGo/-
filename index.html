@@ -203,11 +203,14 @@
     to{ border-color: rgba(0,0,0,0.06); box-shadow: var(--shadow); }
   }
   .stamp{
+    /* 公斤數先隱藏(2026/08/01 要求),之後要恢復顯示就把 display:none 拿掉即可,
+       重量資料本身沒有刪,運費計算不受影響。 */
+    display:none;
     position:absolute; top:14px; right:14px;
     width:52px; height:52px; border-radius:50%;
     border: 2px solid var(--stamp);
     color: var(--stamp);
-    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    align-items:center; justify-content:center; flex-direction:column;
     font-family:'JetBrains Mono',monospace; font-weight:700;
     transform: rotate(8deg);
     font-size:11px; line-height:1.05;
@@ -215,7 +218,7 @@
   }
   .stamp small{ font-size:9px; font-weight:500; }
   .card h3{
-    font-family:'Noto Serif TC',serif; font-size:17px; margin:0; padding-right:60px; font-weight:700;
+    font-family:'Noto Serif TC',serif; font-size:17px; margin:0; padding-right:0; font-weight:700;
   }
   .price-row{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
   .price-jpy{ font-family:'JetBrains Mono',monospace; font-size:13px; color:#6B5B3E; }
@@ -2164,7 +2167,7 @@ function renderCartDrawer(){
       <div class="cart-item">
         <div>
           <div class="cart-item-name">${escapeHtml(l.name)}${l.color ? ' ['+escapeHtml(l.color)+']' : ''}${l.size ? ' ('+escapeHtml(l.size)+')' : ''}</div>
-          <div class="cart-item-sub">${currencySymbol(l.country || 'JP')}${l.jpy.toLocaleString('en-US')}・${l.weight}kg/件</div>
+          <div class="cart-item-sub">${currencySymbol(l.country || 'JP')}${l.jpy.toLocaleString('en-US')}</div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <div class="stepper">
