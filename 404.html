@@ -3,7 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>柴代購網站</title>
+<title>柴代購 ShibaGo - 日本韓國代購,正版保證,每周固定寄送</title>
+<meta name="description" content="柴代購 ShibaGo,日本/韓國潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。AAPE、BAPE、Salomon、Carhartt WIP、DESCENTE 等品牌即時更新現貨與價格。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="柴代購 ShibaGo - 日本韓國代購,正版保證,每周固定寄送">
+<meta property="og:description" content="日本/韓國潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。即時更新現貨與價格。">
+<meta property="og:image" content="https://leeshibago.github.io/-/shiba-avatar.jpg">
+<meta property="og:url" content="https://leeshibago.github.io/-/">
+<link rel="canonical" href="https://leeshibago.github.io/-/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"柴代購 ShibaGo","url":"https://leeshibago.github.io/-/","logo":"https://leeshibago.github.io/-/shiba-avatar.jpg","description":"日本/韓國潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。"}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -318,6 +328,26 @@
   .page-btn.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; }
   .page-btn:disabled{ opacity:0.35; cursor:not-allowed; }
 
+  .hero-cta{ margin: 18px 0; display:flex; justify-content:center; }
+  .hero-cta-inner{
+    background:var(--ink); color:var(--paper); border-radius:var(--radius);
+    padding:28px 32px; text-align:center; max-width:520px; width:100%;
+    box-shadow: var(--shadow);
+  }
+  .hero-cta-title{ font-family:'Noto Serif TC',serif; font-size:24px; font-weight:900; letter-spacing:1px; }
+  .hero-cta-sub{ font-size:14px; color:var(--muted); margin-top:8px; }
+  .hero-cta-arrow{ font-size:20px; color:var(--gold); margin:10px 0 4px; }
+  .hero-cta-btn{
+    display:inline-block; margin-top:6px; background:var(--gold); color:var(--ink);
+    font-weight:700; font-size:15px; padding:12px 32px; border-radius:999px;
+    text-decoration:none;
+  }
+  .hero-cta-btn:hover{ background:var(--amber); }
+  @media (max-width:640px){
+    .hero-cta-inner{ padding:22px 20px; }
+    .hero-cta-title{ font-size:20px; }
+  }
+
   .trust-section{ margin: 22px 0 34px; }
   .trust-stats{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:22px; }
   .trust-stat{
@@ -588,6 +618,16 @@
         <div class="ship-line" style="margin-top:4px;">下單需先付 <b>50%</b> 訂金</div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="hero-cta">
+  <div class="hero-cta-inner">
+    <div class="hero-cta-title">日本代購</div>
+    <div class="hero-cta-sub">正版保證</div>
+    <div class="hero-cta-sub">每周固定寄送,每月親飛日本</div>
+    <div class="hero-cta-arrow">↓</div>
+    <a class="hero-cta-btn" id="heroCtaLineBtn" href="#" target="_blank" rel="noopener noreferrer">立即加入 LINE</a>
   </div>
 </div>
 
@@ -1186,6 +1226,7 @@ const TIER_BY_BRAND = {
   'Lacoste': '潮流品牌',
   'Onitsuka Tiger': '潮流品牌',
   'Carhartt WIP': '潮流品牌',
+  'GU': '生活選物',
 };
 const TIER_ORDER = ['精品', '運動品牌', '潮流品牌', '生活選物'];
 function productTier(p){ return TIER_BY_BRAND[productBrand(p)] || '生活選物'; }
@@ -2191,11 +2232,13 @@ function lineOfficialUrl(id){
 function renderSocialLinks(){
   const customLink = document.getElementById('customRequestLink');
   const footerCustomLink = document.getElementById('footerCustomRequestLink');
+  const heroCtaLineBtn = document.getElementById('heroCtaLineBtn');
   if(settings.lineOfficialId){
     customLink.href = lineOfficialUrl(settings.lineOfficialId);
     customLink.style.display = '';
     footerCustomLink.href = lineOfficialUrl(settings.lineOfficialId);
     footerCustomLink.style.display = '';
+    heroCtaLineBtn.href = lineOfficialUrl(settings.lineOfficialId);
   } else {
     customLink.style.display = 'none';
     footerCustomLink.style.display = 'none';

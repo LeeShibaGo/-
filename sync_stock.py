@@ -7,8 +7,8 @@
   重新到官網抓一次「每個顏色每個尺寸的庫存」和「目前售價」,
   直接更新 Firebase 上的商品資料,客人看到的缺貨狀態最多只落後一天。
 
-兩種同步方式(2026-07-24 擴大範圍):
-  A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE):
+兩種同步方式(2026-07-24 擴大範圍,2026-08-01 加入 GU):
+  A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE、GU):
      這幾家官網的商品頁(或 API)本身就會把「每個顏色每個尺寸」的完整
      庫存用靜態資料吐出來,可以做到跟客人在網站上看到的一樣即時。
   B) 只同步價格(AAPE、Lacoste、J.Lindeberg、DESCENTE):
@@ -51,6 +51,7 @@
   python sync_stock.py lacoste    # 只跑 Lacoste(只同步價格)
   python sync_stock.py jlindeberg # 只跑 J.Lindeberg(只同步價格)
   python sync_stock.py descente   # 只跑 DESCENTE(只同步價格)
+  python sync_stock.py gu         # 只跑 GU
 """
 
 import json
@@ -600,6 +601,88 @@ def sync_honma(items):
     merge_and_save(cards)
 
 
+# ---------- GU ----------
+# GU 跟 Salomon/On/Onitsuka 一樣做「庫存+價格都同步」,細節見 scrape_gu.py
+# 開頭的說明(GU 是 Fast Retailing 集團的公開 API,沒有機器人偵測,
+# 用 productId 直接打 detail API 就能拿到最新的每個顏色+尺寸庫存跟價格,
+# 不像 On/Onitsuka 需要重新抓 HTML 頁面)。
+
+GU_API = "https://www.gu-global.com/jp/api/commerce/v5/ja/products"
+
+
+def gu_product_id_from_link(link):
+    m = re.search(r"/products/([^/]+)/", link or "")
+    return m.group(1) if m else None
+
+
+def sync_gu(items):
+    print("=== GU 同步開始 ===")
+    cards = [p for p in items if p.get("brand") == "GU"]
+    stock_changed = price_changed = errors = 0
+    for idx, card in enumerate(cards):
+        pid = gu_product_id_from_link(card.get("link"))
+        if not pid:
+            errors += 1
+            continue
+        try:
+            data = fetch(f"{GU_API}/{pid}?withPrices=true&withStocks=true&httpFailure=true", timeout=20).json()
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+
+        if data.get("status") != "ok":
+            # 商品在官網已經下架(通常是 302/404),全部標成缺貨,不刪除商品本身
+            if any(v > 0 for c in card.get("colors", []) for v in (c.get("stock") or {}).values()):
+                stock_changed += 1
+                delisted_lines.append(f"[GU] {card.get('name')} 官網已下架,標記全面缺貨")
+            for color in card.get("colors", []):
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+            time.sleep(0.3)
+            continue
+
+        by_color = {}
+        new_jpy = None
+        for l2 in data.get("result", {}).get("l2s", []):
+            color = l2.get("color") or {}
+            color_name = color.get("name") or color.get("displayCode") or "-"
+            size_key = fix_size_key((l2.get("size") or {}).get("name") or "-")
+            entry = by_color.setdefault(color_name, {"name": color_name, "sizes": [], "stock": {}})
+            if size_key not in entry["stock"]:
+                entry["sizes"].append(size_key)
+            entry["stock"][size_key] = max(entry["stock"].get(size_key, 0), 1 if l2.get("sales") else 0)
+            if new_jpy is None:
+                price_val = (l2.get("prices") or {}).get("base", {}).get("value")
+                if price_val:
+                    new_jpy = price_val
+        if not by_color:
+            errors += 1
+            continue
+
+        # detail API 不會回傳圖片網址,沿用原本每個顏色已經存好的圖片
+        old_images = {c.get("name"): c.get("image") for c in card.get("colors", []) if c.get("image")}
+        new_colors = list(by_color.values())
+        for c in new_colors:
+            if c["name"] in old_images:
+                c["image"] = old_images[c["name"]]
+        if new_colors != card.get("colors"):
+            stock_changed += 1
+        card["colors"] = new_colors
+
+        if new_jpy and new_jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[GU] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+
+        time.sleep(0.3)
+        if (idx + 1) % 100 == 0:
+            print(f"  進度 {idx+1}/{len(cards)}(庫存有變 {stock_changed},價格變動 {price_changed},錯誤 {errors})")
+    print(f"GU 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色組合,"
+          f"價格變動 {price_changed} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
+
+
 def main():
     only = sys.argv[1].lower() if len(sys.argv) > 1 else None
     items = load_products()
@@ -610,6 +693,8 @@ def main():
         sync_salomon(items)
     if only in (None, "on"):
         sync_on(items)
+    if only in (None, "gu"):
+        sync_gu(items)
     if only in (None, "onitsuka"):
         sync_onitsuka(items)
     if only in (None, "honma"):
