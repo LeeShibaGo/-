@@ -757,6 +757,27 @@
   </div>
 </div>
 
+<!-- 選「店到店」取貨方式時的匯全款確認 overlay -->
+<div class="overlay" id="storePickupConfirmOverlay">
+  <div class="sheet" style="max-width:440px;">
+    <div class="sheet-head">
+      <h2>選擇店到店取貨</h2>
+      <button class="close-x" id="closeStorePickupConfirm">✕</button>
+    </div>
+    <div style="font-size:14px; line-height:1.8; color:var(--text-page);">
+      選擇店到店取貨,取貨時無法當面補款,需要在下單時<b>先匯清訂單全額</b>(不是 50% 訂金),商品到貨後直接到超商取貨即可。
+    </div>
+    <label style="display:flex; align-items:flex-start; gap:8px; font-size:14px; margin:18px 0; cursor:pointer;">
+      <input type="checkbox" id="storePickupAgreeCheckbox" style="margin-top:3px;">
+      <span>我已了解並同意下單時先匯清訂單全額</span>
+    </label>
+    <div style="display:flex; gap:10px;">
+      <button class="ghost-btn" id="storePickupDisagreeBtn" style="flex:1; border-color:var(--line-strong-onlight); color:var(--text-page);">不同意,選別的方式</button>
+      <button class="primary-btn" id="storePickupAgreeBtn" style="flex:1;" disabled>確認選擇</button>
+    </div>
+  </div>
+</div>
+
 <!-- FAQ overlay -->
 <div class="overlay" id="faqOverlay">
   <div class="sheet" style="max-width:520px;">
@@ -1147,8 +1168,13 @@ The North Face、Carhartt、Aape、Human Made、Bape、Beams…
 
 運費
 賣貨便:$38
-7-11 店到店:$60
-台中市區面交:$0`,
+7-11 店到店:$60(需先匯清訂單全額,無法當面補尾款)
+台中市區面交:$0
+
+賣場
+賣場金額皆是人為處理,作業難免疏忽訂價錯誤,如商品價格有標錯,低於市價太多,已商品官方售價為依據,本公司保有取消訂單的權利。
+若對價格有疑問請先聯繫客服,若價格錯誤而仍下單,我們將直接取消訂單或是請客補款價差!
+如顧客在知情的情況下依舊下單,不願補償差額符合民法惡意下單之情形,我方將依法律流程處理,請悉知。`,
   // 國內取貨方式,每行一個「名稱,運費」,結帳時客人選一個,金額會自動加進訂單總額
   // (這是台灣境內的取貨/配送費用,跟上面「每公斤運費」是不同的東西 ——
   // 每公斤運費是日本/韓國運回台灣的國際運費,這裡是到customer手上最後一哩路的費用)
@@ -1999,6 +2025,24 @@ function parseDeliveryOptions(){
 }
 
 let selectedDeliveryLabel = null; // 客人在結帳畫面選的國內取貨方式
+let pendingDeliveryLabel = null; // 選「店到店」後,等使用者在確認彈窗裡同意/不同意之前暫存的選項
+
+document.getElementById('storePickupAgreeCheckbox').addEventListener('change', (e) => {
+  document.getElementById('storePickupAgreeBtn').disabled = !e.target.checked;
+});
+document.getElementById('storePickupAgreeBtn').onclick = () => {
+  if(pendingDeliveryLabel) selectedDeliveryLabel = pendingDeliveryLabel;
+  pendingDeliveryLabel = null;
+  document.getElementById('storePickupConfirmOverlay').classList.remove('open');
+  renderCartDrawer();
+};
+function cancelStorePickupPending(){
+  pendingDeliveryLabel = null;
+  document.getElementById('storePickupConfirmOverlay').classList.remove('open');
+  renderCartDrawer();
+}
+document.getElementById('storePickupDisagreeBtn').onclick = cancelStorePickupPending;
+document.getElementById('closeStorePickupConfirm').onclick = cancelStorePickupPending;
 
 function computeTotals(){
   const lines = cartLines();
@@ -2008,8 +2052,10 @@ function computeTotals(){
   const deliveryOption = deliveryOptions.find(o => o.label === selectedDeliveryLabel) || deliveryOptions[0] || null;
   const deliveryFee = deliveryOption ? deliveryOption.fee : 0;
   const total = subtotal + shipping + deliveryFee;
-  const deposit = total * 0.5;
-  return { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit };
+  // 店到店取貨無法當面補尾款,下單當下就要匯全額,不是 50% 訂金
+  const isStorePickup = !!(deliveryOption && deliveryOption.label.includes('店到店'));
+  const deposit = isStorePickup ? total : total * 0.5;
+  return { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit, isStorePickup };
 }
 
 function renderCartBar(){
@@ -2037,7 +2083,7 @@ document.getElementById('cartBarLineBtn').onclick = () => {
 document.getElementById('closeCart').onclick = () => document.getElementById('cartOverlay').classList.remove('open');
 
 function renderCartDrawer(){
-  const { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit } = computeTotals();
+  const { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit, isStorePickup } = computeTotals();
   if(deliveryOptions.length && !selectedDeliveryLabel){
     selectedDeliveryLabel = deliveryOptions[0].label;
   }
@@ -2083,8 +2129,19 @@ function renderCartDrawer(){
     `).join('');
     deliveryBox.querySelectorAll('input[name="deliveryOption"]').forEach(input => {
       input.addEventListener('change', () => {
-        selectedDeliveryLabel = input.value;
-        renderCartDrawer();
+        const label = input.value;
+        // 選「店到店」需要先跳出確認,同意先匯全額才真的套用這個選項,
+        // 不同意就讓畫面重繪回原本選的選項(selectedDeliveryLabel 還沒變)。
+        if(label.includes('店到店') && label !== selectedDeliveryLabel){
+          pendingDeliveryLabel = label;
+          document.getElementById('storePickupAgreeCheckbox').checked = false;
+          document.getElementById('storePickupAgreeBtn').disabled = true;
+          document.getElementById('storePickupConfirmOverlay').classList.add('open');
+          renderCartDrawer();
+        } else {
+          selectedDeliveryLabel = label;
+          renderCartDrawer();
+        }
       });
     });
   }
@@ -2094,9 +2151,11 @@ function renderCartDrawer(){
     <div class="totals-row"><span>國際運費估算</span><span>${fmtMoney(shipping)}</span></div>
     <div class="totals-row"><span>國內取貨運費${deliveryOption ? '(' + escapeHtml(deliveryOption.label) + ')' : ''}</span><span>${fmtMoney(deliveryFee)}</span></div>
     <div class="totals-row"><span>總金額</span><span>${fmtMoney(total)}</span></div>
-    <div class="totals-row deposit"><span>應付訂金(50%)</span><span>${fmtMoney(deposit)}</span></div>
+    <div class="totals-row deposit"><span>應付${isStorePickup ? '全額(店到店)' : '訂金(50%)'}</span><span>${fmtMoney(deposit)}</span></div>
   `;
-  document.getElementById('noticeBox').textContent = '訂金為總金額的 50%,老闆確認到款後會與您聯繫確認出貨,尾款於商品到貨前結清。';
+  document.getElementById('noticeBox').textContent = isStorePickup
+    ? '店到店取貨無法當面補尾款,下單需先匯清訂單全額,老闆確認到款後會安排出貨。'
+    : '訂金為總金額的 50%,老闆確認到款後會與您聯繫確認出貨,尾款於商品到貨前結清。';
   document.getElementById('submitOrderBtn').disabled = lines.length === 0;
 }
 
