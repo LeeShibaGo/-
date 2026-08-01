@@ -708,6 +708,7 @@
         <div class="footer-col-title">INFORMATION</div>
         <button type="button" class="footer-col-link" id="footerGuideBtn">代購須知</button>
         <button type="button" class="footer-col-link" id="footerFaqBtn">FAQ</button>
+        <button type="button" class="footer-col-link" id="footerOwnerLoginBtn" style="opacity:0.55; font-size:12px;">老闆登入</button>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">CONTACT US</div>
@@ -2420,6 +2421,9 @@ document.getElementById('closeFaq').onclick = () => document.getElementById('faq
 // 頁尾的「代購須知」「FAQ」「LINE 詢問」直接借用上面已經寫好的按鈕邏輯,不重複一份。
 document.getElementById('footerGuideBtn').onclick = () => document.getElementById('purchaseGuideBtn').click();
 document.getElementById('footerFaqBtn').onclick = () => document.getElementById('faqBtn').click();
+// 現在真正的防線是 Firebase 登入(帳號密碼),不再是「入口藏起來」,
+// 所以直接在頁尾放一個不顯眼的連結,不用再靠 ?owner=1 網址或長按觸發。
+document.getElementById('footerOwnerLoginBtn').onclick = () => openPinOverlay();
 document.getElementById('footerLineInquiryBtn').onclick = () => document.getElementById('cartBarLineBtn').click();
 
 // ===== 客製化代購 / 聯繫方式(直接顯示連結,不用再點開視窗) =====
