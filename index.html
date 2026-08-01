@@ -745,7 +745,7 @@
     <label style="margin-top:14px;">國內取貨方式</label>
     <div id="deliveryOptionsBox" class="delivery-options"></div>
     <div id="storeNameFieldWrap" style="display:none; margin-top:10px;">
-      <label>取貨 7-11 門市(選填,方便老闆確認取貨門市)</label>
+      <label>取貨 7-11 門市(必填)</label>
       <input type="text" id="custStoreName" placeholder="例如:台中中華門市">
     </div>
     <div class="totals" id="totalsBox"></div>
@@ -2301,6 +2301,8 @@ document.getElementById('submitOrderBtn').onclick = () => {
   const email = document.getElementById('custEmail').value.trim();
   if(!name || !phone || !email){ toast('請填寫姓名、電話與 Email'); return; }
   if(!/^\S+@\S+\.\S+$/.test(email)){ toast('請填寫正確格式的 Email'); return; }
+  const { isStorePickup } = computeTotals();
+  if(isStorePickup && !document.getElementById('custStoreName').value.trim()){ toast('請填寫取貨 7-11 門市'); return; }
   document.getElementById('lineFriendAddLink').href = lineOfficialUrl(settings.lineOfficialId);
   document.getElementById('lineFriendAgreeCheckbox').checked = false;
   document.getElementById('lineFriendConfirmSubmitBtn').disabled = true;
