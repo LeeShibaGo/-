@@ -274,10 +274,43 @@
   .cat-sidebar .cat-tabs.subcat{
     margin-top:0; padding-left:0; padding-top:10px; border-top:1px dashed var(--line-strong-onlight);
   }
+  .cat-sidebar .cat-tabs.subcat:first-child{ padding-top:0; border-top:none; }
   .cat-sidebar .cat-tab{
     width:100%; text-align:left; border-radius:8px; white-space:normal; line-height:1.4;
   }
   .shop-main{ flex:1; min-width:0; }
+
+  /* 上方橫式分類選單(取代原本的大分類/品牌兩層側邊標籤),
+     每個項目 hover/點擊展開一個品牌清單的下拉選單。 */
+  .top-cat-nav{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:4px;
+    background:#FFFFFF; border:1px solid var(--line-onlight); border-radius:var(--radius);
+    padding:8px 10px; margin-bottom:18px; position:relative; z-index:15;
+  }
+  .top-cat-nav-item{ position:relative; }
+  .top-cat-nav-btn{
+    background:transparent; border:none; color:var(--text-page); font-weight:700;
+    font-size:14px; padding:9px 16px; border-radius:8px; cursor:pointer;
+    font-family:'Noto Sans TC',sans-serif; white-space:nowrap;
+  }
+  .top-cat-nav-btn:hover, .top-cat-nav-btn.active{ background:var(--paper-2); color:var(--gold-dim); }
+  .top-cat-dropdown{
+    position:fixed; margin-top:6px;
+    background:#FFFFFF; border:1px solid var(--line-onlight); border-radius:12px;
+    box-shadow:var(--shadow); padding:8px; flex-direction:column; gap:2px;
+    min-width:170px; max-height:320px; overflow-y:auto; z-index:50;
+  }
+  .top-cat-dropdown button{
+    background:transparent; border:none; text-align:left; padding:8px 10px; border-radius:8px;
+    font-size:13px; color:var(--muted-onlight); cursor:pointer; font-family:'Noto Sans TC',sans-serif;
+    white-space:nowrap;
+  }
+  .top-cat-dropdown button:hover{ background:var(--paper-2); color:var(--text-page); }
+  .top-cat-dropdown button.active{ color:var(--gold-dim); font-weight:700; }
+  @media (max-width:640px){
+    .top-cat-nav{ overflow-x:auto; flex-wrap:nowrap; justify-content:flex-start; padding:7px 8px; }
+    .top-cat-nav-btn{ font-size:13px; padding:8px 12px; }
+  }
 
   /* 手機版:直式選單改成一整排橫向捲動的分類列,不然側邊欄長期佔掉螢幕寬度,
      商品卡片會被擠得很窄。改成堆疊在商品區「上方」,自然不佔用內容寬度,
@@ -648,11 +681,9 @@
 </div>
 
 <div class="wrap">
-  <h2 class="section-title">所有商品 <span>價格已依即時匯率換算,重量為預估空運/海運重量</span></h2>
+  <nav class="top-cat-nav" id="topCatNav"></nav>
   <div class="shop-layout">
     <aside class="cat-sidebar">
-      <div class="cat-tabs" id="countryTabs"></div>
-      <div class="cat-tabs subcat" id="brandTabs"></div>
       <div class="cat-tabs subcat" id="groupTabs"></div>
       <div class="cat-tabs subcat" id="subtypeTabs"></div>
       <div class="cat-tabs subcat" id="seriesTabs"></div>
@@ -1632,42 +1663,81 @@ function triggerPageTransition(){
   el.classList.add('page-transition');
 }
 
-function renderCountryTabs(){
-  const wrap = document.getElementById('countryTabs');
-  const tiers = Array.from(new Set(products.map(productTier))).sort((a,b) => TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b));
-  const all = ['all', ...tiers];
-  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentTier===c?'active':''}" data-tier="${escapeHtml(c)}">${c==='all' ? '全部' : escapeHtml(c)}</button>`).join('');
-  wrap.querySelectorAll('.cat-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentTier = btn.dataset.tier;
-      currentBrand = 'all'; // 換大分類時,底下的品牌/種類篩選重設
-      currentGroup = 'all';
-      currentSubtype = 'all';
-      currentSeries = 'all';
-      currentPage = 1;
-      renderProducts();
-    });
-  });
+// 原本「大分類(國家/精品/運動/潮流)」+「品牌」兩層側邊標籤,改成上方橫式選單,
+// 每個項目點開一個品牌清單下拉選單(仿照參考網站的上方選單列),不用先選大分類
+// 才看得到品牌,「所有品牌」則是不分大分類直接列出全部品牌。
+function closeAllTopCatDropdowns(){
+  document.querySelectorAll('.top-cat-dropdown').forEach(d => { d.style.display = 'none'; });
+}
+document.addEventListener('click', closeAllTopCatDropdowns);
+
+function scrollToProductGrid(){
+  const el = document.querySelector('.shop-main');
+  if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function renderBrandTabs(){
-  const wrap = document.getElementById('brandTabs');
-  // 只有選定某個大分類(不是「全部」)時,才顯示底下的品牌標籤
-  if(currentTier === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => productTier(p) === currentTier);
-  const brands = Array.from(new Set(scoped.map(productBrand).filter(Boolean)));
-  if(brands.length === 0){ wrap.innerHTML = ''; return; }
-  const all = ['all', ...brands];
-  wrap.innerHTML = all.map(c => `<button type="button" class="cat-tab ${currentBrand===c?'active':''}" data-brand="${escapeHtml(c)}">${c==='all' ? '全部品牌' : escapeHtml(c)}</button>`).join('');
-  wrap.querySelectorAll('.cat-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentBrand = btn.dataset.brand;
-      currentGroup = 'all'; // 換品牌時,大分類/種類/系列篩選重設
-      currentSubtype = 'all';
-      currentSeries = 'all';
-      currentPage = 1;
-      renderProducts();
-      triggerPageTransition();
+function applyTopCatSelection(tier, brand){
+  currentTier = tier;
+  currentBrand = brand;
+  currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all'; // 換大分類/品牌時,底下的種類/系列篩選重設
+  currentPage = 1;
+  closeAllTopCatDropdowns();
+  renderProducts();
+  triggerPageTransition();
+  scrollToProductGrid();
+}
+
+function renderTopCatNav(){
+  const nav = document.getElementById('topCatNav');
+  const tiers = Array.from(new Set(products.map(productTier))).sort((a,b) => TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b));
+  const brandsForTier = (tier) => Array.from(new Set(products.filter(p => productTier(p) === tier).map(productBrand).filter(Boolean)));
+  const allBrands = Array.from(new Set(products.map(productBrand).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+
+  const items = [
+    { key: 'all', label: '全部', brands: null },
+    ...tiers.map(t => ({ key: t, label: t, brands: brandsForTier(t) })),
+    { key: '__all_brands', label: '所有品牌', brands: allBrands },
+  ];
+
+  nav.innerHTML = items.map(it => {
+    const active = it.brands ? (it.key === '__all_brands' ? false : currentTier === it.key && currentBrand === 'all') : (currentTier === 'all' && currentBrand === 'all');
+    return `
+    <div class="top-cat-nav-item" data-key="${escapeHtml(it.key)}">
+      <button type="button" class="top-cat-nav-btn ${active ? 'active' : ''}">${escapeHtml(it.label)}${it.brands ? ' ▾' : ''}</button>
+      ${it.brands ? `<div class="top-cat-dropdown" style="display:none;">
+        ${it.key !== '__all_brands' ? `<button type="button" data-action="tier-all">全部${escapeHtml(it.label)}</button>` : ''}
+        ${it.brands.map(b => `<button type="button" data-action="brand" data-brand="${escapeHtml(b)}" class="${currentBrand===b?'active':''}">${escapeHtml(b)}</button>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  nav.querySelectorAll('.top-cat-nav-item').forEach(itemEl => {
+    const key = itemEl.dataset.key;
+    const btn = itemEl.querySelector('.top-cat-nav-btn');
+    const dropdown = itemEl.querySelector('.top-cat-dropdown');
+    if(!dropdown){
+      btn.addEventListener('click', (e) => { e.stopPropagation(); applyTopCatSelection('all', 'all'); });
+      return;
+    }
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wasOpen = dropdown.style.display !== 'none';
+      closeAllTopCatDropdowns();
+      if(!wasOpen){
+        // fixed 定位,位置用按鈕當下的螢幕座標現算,才不會被 .top-cat-nav
+        // 手機版的橫向捲動(overflow-x:auto)裁切掉——absolute 定位在捲動容器
+        // 裡面會被連著 overflow-y 一起裁掉,fixed 直接跳出捲動容器的裁切範圍。
+        const r = btn.getBoundingClientRect();
+        dropdown.style.left = Math.round(Math.min(r.left, window.innerWidth - 190)) + 'px';
+        dropdown.style.top = Math.round(r.bottom + 6) + 'px';
+        dropdown.style.display = 'flex';
+      }
+    });
+    dropdown.addEventListener('click', (e) => e.stopPropagation());
+    const tierAllBtn = dropdown.querySelector('button[data-action="tier-all"]');
+    if(tierAllBtn) tierAllBtn.addEventListener('click', () => applyTopCatSelection(key, 'all'));
+    dropdown.querySelectorAll('button[data-action="brand"]').forEach(b => {
+      b.addEventListener('click', () => applyTopCatSelection(key === '__all_brands' ? 'all' : key, b.dataset.brand));
     });
   });
 }
@@ -1745,8 +1815,7 @@ function renderSeriesTabs(){
 }
 
 function renderProducts(){
-  renderCountryTabs();
-  renderBrandTabs();
+  renderTopCatNav();
   renderGroupTabs();
   renderSubtypeTabs();
   renderSeriesTabs();
