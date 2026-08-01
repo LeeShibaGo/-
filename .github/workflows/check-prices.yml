@@ -22,6 +22,17 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # 2026-08-01 起資料庫規則鎖起來,商品讀寫需要服務帳號(Admin SDK)身分,
+      # 不能再用沒有驗證的 REST 端點直接 GET/PUT。金鑰存在 GitHub Secret 裡,
+      # 這裡寫成暫存檔,GOOGLE_APPLICATION_CREDENTIALS 是 firebase-admin 官方
+      # 會自動讀取的環境變數,設定過之後這個 job 剩下的步驟都不用再處理。
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          EOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
       # HONMA 的售價是頁面載入後才用 JS 算出來,一般的 HTTP 請求抓不到,
       # 需要用真的瀏覽器(Playwright)把 JS 跑完再讀畫面上的價格,
       # 所以要多這一步下載瀏覽器執行檔,其他品牌不需要。

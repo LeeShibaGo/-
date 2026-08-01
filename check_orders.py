@@ -21,6 +21,8 @@ import sys
 from pathlib import Path
 
 import requests
+import firebase_admin
+from firebase_admin import credentials, db
 
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
@@ -30,6 +32,18 @@ FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebaseda
 ORDERS_KEY = "daigou-orders-v1"
 SEEN_PATH = Path(__file__).parent / "last_seen_orders.json"
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "")
+
+# 2026-08-01 起訂單資料改用服務帳號(Admin SDK)讀取,見 sync_stock.py 裡
+# firebase_app() 的說明——資料庫規則鎖起來之後,只有這個身分讀得到訂單。
+_firebase_app = None
+
+
+def firebase_app():
+    global _firebase_app
+    if _firebase_app is None:
+        cred = credentials.ApplicationDefault()
+        _firebase_app = firebase_admin.initialize_app(cred, {"databaseURL": FIREBASE_DB_URL})
+    return _firebase_app
 
 
 def send_line(message):
@@ -71,9 +85,8 @@ def main():
         print("測試訊息已發送" if ok else "測試訊息發送失敗")
         return
 
-    res = requests.get(f"{FIREBASE_DB_URL}/{ORDERS_KEY}.json", timeout=30)
-    res.raise_for_status()
-    data = res.json() or []
+    firebase_app()
+    data = db.reference(ORDERS_KEY).get() or []
     orders = [o for o in (data if isinstance(data, list) else data.values()) if o]
 
     seen = set()

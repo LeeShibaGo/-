@@ -61,6 +61,8 @@ import sys
 import time
 
 import requests
+import firebase_admin
+from firebase_admin import credentials, db
 
 from scrape_on_full import extract_ldjson, extract_size_stock, fix_size_key
 from scrape_onitsuka import ENDPOINT as ONITSUKA_ENDPOINT, HEADERS as ONITSUKA_HEADERS, QUERY as ONITSUKA_QUERY
@@ -88,7 +90,8 @@ for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
-FIREBASE = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app/daigou-products-v1.json"
+FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
+PRODUCTS_PATH = "daigou-products-v1"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 ON_BASE = "https://www.on.com"
 
@@ -105,17 +108,34 @@ def fetch(url, retries=4, timeout=30):
             time.sleep(4 * (attempt + 1))
 
 
+# 2026-08-01 起改用 Firebase Admin SDK(服務帳號金鑰)讀寫商品資料,不再用
+# 沒有驗證的 REST 端點直接 GET/PUT——資料庫規則鎖起來之後,只有這個身分
+# (連同瀏覽器上真正登入的老闆)可以寫入,其他匿名請求會被拒絕。
+# 金鑰路徑由 GOOGLE_APPLICATION_CREDENTIALS 環境變數指定
+# (GitHub Actions 裡由 workflow 從 FIREBASE_SERVICE_ACCOUNT_KEY 這個
+# secret 寫成暫存檔、再設定這個環境變數,見 .github/workflows/*.yml)。
+_firebase_app = None
+
+
+def firebase_app():
+    global _firebase_app
+    if _firebase_app is None:
+        cred = credentials.ApplicationDefault()
+        _firebase_app = firebase_admin.initialize_app(cred, {"databaseURL": FIREBASE_DB_URL})
+    return _firebase_app
+
+
 def load_products():
-    data = fetch(FIREBASE, timeout=60).json()
-    items = data if isinstance(data, list) else list(data.values())
+    firebase_app()
+    data = db.reference(PRODUCTS_PATH).get()
+    items = data if isinstance(data, list) else list((data or {}).values())
     return [p for p in items if p]
 
 
 def save_products(items):
-    res = requests.put(FIREBASE, data=json.dumps(items, ensure_ascii=False).encode("utf-8"),
-                       headers={"Content-Type": "application/json"}, timeout=300)
-    res.raise_for_status()
-    print(f"Firebase 已更新(HTTP {res.status_code})")
+    firebase_app()
+    db.reference(PRODUCTS_PATH).set(items)
+    print("Firebase 已更新(Admin SDK)")
 
 
 def merge_and_save(updated_cards):

@@ -872,17 +872,19 @@
   </div>
 </div>
 
-<!-- Owner PIN overlay -->
+<!-- Owner login overlay -->
 <div class="overlay" id="pinOverlay">
   <div class="sheet" style="max-width:340px;">
     <div class="sheet-head">
       <h2>老闆模式</h2>
       <button class="close-x" id="closePin">✕</button>
     </div>
-    <label>請輸入設定密碼</label>
-    <input type="text" id="pinInput" placeholder="預設 0000">
-    <button class="primary-btn" id="pinSubmit">進入設定</button>
-    <div class="notice-box">此密碼僅為簡易區隔客人與老闆畫面,非真正的帳號安全機制,請勿用來保護機密資料。</div>
+    <label>Email</label>
+    <input type="email" id="pinEmailInput" placeholder="you@example.com" autocomplete="username">
+    <label>密碼</label>
+    <input type="password" id="pinInput" placeholder="密碼" autocomplete="current-password">
+    <button class="primary-btn" id="pinSubmit">登入</button>
+    <div class="notice-box" id="pinErrorBox" style="display:none; color:var(--stamp); border-color:var(--stamp);"></div>
   </div>
 </div>
 
@@ -891,7 +893,10 @@
   <div class="sheet" style="max-width:620px;">
     <div class="sheet-head">
       <h2>老闆後台</h2>
-      <button class="close-x" id="closeAdmin">✕</button>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button type="button" id="ownerLogoutBtn" style="background:none; border:none; color:#6B7686; cursor:pointer; font-size:13px; text-decoration:underline;">登出</button>
+        <button class="close-x" id="closeAdmin">✕</button>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab-btn active" data-tab="rate">匯率 / 運費</button>
@@ -1031,14 +1036,29 @@
       <textarea id="faqInput" style="min-height:220px; font-size:13px;"></textarea>
       <label style="margin-top:16px;">品牌介紹文字(給搜尋引擎用的品牌頁面顯示,例如 /brand/aape/;每個品牌用一行「---」分隔,每組第一行要跟商品的品牌名稱完全一樣、其餘是介紹內文,沒寫到的品牌頁面先留空白,之後可以陸續補)</label>
       <textarea id="brandIntrosInput" style="min-height:160px; font-size:13px;" placeholder="AAPE&#10;AAPE 是 A BATHING APE 旗下的年輕支線,以猿人迷彩、鯊魚拉鍊外套等經典元素聞名...&#10;---&#10;Human Made&#10;Human Made 由 NIGO 創立,融合復古美式與日系工藝..."></textarea>
-      <label style="margin-top:16px;">設定密碼(老闆模式進入密碼)</label>
-      <input type="text" id="pinChangeInput">
       <button class="primary-btn" id="saveShopBtn">儲存店家資訊</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 老闆登入用 Firebase Auth(2026-08-02 起取代單純密碼比對,見「Owner PIN flow」) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD96ORO0GApKjN_D2xi3sL_mbjyYT6Kx2k",
+  authDomain: "shibago-4dd3c.firebaseapp.com",
+  databaseURL: "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "shibago-4dd3c",
+  storageBucket: "shibago-4dd3c.firebasestorage.app",
+  messagingSenderId: "756826814359",
+  appId: "1:756826814359:web:0bd71f661b6856af4a36d2",
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+</script>
 
 <script>
 const SETTINGS_KEY = 'daigou-settings-v1';
@@ -2500,23 +2520,40 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
   `;
 };
 
-// ===== Owner PIN flow =====
-// 齒輪按鈕拿掉了,改成網址後面加 ?owner=1 才會跳密碼框(見 applyUrlParams()),
+// ===== Owner login flow(Firebase Auth,2026-08-02 起取代單純比對 settings.pin
+// 的簡易密碼——那組密碼跟其他設定值存在同一份沒有存取控制的資料庫裡,等於
+// 沒有鎖,現在改成真正的帳號密碼登入)=====
+// 齒輪按鈕拿掉了,改成網址後面加 ?owner=1 才會跳登入框(見 applyUrlParams()),
 // 頁面上沒有任何看得到、點得到的入口。這個參數只在進站當下讀一次,
 // updateUrl() 每次都會用目前的瀏覽狀態整個重寫網址列,owner 參數用過後就會自動被洗掉。
+// Firebase Auth 預設會把登入狀態存在瀏覽器裡,同一台裝置下次再開 ?owner=1
+// 不用重新輸入帳密,已經是登入狀態就直接進後台。
 function openPinOverlay(){
+  if(fbAuth.currentUser){
+    isOwner = true;
+    openAdmin();
+    return;
+  }
+  document.getElementById('pinEmailInput').value = '';
   document.getElementById('pinInput').value = '';
+  document.getElementById('pinErrorBox').style.display = 'none';
   document.getElementById('pinOverlay').classList.add('open');
 }
 document.getElementById('closePin').onclick = () => document.getElementById('pinOverlay').classList.remove('open');
-document.getElementById('pinSubmit').onclick = () => {
-  const val = document.getElementById('pinInput').value.trim();
-  if(val === settings.pin){
+document.getElementById('pinSubmit').onclick = async () => {
+  const email = document.getElementById('pinEmailInput').value.trim();
+  const password = document.getElementById('pinInput').value;
+  const errorBox = document.getElementById('pinErrorBox');
+  errorBox.style.display = 'none';
+  if(!email || !password){ toast('請輸入 Email 與密碼'); return; }
+  try{
+    await fbAuth.signInWithEmailAndPassword(email, password);
     document.getElementById('pinOverlay').classList.remove('open');
     isOwner = true;
     openAdmin();
-  } else {
-    toast('密碼不正確');
+  }catch(e){
+    errorBox.textContent = '登入失敗,請確認 Email 與密碼是否正確。';
+    errorBox.style.display = '';
   }
 };
 
@@ -2539,13 +2576,18 @@ function openAdmin(){
   document.getElementById('deliveryOptionsInput').value = settings.deliveryOptions || '';
   document.getElementById('faqInput').value = settings.faq || '';
   document.getElementById('brandIntrosInput').value = settings.brandIntros || '';
-  document.getElementById('pinChangeInput').value = settings.pin;
   resetProductForm();
   renderProductAdminList();
   renderOrdersAdminList();
   document.getElementById('adminOverlay').classList.add('open');
 }
 document.getElementById('closeAdmin').onclick = () => document.getElementById('adminOverlay').classList.remove('open');
+document.getElementById('ownerLogoutBtn').onclick = async () => {
+  await fbAuth.signOut();
+  isOwner = false;
+  document.getElementById('adminOverlay').classList.remove('open');
+  toast('已登出');
+};
 document.getElementById('showCompletedOrdersToggle').addEventListener('change', renderOrdersAdminList);
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2632,7 +2674,6 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
   settings.faq = document.getElementById('faqInput').value;
   settings.brandIntros = document.getElementById('brandIntrosInput').value;
-  settings.pin = document.getElementById('pinChangeInput').value.trim() || settings.pin;
   await storageSet(SETTINGS_KEY, settings, true);
   render();
   toast('店家資訊已儲存');

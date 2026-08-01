@@ -29,15 +29,27 @@ import re
 import sys
 
 import requests
+import firebase_admin
+from firebase_admin import credentials, db
 
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
-FIREBASE_PRODUCTS = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app/daigou-products-v1.json"
-FIREBASE_SETTINGS = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app/daigou-settings-v1.json"
-FIREBASE_ORDERS = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app/daigou-orders-v1.json"
+FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+# 2026-08-01 起改用服務帳號(Admin SDK)讀取,見 sync_stock.py 裡
+# firebase_app() 的說明——資料庫規則鎖起來之後,匿名 REST 請求讀不到訂單。
+_firebase_app = None
+
+
+def firebase_app():
+    global _firebase_app
+    if _firebase_app is None:
+        cred = credentials.ApplicationDefault()
+        _firebase_app = firebase_admin.initialize_app(cred, {"databaseURL": FIREBASE_DB_URL})
+    return _firebase_app
 
 SITE_BASE = "https://leeshibago.github.io/-"
 OUTPUT_DIR = "brand"
@@ -64,22 +76,20 @@ BRAND_SLUGS = {
 }
 
 
-def fetch_list(url):
+def fetch_list(path):
     """給 products/orders 用:Firebase 存的 key 如果不是連續數字索引,
     讀出來會是物件而不是陣列,這裡一律轉成陣列。"""
-    r = requests.get(url, headers=HEADERS, timeout=60)
-    r.raise_for_status()
-    data = r.json()
+    firebase_app()
+    data = db.reference(path).get()
     if data is None:
         return []
     return data if isinstance(data, list) else list(data.values())
 
 
-def fetch_dict(url):
+def fetch_dict(path):
     """給 settings 用:本來就是單一物件,不要被轉成陣列。"""
-    r = requests.get(url, headers=HEADERS, timeout=60)
-    r.raise_for_status()
-    return r.json() or {}
+    firebase_app()
+    return db.reference(path).get() or {}
 
 
 def product_brand(p):
@@ -232,9 +242,9 @@ def render_page(brand, slug, intro_text, items, sold_map, shop_name, faq_blocks,
 
 def main():
     print("抓取商品/設定/訂單資料...")
-    products = [p for p in fetch_list(FIREBASE_PRODUCTS) if p]
-    settings = fetch_dict(FIREBASE_SETTINGS)
-    orders = [o for o in fetch_list(FIREBASE_ORDERS) if o]
+    products = [p for p in fetch_list("daigou-products-v1") if p]
+    settings = fetch_dict("daigou-settings-v1")
+    orders = [o for o in fetch_list("daigou-orders-v1") if o]
 
     shop_name = settings.get("shopName") or "柴代購 ShibaGo"
     intros = parse_brand_intros(settings.get("brandIntros", ""))

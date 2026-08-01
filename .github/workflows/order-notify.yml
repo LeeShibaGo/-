@@ -20,7 +20,16 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests firebase-admin
+
+      # 2026-08-01 起訂單讀取需要服務帳號(Admin SDK)身分,見 check-prices.yml
+      # 裡同一步驟的說明。
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          EOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
       - name: Check new orders
         env:
