@@ -744,6 +744,10 @@
     <div id="cartItemsList"></div>
     <label style="margin-top:14px;">國內取貨方式</label>
     <div id="deliveryOptionsBox" class="delivery-options"></div>
+    <div id="storeNameFieldWrap" style="display:none; margin-top:10px;">
+      <label>取貨 7-11 門市(選填,方便老闆確認取貨門市)</label>
+      <input type="text" id="custStoreName" placeholder="例如:台中中華門市">
+    </div>
     <div class="totals" id="totalsBox"></div>
 
     <div id="checkoutForm">
@@ -809,6 +813,25 @@
       <button class="ghost-btn" id="storePickupDisagreeBtn" style="flex:1; margin-top:0; padding:13px; font-size:14px; background:var(--paper-2); border:1px solid var(--muted-onlight); color:var(--text-page); font-weight:700;">不同意</button>
       <button class="primary-btn" id="storePickupAgreeBtn" style="flex:1; margin-top:0;" disabled>確認選擇</button>
     </div>
+  </div>
+</div>
+
+<!-- 送出訂單前,確認客人已加 LINE 官方帳號好友(方便老闆聯絡) -->
+<div class="overlay" id="lineFriendConfirmOverlay">
+  <div class="sheet" style="max-width:440px;">
+    <div class="sheet-head">
+      <h2>送出訂單前,請先確認</h2>
+      <button class="close-x" id="closeLineFriendConfirm">✕</button>
+    </div>
+    <div style="font-size:14px; line-height:1.8; color:var(--text-page);">
+      為了讓老闆能順利跟您聯繫確認訂單、通知出貨進度,請先加入 LINE 官方帳號好友。
+    </div>
+    <a href="#" id="lineFriendAddLink" target="_blank" rel="noopener noreferrer" class="ghost-btn" style="display:block; text-align:center; text-decoration:none; margin:14px 0; padding:13px; font-size:14px; background:var(--paper-2); border:1px solid var(--muted-onlight); color:var(--text-page); font-weight:700;">💬 加入 LINE 官方帳號好友</a>
+    <label style="display:flex; align-items:flex-start; gap:8px; font-size:14px; margin:14px 0; cursor:pointer;">
+      <input type="checkbox" id="lineFriendAgreeCheckbox" style="margin-top:3px;">
+      <span>我已經加入 LINE 官方帳號好友</span>
+    </label>
+    <button class="primary-btn" id="lineFriendConfirmSubmitBtn" style="margin-top:0;" disabled>確認送出訂單</button>
   </div>
 </div>
 
@@ -2218,6 +2241,7 @@ function renderCartDrawer(){
     });
   }
 
+  document.getElementById('storeNameFieldWrap').style.display = isStorePickup ? '' : 'none';
   document.getElementById('totalsBox').innerHTML = `
     <div class="totals-row"><span>商品小計</span><span>${fmtMoney(subtotal)}</span></div>
     <div class="totals-row"><span>國際運費估算</span><span>${fmtMoney(shipping)}</span></div>
@@ -2269,14 +2293,31 @@ function notifyOrderInstant(order){
   }catch(e){}
 }
 
-document.getElementById('submitOrderBtn').onclick = async () => {
+// 送出訂單前一定要先經過「已加 LINE 好友」確認彈窗,不能直接送單——
+// 老闆需要能透過 LINE 聯繫客人確認訂金/出貨,沒加好友的話後續完全聯絡不到人。
+document.getElementById('submitOrderBtn').onclick = () => {
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const email = document.getElementById('custEmail').value.trim();
+  if(!name || !phone || !email){ toast('請填寫姓名、電話與 Email'); return; }
+  if(!/^\S+@\S+\.\S+$/.test(email)){ toast('請填寫正確格式的 Email'); return; }
+  document.getElementById('lineFriendAddLink').href = lineOfficialUrl(settings.lineOfficialId);
+  document.getElementById('lineFriendAgreeCheckbox').checked = false;
+  document.getElementById('lineFriendConfirmSubmitBtn').disabled = true;
+  document.getElementById('lineFriendConfirmOverlay').classList.add('open');
+};
+document.getElementById('lineFriendAgreeCheckbox').addEventListener('change', (e) => {
+  document.getElementById('lineFriendConfirmSubmitBtn').disabled = !e.target.checked;
+});
+document.getElementById('closeLineFriendConfirm').onclick = () => document.getElementById('lineFriendConfirmOverlay').classList.remove('open');
+
+document.getElementById('lineFriendConfirmSubmitBtn').onclick = async () => {
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
   const email = document.getElementById('custEmail').value.trim();
   const note = document.getElementById('custNote').value.trim();
-  if(!name || !phone || !email){ toast('請填寫姓名、電話與 Email'); return; }
-  if(!/^\S+@\S+\.\S+$/.test(email)){ toast('請填寫正確格式的 Email'); return; }
-  const { lines, subtotal, shipping, deliveryOption, deliveryFee, total, deposit } = computeTotals();
+  const { lines, subtotal, shipping, deliveryOption, deliveryFee, total, deposit, isStorePickup } = computeTotals();
+  const storeName = isStorePickup ? document.getElementById('custStoreName').value.trim() : '';
   const order = {
     id: 'ord_' + Date.now(),
     code: generateOrderCode(orders),
@@ -2284,6 +2325,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
     name, phone, email, note,
     items: lines.map(l => ({ productId: l.id, name: l.name, qty: l.qty, jpy: l.jpy, weight: l.weight, size: l.size || null, color: l.color || null, country: l.country || 'JP', purchased: false })),
     subtotal, shipping, deliveryMethod: deliveryOption ? deliveryOption.label : null, deliveryFee, total, deposit,
+    storeName: storeName || null,
     status: '待確認訂金',
     statusTimestamps: { '待確認訂金': Date.now() },
     // 跟網站本身判斷手機版/電腦版用同一個標準(視窗寬度是否 <=640px),
@@ -2297,6 +2339,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   saveCart();
   renderProducts();
   renderCartBar();
+  document.getElementById('lineFriendConfirmOverlay').classList.remove('open');
   document.getElementById('cartOverlay').classList.remove('open');
   document.getElementById('confirmDeposit').textContent = fmtMoney(deposit);
   document.getElementById('confirmPayment').innerHTML = escapeHtml(settings.payment).replace(/\n/g,'<br>');
@@ -2306,6 +2349,7 @@ document.getElementById('submitOrderBtn').onclick = async () => {
   document.getElementById('custPhone').value = '';
   document.getElementById('custEmail').value = '';
   document.getElementById('custNote').value = '';
+  document.getElementById('custStoreName').value = '';
 };
 document.getElementById('closeConfirm').onclick = () => document.getElementById('confirmOverlay').classList.remove('open');
 
@@ -2445,6 +2489,7 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
       }).join('')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(found.total)}　訂金 ${fmtMoney(found.deposit)}</div>
       ${found.deliveryMethod ? `<div class="cart-item-sub">取貨方式:${escapeHtml(found.deliveryMethod)}</div>` : ''}
+      ${found.storeName ? `<div class="cart-item-sub">取貨門市:${escapeHtml(found.storeName)}</div>` : ''}
       <div style="margin-top:8px; font-size:12px; color:#6B7686;">
         ${timelineRows.map(([label, t]) => `<div>${label}:${new Date(t).toLocaleString('zh-TW')}</div>`).join('')}
       </div>
@@ -3013,7 +3058,7 @@ function renderOrdersAdminList(){
           <span style="${i.purchased ? 'text-decoration:line-through; color:#B5AE9C;' : ''}">${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}</span>
         </label>
       `).join('')}</div>
-      <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}${o.deliveryMethod ? `　取貨:${escapeHtml(o.deliveryMethod)}` : ''}</div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}${o.deliveryMethod ? `　取貨:${escapeHtml(o.deliveryMethod)}` : ''}${o.storeName ? `　門市:${escapeHtml(o.storeName)}` : ''}</div>
       ${timeline ? `<div class="cart-item-sub">${timeline}</div>` : ''}
       ${o.status === '無法完成' && o.cancelReason ? `<div class="cart-item-sub" style="color:var(--stamp);">無法完成原因:${escapeHtml(o.cancelReason)}</div>` : ''}
       ${o.note ? `<div class="cart-item-sub">備註:${escapeHtml(o.note)}</div>` : ''}
@@ -3102,7 +3147,7 @@ ${itemLines}
 
 商品小計:${fmtMoney(o.subtotal)}
 國際運費估算:${fmtMoney(o.shipping)}
-${o.deliveryMethod ? `國內取貨運費(${o.deliveryMethod}):${fmtMoney(o.deliveryFee || 0)}\n` : ''}總金額:${fmtMoney(o.total)}
+${o.deliveryMethod ? `國內取貨運費(${o.deliveryMethod}):${fmtMoney(o.deliveryFee || 0)}\n` : ''}${o.storeName ? `取貨門市:${o.storeName}\n` : ''}總金額:${fmtMoney(o.total)}
 已收訂金:${fmtMoney(o.deposit)}
 尾款(到貨前結清):${fmtMoney(balance)}
 
