@@ -2397,7 +2397,10 @@ document.getElementById('lineFriendConfirmSubmitBtn').onclick = async () => {
     device: window.innerWidth <= 640 ? '手機' : '電腦',
   };
   orders = [order, ...orders];
-  await storageSet(ORDERS_KEY, orders, true);
+  // 訂單改成一筆一個獨立 key(用訂單編碼當 key),不是整包陣列覆寫——
+  // 這樣資料庫規則才擋得住「隨便一個人就把全部訂單蓋掉」的風險,
+  // 也才能只公開單筆讀取(查訂單用),不整包公開所有客人的資料。
+  await storageSet(`${ORDERS_KEY}/${order.code}`, order);
   notifyOrderInstant(order);
   cart = {};
   saveCart();
@@ -2525,8 +2528,9 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
   const resultBox = document.getElementById('lookupResult');
   if(!code){ toast('請輸入訂單編碼'); return; }
   resultBox.innerHTML = '<div class="empty-note">查詢中...</div>';
-  const latestOrders = await storageGet(ORDERS_KEY) || [];
-  const found = latestOrders.find(o => o.code === code);
+  // 直接用編碼當 key 讀取單筆訂單,不再整包撈全部訂單回來找——資料庫規則
+  // 現在也只開放「知道編碼就能讀那一筆」,不開放整包讀取全部客人的訂單。
+  const found = await storageGet(`${ORDERS_KEY}/${code}`);
   if(!found){
     resultBox.innerHTML = '<div class="empty-note">查無此訂單編碼,請確認輸入是否正確。</div>';
     return;
@@ -3170,7 +3174,7 @@ function renderOrdersAdminList(){
       o.cancelReason = reason.trim();
       o.status = newStatus;
       o.statusTimestamps[newStatus] = Date.now();
-      await storageSet(ORDERS_KEY, orders, true);
+      await storageSet(`${ORDERS_KEY}/${o.code}`, o);
       renderOrdersAdminList();
       toast('訂單狀態已更新');
       return;
@@ -3194,14 +3198,15 @@ function renderOrdersAdminList(){
     o.status = newStatus;
     o.statusTimestamps[newStatus] = Date.now();
     delete o.cancelReason; // 離開「無法完成」狀態後,舊的原因就沒有意義了
-    await storageSet(ORDERS_KEY, orders, true);
+    await storageSet(`${ORDERS_KEY}/${o.code}`, o);
     renderOrdersAdminList();
     toast('訂單狀態已更新');
   };
   window.deleteOrder = async function(id){
     if(!confirm('確定要刪除這筆訂單嗎?這個動作無法復原。')) return;
+    const target = orders.find(x => x.id === id);
     orders = orders.filter(x => x.id !== id);
-    await storageSet(ORDERS_KEY, orders, true);
+    if(target) await storageSet(`${ORDERS_KEY}/${target.code}`, null); // PUT null 等於刪除這個 key
     renderOrdersAdminList();
     toast('訂單已刪除');
   };
@@ -3210,7 +3215,7 @@ function renderOrdersAdminList(){
     const o = orders.find(x => x.id === orderId);
     const item = o.items[itemIndex];
     item.purchased = !item.purchased;
-    await storageSet(ORDERS_KEY, orders, true);
+    await storageSet(`${ORDERS_KEY}/${o.code}`, o);
     renderOrdersAdminList();
   };
 

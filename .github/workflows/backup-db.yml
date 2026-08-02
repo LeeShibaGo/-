@@ -1,0 +1,42 @@
+name: Daily database backup
+
+on:
+  schedule:
+    # 每天 UTC 16:00 = 台灣時間半夜 00:00,避開其他排程的尖峰時段
+    - cron: "0 16 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install firebase-admin
+
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          EOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Backup products/settings/orders
+        run: python backup_db.py
+
+      - name: Commit backup snapshot
+        run: |
+          git config user.name "db-backup-bot"
+          git config user.email "actions@github.com"
+          git add db_backup/
+          git diff --cached --quiet || git commit -m "Daily database backup [skip ci]"
+          git pull --rebase origin master || true
+          git push
