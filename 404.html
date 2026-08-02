@@ -612,6 +612,7 @@
   <div class="flight-banner-inner">
     <span id="flightDepartureLine" style="display:none;">🛫 起飛時間:<b id="flightDepartureText"></b></span>
     <span id="flightReturnLine" style="display:none;">🛬 回台時間:<b id="flightReturnText"></b></span>
+    <span id="countdownLine" style="display:none;">⏳ <span id="countdownLabel"></span>倒數:<b id="countdownText"></b></span>
   </div>
 </div>
 
@@ -1030,6 +1031,11 @@
         <div><label>起飛時間</label><input type="text" id="departureTimeInput" placeholder="例如:2026/08/05 14:20"></div>
         <div><label>回台時間</label><input type="text" id="returnTimeInput" placeholder="例如:2026/08/12 21:00"></div>
       </div>
+      <label style="margin-top:16px;">倒數計時目標時間(選填,例如收單截止時間;會在橫幅最後面顯示即時倒數,留空就不顯示)</label>
+      <div class="field-row">
+        <div><label>倒數標籤文字(選填)</label><input type="text" id="countdownLabelInput" placeholder="例如:收單截止"></div>
+        <div><label>倒數目標時間</label><input type="text" id="countdownTargetInput" placeholder="例如:2026/08/16 23:59"></div>
+      </div>
       <label style="margin-top:16px;">代購須知(本期收單期間、可代購品項、下單流程等,客人點「代購須知」按鈕會看到這段文字;每次開新一團記得回來更新日期)</label>
       <textarea id="purchaseGuideInput" style="min-height:220px;"></textarea>
       <label style="margin-top:16px;">國內取貨方式與運費(結帳時客人可以選,金額會自動加進訂單總額;一行一個,格式是「名稱,金額」)</label>
@@ -1204,6 +1210,11 @@ const DEFAULT_SETTINGS = {
   // 純文字自由填寫(例如「2026/08/05 14:20」),兩個都留空就不顯示整條橫幅。
   departureTime: '',
   returnTime: '',
+  // 起飛/回台橫幅最後面的即時倒數計時,目標時間格式跟起飛/回台時間一樣自由填寫
+  // (例如「2026/08/16 23:59」),留空就不顯示;countdownLabel 是倒數前面的
+  // 說明文字(例如「收單截止」),留空的話就只顯示「倒數:」。
+  countdownTarget: '',
+  countdownLabel: '',
   // 每個品牌的介紹文字,給 SEO 用的靜態品牌頁面(brand/{品牌}/index.html)顯示。
   // 格式比照 FAQ,一個品牌一組用 --- 分隔,每組第一行是品牌名稱(要跟商品的
   // brand 欄位完全一樣才對得到)、其餘是介紹內文。沒寫到的品牌,靜態頁面
@@ -1621,6 +1632,29 @@ function updateUrl(){
   history.replaceState(null, '', path);
 }
 
+// 起飛/回台橫幅最後面的即時倒數,每秒更新一次,跟 render() 分開獨立跑,
+// 不然沒有東西會每秒重新呼叫 render() 去刷新這個數字。
+function updateCountdownDisplay(){
+  const line = document.getElementById('countdownLine');
+  const target = (settings.countdownTarget || '').trim();
+  if(!target){ line.style.display = 'none'; return; }
+  const targetMs = new Date(target.replace(/-/g, '/')).getTime();
+  if(isNaN(targetMs)){ line.style.display = 'none'; return; }
+  line.style.display = '';
+  const diff = targetMs - Date.now();
+  if(diff <= 0){
+    document.getElementById('countdownText').textContent = '已截止';
+    return;
+  }
+  const totalSec = Math.floor(diff / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  document.getElementById('countdownText').textContent = `${days} 天 ${hours} 時 ${mins} 分 ${secs} 秒`;
+}
+setInterval(updateCountdownDisplay, 1000);
+
 function render(){
   document.getElementById('shopName').textContent = settings.shopName;
   document.getElementById('rateDisplayJPY').textContent = `1 JPY = ${Number(settings.rate).toFixed(3)} TWD`;
@@ -1634,14 +1668,17 @@ function render(){
   } else {
     batchLine.style.display = 'none';
   }
-  // 起飛/回台時間橫幅:兩個都沒填就整條隱藏,填了哪個就顯示哪行。
+  // 起飛/回台時間橫幅:兩個都沒填、也沒設倒數目標時間就整條隱藏,填了哪個就顯示哪行。
   const hasDeparture = settings.departureTime && settings.departureTime.trim();
   const hasReturn = settings.returnTime && settings.returnTime.trim();
-  document.getElementById('flightBanner').style.display = (hasDeparture || hasReturn) ? '' : 'none';
+  const hasCountdown = settings.countdownTarget && settings.countdownTarget.trim();
+  document.getElementById('flightBanner').style.display = (hasDeparture || hasReturn || hasCountdown) ? '' : 'none';
   document.getElementById('flightDepartureLine').style.display = hasDeparture ? '' : 'none';
   document.getElementById('flightReturnLine').style.display = hasReturn ? '' : 'none';
   if(hasDeparture) document.getElementById('flightDepartureText').textContent = settings.departureTime.trim();
   if(hasReturn) document.getElementById('flightReturnText').textContent = settings.returnTime.trim();
+  document.getElementById('countdownLabel').textContent = (settings.countdownLabel || '').trim();
+  updateCountdownDisplay();
   // 目前沒有韓幣商品的話,看板不需要顯示 KRW 匯率,不然客人會誤以為有韓國代購。
   // 之後如果又上架韓國商品,這裡會自動偵測到、自己重新顯示,不用手動切換。
   const hasKrProducts = products.some(p => (p.country || 'JP') === 'KR');
@@ -2580,6 +2617,8 @@ function openAdmin(){
   document.getElementById('batchStatusInput').value = settings.batchStatus || '';
   document.getElementById('departureTimeInput').value = settings.departureTime || '';
   document.getElementById('returnTimeInput').value = settings.returnTime || '';
+  document.getElementById('countdownLabelInput').value = settings.countdownLabel || '';
+  document.getElementById('countdownTargetInput').value = settings.countdownTarget || '';
   document.getElementById('purchaseGuideInput').value = settings.purchaseGuide || '';
   document.getElementById('deliveryOptionsInput').value = settings.deliveryOptions || '';
   document.getElementById('faqInput').value = settings.faq || '';
@@ -2678,6 +2717,8 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.batchStatus = document.getElementById('batchStatusInput').value.trim();
   settings.departureTime = document.getElementById('departureTimeInput').value.trim();
   settings.returnTime = document.getElementById('returnTimeInput').value.trim();
+  settings.countdownLabel = document.getElementById('countdownLabelInput').value.trim();
+  settings.countdownTarget = document.getElementById('countdownTargetInput').value.trim();
   settings.purchaseGuide = document.getElementById('purchaseGuideInput').value;
   settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
   settings.faq = document.getElementById('faqInput').value;
