@@ -53,6 +53,7 @@
   python sync_stock.py descente   # 只跑 DESCENTE(只同步價格)
   python sync_stock.py gu         # 只跑 GU
   python sync_stock.py uha        # 只跑 UHA
+  python sync_stock.py dhc        # 只跑 DHC
 """
 
 import json
@@ -692,6 +693,69 @@ def sync_uha(items):
     merge_and_save(cards)
 
 
+# ---------- DHC(健康食品分類,dhc.co.jp) ----------
+# 跟 UHA 同一套做法(商品沒有 colors,saleType 直接跟著官網 availability 走)。
+
+def extract_dhc_ldjson(html):
+    m = re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.DOTALL)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(1))
+    except Exception:
+        return None
+
+
+def sync_dhc(items):
+    print("=== DHC 同步開始 ===")
+    cards = [p for p in items if p.get("brand") == "DHC"]
+    changed = errors = delisted = now_oos = 0
+    for idx, card in enumerate(cards):
+        link = card.get("link")
+        if not link:
+            continue
+        try:
+            res = fetch_or_none_if_404(link, timeout=25)
+            time.sleep(0.3)
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+        if res is None:
+            delisted += 1
+            print(f"  官網已下架(404):{card.get('name')}")
+            delisted_lines.append(f"[DHC] {card.get('name')} 官網已下架(404),請確認是否要手動下架")
+            continue
+
+        data = extract_dhc_ldjson(res.text)
+        if not data:
+            errors += 1
+            continue
+        offers = data.get("offers", {})
+
+        new_sale_type = "soldout" if "OutOfStock" in (offers.get("availability") or "") else "instock"
+        if new_sale_type != card.get("saleType"):
+            if new_sale_type == "soldout":
+                now_oos += 1
+            card["saleType"] = new_sale_type
+
+        try:
+            new_jpy = int(float(offers.get("price")))
+        except (TypeError, ValueError):
+            new_jpy = None
+        if new_jpy and new_jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[DHC] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            changed += 1
+
+        if (idx + 1) % 100 == 0:
+            print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},下架 {delisted},缺貨 {now_oos},錯誤 {errors})")
+    print(f"DHC 完成:{len(cards)} 張卡,價格變動 {changed} 件,下架 {delisted} 件,"
+          f"官網缺貨 {now_oos} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
+
+
 # ---------- GU ----------
 # GU 跟 Salomon/On/Onitsuka 一樣做「庫存+價格都同步」,細節見 scrape_gu.py
 # 開頭的說明(GU 是 Fast Retailing 集團的公開 API,沒有機器人偵測,
@@ -788,6 +852,8 @@ def main():
         sync_gu(items)
     if only in (None, "uha"):
         sync_uha(items)
+    if only in (None, "dhc"):
+        sync_dhc(items)
     if only in (None, "onitsuka"):
         sync_onitsuka(items)
     if only in (None, "honma"):

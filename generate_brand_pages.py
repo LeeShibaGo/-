@@ -74,6 +74,7 @@ BRAND_SLUGS = {
     "Dior": "dior",
     "GU": "gu",
     "UHA": "uha",
+    "DHC": "dhc",
 }
 
 
