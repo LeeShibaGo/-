@@ -3138,7 +3138,7 @@ function renderOrdersAdminList(){
     return `
     <div class="order-card">
       <div class="order-top">
-        <span>${new Date(o.time).toLocaleString('zh-TW')}${o.device ? `　<span class="cart-item-sub">${o.device}</span>` : ''}</span>
+        <span>${new Date(o.time).toLocaleString('zh-TW')}${o.device ? `　<span class="cart-item-sub">${escapeHtml(o.device)}</span>` : ''}</span>
         <div style="display:flex; align-items:center; gap:8px;">
           <select class="status-chip" style="cursor:pointer;" onchange="setOrderStatus('${o.id}', this.value)">
             ${statuses.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
