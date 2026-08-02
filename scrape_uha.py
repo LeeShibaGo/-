@@ -88,8 +88,20 @@ WEIGHT_BY_SUBTYPE = {
 DEFAULT_WEIGHT = 0.15
 
 
-def guess_subtype(ja_label):
-    return JA_TO_SUBTYPE.get((ja_label or "").strip(), DEFAULT_SUBTYPE)
+# 麵包屑分類抓不到,或抓到的分類名稱對不到 JA_TO_SUBTYPE 時,回頭看商品
+# 名稱本身有沒有「グミサプリ/機能性表示食品/瞬間サプリ」這種保健食品的
+# 關鍵字——2026-08-02 發現 80 幾件 UHA 保健食品糖果因為麵包屑抓到的分類
+# 名稱對不上,全部被歸進預設值「零食」,老闆自己發現才回報。
+SUPPLEMENT_NAME_KEYWORDS = ("グミサプリ", "機能性表示食品", "瞬間サプリ")
+
+
+def guess_subtype(ja_label, name=""):
+    mapped = JA_TO_SUBTYPE.get((ja_label or "").strip())
+    if mapped:
+        return mapped
+    if any(k in (name or "") for k in SUPPLEMENT_NAME_KEYWORDS):
+        return "保健食品"
+    return DEFAULT_SUBTYPE
 
 
 def guess_weight(subtype):
@@ -148,10 +160,11 @@ def parse_product(pid):
 
     bc_match = BREADCRUMB_RE.search(html)
     ja_label = bc_match.group(1) if bc_match else None
-    subtype = guess_subtype(ja_label)
+    name = data.get("name", "").strip()
+    subtype = guess_subtype(ja_label, name)
 
     return {
-        "name": data.get("name", "").strip(),
+        "name": name,
         "jpy": jpy,
         "weight": guess_weight(subtype),
         "brand": BRAND,
