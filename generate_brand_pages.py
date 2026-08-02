@@ -73,6 +73,7 @@ BRAND_SLUGS = {
     "TaylorMade": "taylormade",
     "Dior": "dior",
     "GU": "gu",
+    "UHA": "uha",
 }
 
 

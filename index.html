@@ -465,6 +465,7 @@
   .sale-badge.instock{ background:#DDF0E4; color:#2E7D4F; }
   .sale-badge.preorder{ background:#F3E4C7; color:#8A6B2E; }
   .sale-badge.discount{ background:#FCE4E4; color:#C0392B; }
+  .sale-badge.soldout{ background:#EAE3D1; color:#8A8478; }
   .price-jpy.was{ text-decoration:line-through; opacity:0.55; margin-right:4px; }
 
   .color-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
@@ -1946,7 +1947,10 @@ function buildCardHTML(p){
   const chosenSize = hasSizes ? (selectedSize[sizeStateKey] || sizesForChoice[0]) : null;
   const key = cartKey(p.id, chosenColor, chosenSize);
   const qty = (cart[key] && cart[key].qty) || 0;
-  const soldOut = saleType !== 'preorder' && stockForColor && chosenSize && (stockForColor[chosenSize] || 0) <= 0;
+  // saleType === 'soldout' 是給沒有 colors/尺寸庫存可以追蹤的簡單商品用的
+  // (例如 UHA 零食,單一款式沒有顏色/尺寸選項),官網缺貨時同步直接把
+  // 整張商品卡標成缺貨,不像 Salomon/On 那樣只鎖定某個顏色/尺寸。
+  const soldOut = saleType === 'soldout' || (saleType !== 'preorder' && stockForColor && chosenSize && (stockForColor[chosenSize] || 0) <= 0);
   const displayImage = colorImage || p.image;
   const badgeParts = [COUNTRY_LABELS[country] || country, productBrand(p), p.subtype].filter(Boolean);
   const soldQty = getSoldQty(p);
@@ -1956,7 +1960,7 @@ function buildCardHTML(p){
       ${displayImage ? `<img class="prod-image" id="prodImg-${p.id}" src="${escapeHtml(displayImage)}" alt="${escapeHtml(p.name)}">` : ''}
       <div class="stamp">${p.weight}<small>KG</small></div>
       <div class="cat-badge">${badgeParts.map(escapeHtml).join(' · ')}</div>
-      <span class="sale-badge ${saleType}">${saleType === 'preorder' ? '預購' : '現貨'}</span>
+      <span class="sale-badge ${saleType}">${saleType === 'preorder' ? '預購' : (saleType === 'soldout' ? '缺貨' : '現貨')}</span>
       ${p.origJpy && p.origJpy > p.jpy ? `<span class="sale-badge discount">特價</span>` : ''}
       <h3>${escapeHtml(p.name)}</h3>
       ${p.quoteOnly
