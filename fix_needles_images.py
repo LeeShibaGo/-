@@ -11,6 +11,11 @@
     米白色 -> uniqlo.com/jp E483980-000 COL31(BEIGE)
     黑紫色 -> uniqlo.com/jp E484125-000 COL09(黑底紫條紋,款式編號不同)
 
+  順便清掉稍早測試 Firebase 規則時,不小心留在資料庫裡的一筆假訂單
+  (test_rule_check_delete_me)——那筆是不登入建立的,現在資料庫規則
+  要求覆蓋/刪除既有資料必須登入,所以只能用這支有服務帳號權限的程式
+  來刪除。
+
   用服務帳號(Admin SDK)寫入,因為資料庫規則已經鎖起來。
 
 執行方式(透過 GitHub Actions 手動觸發):
@@ -29,7 +34,9 @@ for _s in (sys.stdout, sys.stderr):
 
 FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
 PRODUCTS_PATH = "daigou-products-v1"
+ORDERS_PATH = "daigou-orders-v1"
 TARGET_ID = "p_uniqlo_needles_1785655033387_1"
+TEST_ORDER_CODE = "test_rule_check_delete_me"
 
 COLOR_IMAGES = {
     "灰色": "https://image.uniqlo.com/UQ/ST3/jp/imagesgoods/483980/item/jpgoods_08_483980_3x4.jpg",
@@ -60,6 +67,9 @@ def main():
 
     db.reference(PRODUCTS_PATH).set(products)
     print("已寫回 Firebase,完成!")
+
+    db.reference(f"{ORDERS_PATH}/{TEST_ORDER_CODE}").delete()
+    print(f"已刪除測試訂單 {TEST_ORDER_CODE}")
 
 
 if __name__ == "__main__":
