@@ -122,7 +122,10 @@ def parse_product(pid):
     offers = data.get("offers", {})
     price = offers.get("price")
     try:
-        jpy = int(float(price))
+        # JSON-LD 的 price 是未稅價,官網實際顯示、客人實際要付的是稅込(含稅)價,
+        # 差 8%(食品類消費稅率)——用「濃縮プエラリアミリフィカ」交叉比對過官網
+        # 顯示的稅込價格,3800(未稅) x 1.08 = 4104(稅込)完全對上。
+        jpy = round(float(price) * 1.08)
     except (TypeError, ValueError):
         return None
     availability = offers.get("availability", "")

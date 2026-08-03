@@ -740,7 +740,9 @@ def sync_dhc(items):
             card["saleType"] = new_sale_type
 
         try:
-            new_jpy = int(float(offers.get("price")))
+            # JSON-LD 的 price 是未稅價,要乘上 1.08 換算成官網實際顯示的稅込價
+            # (跟 scrape_dhc.py 的換算邏輯一致,理由見該檔案的註解)
+            new_jpy = round(float(offers.get("price")) * 1.08)
         except (TypeError, ValueError):
             new_jpy = None
         if new_jpy and new_jpy != card.get("jpy"):
