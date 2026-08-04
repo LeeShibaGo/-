@@ -7,7 +7,8 @@
   重新到官網抓一次「每個顏色每個尺寸的庫存」和「目前售價」,
   直接更新 Firebase 上的商品資料,客人看到的缺貨狀態最多只落後一天。
 
-兩種同步方式(2026-07-24 擴大範圍,2026-08-01 加入 GU,2026-08-04 加入 UNIQLO):
+四種同步方式(2026-07-24 擴大範圍,2026-08-01 加入 GU,2026-08-04 加入 UNIQLO,
+2026-08-04 再把 AAPE/Lacoste 升級成真庫存同步、DESCENTE 升級成整體現貨同步):
   A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE、GU、UNIQLO):
      這幾家官網的商品頁(或 API)本身就會把「每個顏色每個尺寸」的完整
      庫存用靜態資料吐出來,可以做到跟客人在網站上看到的一樣即時。
@@ -16,17 +17,33 @@
      NEEDLES 聯名開襟外套(見 UNIQLO_MANUAL_SKIP_IDS)不在此列,原因是
      它的三個顏色橫跨兩個不同官網商品代碼,自動同步的話會抓不到正確
      顏色,要排除。
-  B) 只同步價格(AAPE、Lacoste、J.Lindeberg、DESCENTE):
-     這幾家的尺寸庫存是點了才用 AJAX 動態載入,静態頁面抓不到,沒辦法
-     做庫存同步;但目前售價都能從靜態頁面(JSON-LD 或固定 CSS class)
-     直接讀到,所以至少把價格這塊做到自動更新 + LINE 通知,不用像以前
-     的 price_watch.py 只通知、不會自動改價。
+  A') 庫存 + 價格都同步,但顏色/尺寸比對邏輯是各自品牌獨有的(AAPE、Lacoste):
+     一開始誤以為這兩家的尺寸庫存要點了才用 AJAX 載入抓不到,實測發現
+     其實已經直接寫在靜態網頁裡(AAPE 的 .quantity、Lacoste 商品頁
+     __NEXT_DATA__ 裡的 inventoryQuantity),純 requests 就抓得到,
+     詳見 sync_aape/sync_lacoste 的說明。
+  B) 只同步「整體現貨/缺貨」,不到每個尺寸(DESCENTE):
+     尺寸庫存實測確認過是純前端樣板套版,要真的執行 JS 才抓得到,用
+     Playwright 渲染頁面後看每個尺寸文字是不是「あり」;但這個品牌
+     上架時是每個顏色各自一筆商品(沒有 colors 陣列),所以只做到跟
+     UHA/DHC 一樣的整體 saleType,不到每個尺寸,詳見 sync_descente。
+  C) 只同步價格(J.Lindeberg):
+     尺寸庫存是點了才用 AJAX 動態載入,静態頁面抓不到,沒辦法做庫存
+     同步;但目前售價能從靜態頁面(JSON-LD)直接讀到,所以至少把價格
+     這塊做到自動更新 + LINE 通知,不用像以前的 price_watch.py 只通知、
+     不會自動改價。
   以下品牌目前技術上做不到自動追蹤,原因各不相同,不會用繞過偵測的
   方式硬做:
-  - HONMA:售價是頁面載入後才用 JS 動態渲染,靜態抓不到數字。
+  - HONMA:售價是頁面載入後才用 JS 動態渲染,靜態抓不到數字(不過這個
+    可以用 Playwright 渲染後讀到,見 sync_honma——DESCENTE 也是同樣道理)。
   - TaylorMade:官網有 DataDome 機器人偵測,會被導到驗證頁。
   - Dior、Dior 日本限定、Louis Vuitton:官網對非瀏覽器的請求直接回
     HTTP 403。
+  - Gentle Monster:CloudFront 會偵測「這是自動化瀏覽器」直接回 403,
+    純 requests 讀得到但沒有 JS 執行不出商品資料,矛盾的組合導致
+    plain requests/真瀏覽器兩種方式都不能用。
+  - Rakuten(樂天)賣場:Akamai 邊緣節點直接擋下,回應內容只有一段
+    "Reference #..." 代碼,連正常錯誤頁都不會顯示。
   - MUSINSA、Nike、零食伴手禮:這些是手動加的參考商品,沒有官網連結
     可以查價。
 
@@ -52,10 +69,10 @@
   python sync_stock.py salomon    # 只跑 Salomon(快,測試用)
   python sync_stock.py onitsuka   # 只跑 Onitsuka Tiger
   python sync_stock.py bape       # 只跑 BAPE
-  python sync_stock.py aape       # 只跑 AAPE(只同步價格)
-  python sync_stock.py lacoste    # 只跑 Lacoste(只同步價格)
+  python sync_stock.py aape       # 只跑 AAPE
+  python sync_stock.py lacoste    # 只跑 Lacoste
   python sync_stock.py jlindeberg # 只跑 J.Lindeberg(只同步價格)
-  python sync_stock.py descente   # 只跑 DESCENTE(只同步價格)
+  python sync_stock.py descente   # 只跑 DESCENTE(只同步整體現貨/缺貨,使用瀏覽器渲染 JS)
   python sync_stock.py gu         # 只跑 GU
   python sync_stock.py uniqlo     # 只跑 UNIQLO
   python sync_stock.py uha        # 只跑 UHA
@@ -572,6 +589,199 @@ def sync_price_only(items, brand, extractor):
     merge_and_save(cards)
 
 
+# ---------- AAPE(2026-08-04 從「只同步價格」升級成「庫存+價格都同步」:
+# 原本以為尺寸庫存要點了才用 AJAX 載入抓不到,實測發現其實每個顏色每個
+# 尺寸的真實庫存件數本來就已經寫在靜態網頁裡(.variation-col-size_stock
+# 裡的 .quantity),跟 scrape_aape.py 當初上架時用的抓法一模一樣,
+# 顏色名稱翻譯/尺寸代碼標準化直接沿用 scrape_aape.py 裡的對照表,
+# 確保新舊資料的顏色/尺寸字串是同一套,不會對不起來)----------
+
+def sync_aape(items):
+    print("=== AAPE 同步開始 ===")
+    from bs4 import BeautifulSoup
+    from urllib.parse import urljoin
+    from scrape_aape import translate_color, standardize_size, extract_price_number, BASE_URL as AAPE_BASE
+
+    cards = [p for p in items if p.get("brand") == "AAPE"]
+    stock_changed = price_changed = errors = delisted = 0
+    for idx, card in enumerate(cards):
+        link = card.get("link")
+        if not link:
+            continue
+        try:
+            res = fetch_or_none_if_404(link, timeout=25)
+            time.sleep(0.3)
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+        if res is None:
+            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+                mark_all_sold_out(card)
+                delisted += 1
+                print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
+                delisted_lines.append(f"[AAPE] {card.get('name')}")
+            continue
+
+        new_jpy = extract_aape_price(res.text)
+        if new_jpy and int(new_jpy) != card.get("jpy"):
+            new_jpy = int(new_jpy)
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[AAPE] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+
+        soup = BeautifulSoup(res.text, "html.parser")
+        old_images = {c.get("name"): c.get("image") for c in card.get("colors", []) if c.get("image")}
+        new_colors = []
+        for row in soup.select(".variation-row"):
+            color_el = row.select_one(".variation-row-thumbnail .color")
+            color_name_ja = color_el.get_text(strip=True) if color_el else None
+            if not color_name_ja:
+                continue
+            color_name = translate_color(color_name_ja)
+
+            img_el = row.select_one(".variation-row-thumbnail .image img")
+            color_image = None
+            if img_el and img_el.get("src"):
+                color_image = urljoin(AAPE_BASE, img_el["src"]).replace("_d_125.jpg", "_d_240.jpg")
+
+            sizes, stock = [], {}
+            for item_el in row.select(".variation-col-item"):
+                size_el = item_el.select_one(".variation-col-size_stock .size")
+                qty_el = item_el.select_one(".variation-col-size_stock .quantity")
+                stock_el = item_el.select_one(".variation-col-size_stock .stock")
+                if not size_el:
+                    continue
+                size_name = standardize_size(size_el.get_text(strip=True))
+                if not size_name:
+                    continue
+                qty = extract_price_number(qty_el.get_text()) if qty_el else None
+                stock_classes = (stock_el.get("class") or []) if stock_el else []
+                is_out = ("out" in stock_classes) or (qty is not None and qty <= 0)
+                sizes.append(size_name)
+                stock[size_name] = 0 if is_out else (qty if qty is not None else 1)
+
+            if sizes:
+                new_colors.append({
+                    "name": color_name, "sizes": sizes, "stock": stock,
+                    "image": color_image or old_images.get(color_name),
+                })
+
+        if new_colors:
+            if new_colors != card.get("colors"):
+                stock_changed += 1
+            card["colors"] = new_colors
+
+        if (idx + 1) % 100 == 0:
+            print(f"  進度 {idx+1}/{len(cards)}(庫存有變 {stock_changed},價格變動 {price_changed},下架 {delisted},錯誤 {errors})")
+    print(f"AAPE 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色組合,"
+          f"價格變動 {price_changed} 件,下架 {delisted} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
+
+
+# ---------- Lacoste(2026-08-04 從「只同步價格」升級成「庫存+價格都同步」:
+# 商品頁的 __NEXT_DATA__ 裡 variants 陣列每一筆都有 inventoryQuantity
+# (真實庫存件數)跟 extraProperties 裡的 JapanSize,不需要額外的 AJAX 請求。
+# 用 imageCode(例如 46SMA0008-1R5)當比對鍵,對照既有 colors[].image 網址
+# 裡是否包含同一組代碼,找出這是哪個顏色。) ----------
+
+LACOSTE_NEXT_DATA_RE = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.DOTALL)
+
+
+def sync_lacoste(items):
+    print("=== Lacoste 同步開始 ===")
+    cards = [p for p in items if p.get("brand") == "Lacoste"]
+    stock_changed = price_changed = errors = delisted = 0
+    for idx, card in enumerate(cards):
+        link = card.get("link")
+        if not link:
+            continue
+        try:
+            res = fetch_or_none_if_404(link, timeout=25)
+            time.sleep(0.4)
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+        if res is None:
+            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+                mark_all_sold_out(card)
+                delisted += 1
+                print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
+                delisted_lines.append(f"[Lacoste] {card.get('name')}")
+            continue
+
+        new_jpy = extract_ldjson_price(res.text)
+        if new_jpy and int(new_jpy) != card.get("jpy"):
+            new_jpy = int(new_jpy)
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[Lacoste] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+
+        m = LACOSTE_NEXT_DATA_RE.search(res.text)
+        if not m:
+            errors += 1
+            continue
+        try:
+            data = json.loads(m.group(1))
+            variants = data["props"]["pageProps"]["data"]["productResponse"]["product"]["variants"]
+        except Exception:
+            errors += 1
+            continue
+
+        by_imagecode = {}
+        for v in variants:
+            code = (v.get("imageCode") or "").lower()
+            if code:
+                by_imagecode.setdefault(code, []).append(v)
+
+        new_colors = []
+        any_color_changed = False
+        for color in card.get("colors", []):
+            old_stock = dict(color.get("stock") or {})
+            img = (color.get("image") or "").lower()
+            matched_code = next((c for c in by_imagecode if c in img), None)
+            if not matched_code:
+                # 官網對不到這個顏色(可能是這款配色下架了),沿用舊尺寸清單但庫存歸零
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+                if color["stock"] != old_stock:
+                    any_color_changed = True
+                new_colors.append(color)
+                continue
+            sizes, stock = [], {}
+            for v in by_imagecode[matched_code]:
+                raw_size = None
+                for prop in (v.get("extraProperties") or []):
+                    if prop.get("field") == "JapanSize":
+                        vals = prop.get("values") or []
+                        raw_size = vals[0] if vals else None
+                        break
+                if not raw_size:
+                    continue
+                # 沿用初次上架時的字串轉換規則(半形句點/斜線 -> 全形),尺寸字串才會跟舊資料一致
+                size_name = raw_size.replace(".", "-").replace("/", "／")
+                qty = int(v.get("inventoryQuantity") or 0)
+                if size_name not in stock:
+                    sizes.append(size_name)
+                stock[size_name] = qty
+            if stock != old_stock:
+                any_color_changed = True
+            color["sizes"], color["stock"] = sizes, stock
+            new_colors.append(color)
+
+        if any_color_changed:
+            stock_changed += 1
+        card["colors"] = new_colors
+
+        if (idx + 1) % 100 == 0:
+            print(f"  進度 {idx+1}/{len(cards)}(庫存有變 {stock_changed},價格變動 {price_changed},下架 {delisted},錯誤 {errors})")
+    print(f"Lacoste 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色組合,"
+          f"價格變動 {price_changed} 件,下架 {delisted} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
+
+
 # ---------- HONMA(價格是頁面載入後才用 JS 算出來,一般 HTTP 請求抓不到,
 # 要用真的瀏覽器把 JS 跑完再讀畫面上顯示的價格;跟其他品牌不同,只有這支
 # 需要 playwright,所以在函式內才 import,沒有要跑 HONMA 的話不需要裝這個套件)----------
@@ -626,6 +836,74 @@ def sync_honma(items):
                 print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},新標記下架 {delisted},讀取失敗 {errors})")
         browser.close()
     print(f"HONMA 完成:{len(cards)} 張卡,價格變動 {changed} 件,新標記下架 {delisted} 件,讀取失敗 {errors} 件")
+    merge_and_save(cards)
+
+
+# ---------- DESCENTE(2026-08-04 從「只同步價格」升級成「同步整體現貨/缺貨」:
+# 尺寸庫存實測確認過是純前端 Handlebars 樣板,套版資料要真的執行過 JS 才會
+# 填進去,要用瀏覽器渲染,做法跟 HONMA 一樣。
+# 這個品牌當初上架時每個顏色是各自一筆商品(沒有 colors 陣列),所以不像
+# AAPE/Lacoste 追蹤到「每個尺寸」的庫存,只做到跟 UHA/DHC 一樣的整體
+# saleType(這張卡代表的顏色,只要還有任一個尺寸買得到就算現貨,全部尺寸
+# 都缺貨才標成 soldout)——尺寸表格每一列的「あり」就是客人看到的現貨文字,
+# 直接拿這個文字判斷,不用去猜内部庫存等級代碼的確切命名。) ----------
+
+def sync_descente(items):
+    print("=== DESCENTE 同步開始(使用瀏覽器渲染 JS)===")
+    from playwright.sync_api import sync_playwright
+
+    cards = [p for p in items if p.get("brand") == "DESCENTE"]
+    changed = stock_changed = errors = delisted = 0
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page = browser.new_page(user_agent=HEADERS["User-Agent"])
+        for idx, card in enumerate(cards):
+            link = card.get("link")
+            if not link:
+                continue
+            try:
+                res = page.goto(link, timeout=30000, wait_until="networkidle")
+                if res is not None and res.status == 404:
+                    if card.get("saleType") != "soldout":
+                        card["saleType"] = "soldout"
+                        delisted += 1
+                        print(f"  官網已下架(404):{card.get('name')},已標記缺貨")
+                        delisted_lines.append(f"[DESCENTE] {card.get('name')}")
+                    continue
+
+                new_jpy = None
+                price_locator = page.locator("#mrkSalesPrice").first
+                if price_locator.count():
+                    price_text = price_locator.text_content(timeout=10000) or ""
+                    digits = re.sub(r"[^\d]", "", price_text)
+                    if digits:
+                        new_jpy = int(digits)
+
+                stock_texts = page.eval_on_selector_all(
+                    "li[data-sku] .stock", "els => els.map(e => e.textContent)"
+                )
+            except Exception as e:
+                print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+                errors += 1
+                continue
+
+            if new_jpy and new_jpy != card.get("jpy"):
+                print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+                price_change_lines.append(f"[DESCENTE] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+                card["jpy"] = new_jpy
+                changed += 1
+
+            has_stock = any("あり" in (t or "") for t in stock_texts) if stock_texts else True
+            new_sale_type = "instock" if has_stock else "soldout"
+            if new_sale_type != card.get("saleType", "instock"):
+                card["saleType"] = new_sale_type
+                stock_changed += 1
+
+            time.sleep(0.3)
+            if (idx + 1) % 50 == 0:
+                print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},缺貨異動 {stock_changed},下架 {delisted},錯誤 {errors})")
+        browser.close()
+    print(f"DESCENTE 完成:{len(cards)} 張卡,價格變動 {changed} 件,缺貨異動 {stock_changed} 件,下架 {delisted} 件,錯誤 {errors} 件")
     merge_and_save(cards)
 
 
@@ -960,13 +1238,13 @@ def main():
     if only in (None, "bape"):
         sync_bape(items)
     if only in (None, "aape"):
-        sync_price_only(items, "AAPE", extract_aape_price)
+        sync_aape(items)
     if only in (None, "lacoste"):
-        sync_price_only(items, "Lacoste", extract_ldjson_price)
+        sync_lacoste(items)
     if only in (None, "jlindeberg"):
         sync_price_only(items, "J.Lindeberg", extract_ldjson_price)
     if only in (None, "descente"):
-        sync_price_only(items, "DESCENTE", extract_ldjson_price)
+        sync_descente(items)
     if price_change_lines:
         # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
         head = f"📋 今日價格同步:共 {len(price_change_lines)} 件官網改價,網站售價已自動更新\n\n"

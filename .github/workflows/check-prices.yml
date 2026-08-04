@@ -33,10 +33,11 @@ jobs:
           EOF
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
-      # HONMA 的售價是頁面載入後才用 JS 算出來,一般的 HTTP 請求抓不到,
-      # 需要用真的瀏覽器(Playwright)把 JS 跑完再讀畫面上的價格,
-      # 所以要多這一步下載瀏覽器執行檔,其他品牌不需要。
-      - name: Install Playwright browser (for HONMA)
+      # HONMA(售價)、DESCENTE(現貨/缺貨)都是頁面載入後才用 JS 算出來/
+      # 套版,一般的 HTTP 請求抓不到,需要用真的瀏覽器(Playwright)把 JS
+      # 跑完再讀畫面上的資料,所以要多這一步下載瀏覽器執行檔,其他品牌
+      # 不需要。
+      - name: Install Playwright browser (for HONMA and DESCENTE)
         run: python -m playwright install --with-deps chromium
 
       # 每個品牌各自的庫存/價格同步邏輯見 sync_stock.py 開頭的說明。
