@@ -298,7 +298,7 @@
   }
   .top-cat-nav-btn:hover, .top-cat-nav-btn.active{ background:var(--paper-2); color:var(--gold-dim); }
   .top-cat-dropdown{
-    position:fixed; margin-top:6px;
+    position:absolute; margin-top:6px;
     background:#FFFFFF; border:1px solid var(--line-onlight); border-radius:12px;
     box-shadow:var(--shadow); padding:8px; flex-direction:column; gap:2px;
     min-width:170px; max-height:320px; overflow-y:auto; z-index:50;
@@ -1773,6 +1773,9 @@ function applyTopCatSelection(tier, brand){
 
 function renderTopCatNav(){
   const nav = document.getElementById('topCatNav');
+  // 上一輪 render 搬到 <body> 底下的舊下拉選單(見下面說明)要先清掉,
+  // 不然每次重繪都會多堆一份孤兒節點,清單越滾越大。
+  document.querySelectorAll('body > .top-cat-dropdown').forEach(d => d.remove());
   const tiers = Array.from(new Set(products.map(productTier))).sort((a,b) => TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b));
   const brandsForTier = (tier) => Array.from(new Set(products.filter(p => productTier(p) === tier).map(productBrand).filter(Boolean)));
   const allBrands = Array.from(new Set(products.map(productBrand).filter(Boolean))).sort((a,b) => a.localeCompare(b));
@@ -1803,17 +1806,26 @@ function renderTopCatNav(){
       btn.addEventListener('click', (e) => { e.stopPropagation(); applyTopCatSelection('all', 'all'); });
       return;
     }
+    // 搬到 <body> 底下,理由跟原本一樣:.top-cat-nav 手機版有橫向捲動
+    // (overflow-x:auto),而 overflow-x 只要不是 visible,overflow-y 也會
+    // 跟著被裁掉,下拉選單留在裡面高度會被截斷。
+    // 位置改用「頁面座標」(scrollX/scrollY + getBoundingClientRect)算,
+    // 定位方式改回 absolute——原本用 fixed + 純視窗座標,在手機 Safari
+    // 網址列會動態收合、視覺視窗高度即時變化的情況下,算出來的位置常常
+    // 跟按鈕實際位置對不起來,選單會跳到畫面中間、跟按鈕完全不同的地方
+    // (2026-08-04 使用者回報並用截圖確認過)。頁面座標不受網址列收合影響,
+    // 同時 absolute 定位在 body 底下(不在捲動容器裡)也不會被裁切,兩個
+    // 問題一次解決。
+    document.body.appendChild(dropdown);
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const wasOpen = dropdown.style.display !== 'none';
       closeAllTopCatDropdowns();
       if(!wasOpen){
-        // fixed 定位,位置用按鈕當下的螢幕座標現算,才不會被 .top-cat-nav
-        // 手機版的橫向捲動(overflow-x:auto)裁切掉——absolute 定位在捲動容器
-        // 裡面會被連著 overflow-y 一起裁掉,fixed 直接跳出捲動容器的裁切範圍。
         const r = btn.getBoundingClientRect();
-        dropdown.style.left = Math.round(Math.min(r.left, window.innerWidth - 190)) + 'px';
-        dropdown.style.top = Math.round(r.bottom + 6) + 'px';
+        const left = Math.min(window.scrollX + r.left, window.scrollX + window.innerWidth - 190);
+        dropdown.style.left = Math.round(Math.max(window.scrollX, left)) + 'px';
+        dropdown.style.top = Math.round(window.scrollY + r.bottom + 6) + 'px';
         dropdown.style.display = 'flex';
       }
     });
