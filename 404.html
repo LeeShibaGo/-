@@ -387,6 +387,32 @@
   .promo-banner{ display:block; max-width:1080px; margin:0 auto 18px; padding:0 20px; }
   .promo-banner img{ width:100%; display:block; border-radius:var(--radius); box-shadow:var(--shadow); transition:opacity 0.2s; }
   .promo-banner:hover img{ opacity:0.92; }
+  /* 首頁品牌方塊區,點一個品牌直接跳轉到該品牌的商品列表,
+     「所有品牌」按鈕重用上方分類選單本來就有的「所有品牌」下拉選單。 */
+  .brand-showcase{ margin: 28px auto; }
+  .brand-showcase-title{
+    text-align:center; font-family:'Noto Serif TC',serif; font-size:34px;
+    font-weight:900; letter-spacing:6px; color:var(--ink); margin-bottom:18px;
+  }
+  .brand-showcase-grid{
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; margin-bottom:14px;
+  }
+  .brand-showcase-item{
+    border:1px solid var(--line-onlight); border-radius:8px; background:#FFFFFF;
+    padding:20px 10px; text-align:center; font-weight:800; font-size:15px;
+    color:var(--ink); cursor:pointer; transition:box-shadow 0.15s, transform 0.15s;
+  }
+  .brand-showcase-item:hover{ box-shadow:var(--shadow); transform:translateY(-2px); }
+  .brand-showcase-all-btn{
+    display:block; width:100%; background:var(--ink); color:#fff; border:none;
+    border-radius:999px; padding:15px; font-weight:700; font-size:16px; cursor:pointer;
+    font-family:'Noto Sans TC',sans-serif;
+  }
+  .brand-showcase-all-btn:hover{ background:var(--gold-dim); }
+  @media (max-width:640px){
+    .brand-showcase-grid{ grid-template-columns:repeat(2, 1fr); }
+    .brand-showcase-title{ font-size:26px; letter-spacing:4px; }
+  }
 
   .trust-section{ margin: 22px 0 34px; }
   .trust-stats{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:22px; }
@@ -676,6 +702,12 @@
 <a class="promo-banner" href="?p=p_salomon_1784396678297_44">
   <img src="images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
 </a>
+
+<div class="wrap brand-showcase">
+  <h2 class="brand-showcase-title">BRAND</h2>
+  <div class="brand-showcase-grid" id="brandShowcaseGrid"></div>
+  <button type="button" class="brand-showcase-all-btn" id="brandShowcaseAllBtn">所有品牌 ▶</button>
+</div>
 
 <div class="wrap">
   <div class="trust-section">
@@ -1710,6 +1742,7 @@ function render(){
   soldMaps = computeSoldMaps();
   renderSocialLinks();
   renderTrustSection();
+  renderBrandShowcase();
   renderProducts();
   renderNewArrivals();
   renderBestSellers();
@@ -2565,6 +2598,40 @@ function renderTrustSection(){
     .map(src => `<a href="${src}" target="_blank" rel="noopener noreferrer"><img src="${src}" alt="客戶真實回饋截圖" loading="lazy"></a>`)
     .join('');
 }
+
+// 首頁「BRAND」精選品牌方塊,固定挑幾個代表性品牌,點下去直接跳轉到
+// 該品牌的商品列表(邏輯比照分類選單裡點選品牌的 applyTopCatSelection)。
+// 只列出「目前真的有上架商品」的品牌,不會出現點了却空白的死連結。
+const BRAND_SHOWCASE_LIST = ['GU', 'UNIQLO', 'Salomon', 'On', 'AAPE', 'BAPE', 'Lacoste', 'Onitsuka Tiger', 'DHC', 'Dior'];
+
+function renderBrandShowcase(){
+  const grid = document.getElementById('brandShowcaseGrid');
+  const visible = visibleProducts();
+  const present = BRAND_SHOWCASE_LIST.filter(b => visible.some(p => productBrand(p) === b));
+  grid.innerHTML = present.map(b => `<div class="brand-showcase-item" data-brand="${escapeHtml(b)}">${escapeHtml(b)}</div>`).join('');
+  grid.querySelectorAll('.brand-showcase-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const brand = el.dataset.brand;
+      const match = visible.find(p => productBrand(p) === brand);
+      if(!match) return;
+      currentTier = productTier(match);
+      currentBrand = brand;
+      currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all';
+      currentPage = 1;
+      renderProducts();
+      triggerPageTransition();
+      scrollToProductGrid();
+    });
+  });
+}
+document.getElementById('brandShowcaseAllBtn').addEventListener('click', () => {
+  const nav = document.getElementById('topCatNav');
+  nav.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => {
+    const btn = Array.from(nav.querySelectorAll('.top-cat-nav-btn')).find(b => b.textContent.includes('所有品牌'));
+    if(btn) btn.click();
+  }, 400);
+});
 
 document.getElementById('lookupSubmitBtn').onclick = async () => {
   const code = document.getElementById('lookupCodeInput').value.trim().toUpperCase();
