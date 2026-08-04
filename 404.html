@@ -977,6 +977,10 @@
         <input type="checkbox" id="newProdQuoteOnly" style="width:auto;">
         私訊報價(勾選後商品卡不顯示價格、不能直接加入清單,改成「私訊詢問報價」按鈕,適合大型/客製商品)
       </label>
+      <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+        <input type="checkbox" id="newProdHidden" style="width:auto;">
+        隱藏(勾選後客人在網站上完全看不到這件商品,包括分類選單、本週新品、熱銷商品、分享連結,但資料保留,之後隨時可以取消勾選重新上架)
+      </label>
       <label>尺寸(選填,逗號分隔;若下方有加顏色,以顏色內設定的尺寸為主)</label>
       <input type="text" id="newProdSizes" placeholder="例如:S,M,L">
 
@@ -1600,7 +1604,7 @@ function applyUrlParams(){
   }
   const pid = q.get('p');
   if(pid){
-    const prod = products.find(x => x.id === pid);
+    const prod = visibleProducts().find(x => x.id === pid);
     if(prod){
       currentTier = productTier(prod);
       currentBrand = productBrand(prod);
@@ -1746,6 +1750,12 @@ function escapeHtml(str){
 // 就先拿 category 頂著用,畫面上才不會整排商品都掉進「其他」。
 function productBrand(p){ return p.brand || p.category || '其他'; }
 
+// hidden:true 的商品要整張卡從客人看得到的地方都拿掉(不是像 soldout
+// 那樣還留著卡片、只是標缺貨),但後台商品管理列表要看得到、才能重新
+// 打開——所以只在「客人瀏覽會用到」的畫面套用這個過濾,後台(admin 開頭
+// 的那組函式)刻意不套用,繼續讀 products 本身。
+function visibleProducts(){ return products.filter(p => !p.hidden); }
+
 // 鞋類的尺寸選項通常比服飾多很多(例如跑鞋一款可能有 14 個尺寸),
 // 選項一多用小按鈕全部攤開會很亂,鞋子尺寸選項才需要收進下拉選單。
 // 服飾尺寸(XS/S/M/L/XL 這種)選項數量少,維持原本的按鈕列就好。
@@ -1797,9 +1807,10 @@ function renderTopCatNav(){
   // 上一輪 render 搬到 <body> 底下的舊下拉選單(見下面說明)要先清掉,
   // 不然每次重繪都會多堆一份孤兒節點,清單越滾越大。
   document.querySelectorAll('body > .top-cat-dropdown').forEach(d => d.remove());
-  const tiers = Array.from(new Set(products.map(productTier))).sort((a,b) => TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b));
-  const brandsForTier = (tier) => Array.from(new Set(products.filter(p => productTier(p) === tier).map(productBrand).filter(Boolean)));
-  const allBrands = Array.from(new Set(products.map(productBrand).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+  const visible = visibleProducts();
+  const tiers = Array.from(new Set(visible.map(productTier))).sort((a,b) => TIER_ORDER.indexOf(a) - TIER_ORDER.indexOf(b));
+  const brandsForTier = (tier) => Array.from(new Set(visible.filter(p => productTier(p) === tier).map(productBrand).filter(Boolean)));
+  const allBrands = Array.from(new Set(visible.map(productBrand).filter(Boolean))).sort((a,b) => a.localeCompare(b));
 
   const items = [
     { key: 'all', label: '全部', brands: null },
@@ -1863,7 +1874,7 @@ function renderGroupTabs(){
   const wrap = document.getElementById('groupTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的大分類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = products.filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  const scoped = visibleProducts().filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
   const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean)));
   // 這個品牌底下只有一種大分類,沒必要多一排標籤
   if(groups.length < 2){ wrap.innerHTML = ''; return; }
@@ -1885,7 +1896,7 @@ function renderSubtypeTabs(){
   const wrap = document.getElementById('subtypeTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的種類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  let scoped = products.filter(p => productBrand(p) === currentBrand);
+  let scoped = visibleProducts().filter(p => productBrand(p) === currentBrand);
   if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
@@ -1909,7 +1920,7 @@ function renderSeriesTabs(){
   const wrap = document.getElementById('seriesTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的系列標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  let scoped = products.filter(p => productBrand(p) === currentBrand);
+  let scoped = visibleProducts().filter(p => productBrand(p) === currentBrand);
   if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
@@ -1944,7 +1955,7 @@ function renderProducts(){
   // 各層篩選(大分類/品牌/種類分類/種類/系列)各自獨立套用,不互相依賴選擇順序——
   // 品牌選單現在可以在還沒選大分類時就直接選品牌,所以不能像以前那樣把品牌以下的
   // 篩選都包在「有選大分類」的條件裡面,不然沒選大分類時選品牌會完全沒作用。
-  let list = products;
+  let list = visibleProducts();
   if(currentTier !== 'all'){
     list = list.filter(p => productTier(p) === currentTier);
   }
@@ -2117,7 +2128,7 @@ function wireCardEvents(grid, onChange){
 function renderNewArrivals(){
   const wrap = document.getElementById('newArrivalsWrap');
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const recent = products
+  const recent = visibleProducts()
     .filter(p => productAddedAt(p) >= cutoff)
     .sort((a, b) => productAddedAt(b) - productAddedAt(a))
     .slice(0, 5);
@@ -2135,7 +2146,7 @@ function renderNewArrivals(){
 // 目前沒有任何一件賣出紀錄的話整塊隱藏。
 function renderBestSellers(){
   const wrap = document.getElementById('bestSellersWrap');
-  const ranked = products
+  const ranked = visibleProducts()
     .map(p => ({ p, qty: getSoldQty(p) }))
     .filter(x => x.qty > 0)
     .sort((a, b) => b.qty - a.qty)
@@ -2857,7 +2868,7 @@ function renderProductAdminList(){
         ${p.image ? `<img class="admin-thumb" src="${escapeHtml(p.image)}" alt="">` : ''}
         <div>
           <div class="prod-row-name">${escapeHtml(p.name)}</div>
-          <div class="prod-row-meta">${escapeHtml(COUNTRY_LABELS[p.country || 'JP'])} ・ ${currencySymbol(p.country || 'JP')}${p.jpy.toLocaleString('en-US')} → ${fmtMoney(sellPriceTwd(p))}${p.twdOverride != null && p.twdOverride !== '' ? '(手動定價)' : ''} ・ ${p.weight}kg ・ ${(p.saleType || 'instock') === 'preorder' ? '預購' : '現貨'}${productBrand(p) ? ' ・ ' + escapeHtml(productBrand(p)) : ''}${p.subtype ? ' ・ ' + escapeHtml(p.subtype) : ''}${p.desc ? ' ・ ' + escapeHtml(p.desc) : ''}</div>
+          <div class="prod-row-meta">${p.hidden ? '<b style="color:var(--stamp);">(隱藏中)</b> ・ ' : ''}${escapeHtml(COUNTRY_LABELS[p.country || 'JP'])} ・ ${currencySymbol(p.country || 'JP')}${p.jpy.toLocaleString('en-US')} → ${fmtMoney(sellPriceTwd(p))}${p.twdOverride != null && p.twdOverride !== '' ? '(手動定價)' : ''} ・ ${p.weight}kg ・ ${(p.saleType || 'instock') === 'preorder' ? '預購' : '現貨'}${productBrand(p) ? ' ・ ' + escapeHtml(productBrand(p)) : ''}${p.subtype ? ' ・ ' + escapeHtml(p.subtype) : ''}${p.desc ? ' ・ ' + escapeHtml(p.desc) : ''}</div>
           ${variantDetail ? `<details><summary style="cursor:pointer; font-size:12px; color:#6B7686;">顏色/尺寸</summary><div class="prod-row-meta">${variantDetail}</div></details>` : ''}
         </div>
       </div>
@@ -2978,6 +2989,7 @@ function resetProductForm(){
   document.getElementById('newProdSubtype').value = '';
   document.getElementById('newProdSaleType').value = 'instock';
   document.getElementById('newProdQuoteOnly').checked = false;
+  document.getElementById('newProdHidden').checked = false;
   document.getElementById('newProdSizes').value = '';
   clearColorRows();
   document.getElementById('newProdImageUrl').value = '';
@@ -3003,6 +3015,7 @@ window.startEditProduct = function(id){
   document.getElementById('newProdSubtype').value = p.subtype || '';
   document.getElementById('newProdSaleType').value = p.saleType || 'instock';
   document.getElementById('newProdQuoteOnly').checked = !!p.quoteOnly;
+  document.getElementById('newProdHidden').checked = !!p.hidden;
   document.getElementById('newProdSizes').value = (p.sizes || []).join(',');
   clearColorRows();
   (p.colors || []).forEach(c => addColorRow(c));
@@ -3084,6 +3097,7 @@ document.getElementById('addProdBtn').onclick = async () => {
   const subtype = document.getElementById('newProdSubtype').value.trim();
   const saleType = document.getElementById('newProdSaleType').value;
   const quoteOnly = document.getElementById('newProdQuoteOnly').checked;
+  const hidden = document.getElementById('newProdHidden').checked;
   const sizesRaw = document.getElementById('newProdSizes').value.trim();
   const sizes = sizesRaw ? sizesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
   const colors = readColorRowsFromForm();
@@ -3112,6 +3126,7 @@ document.getElementById('addProdBtn').onclick = async () => {
     if(twdOverride != null && !isNaN(twdOverride)) updated.twdOverride = twdOverride;
     if(extraSoldQty != null && !isNaN(extraSoldQty)) updated.extraSoldQty = extraSoldQty;
     if(quoteOnly) updated.quoteOnly = true;
+    if(hidden) updated.hidden = true;
     products[idx] = updated;
     const ok = await storageSet(PRODUCTS_KEY, products, true);
     if(!ok){ toast('儲存失敗,圖片可能太大,建議換更小的圖片或改用圖片網址'); }
@@ -3127,6 +3142,7 @@ document.getElementById('addProdBtn').onclick = async () => {
     if(twdOverride != null && !isNaN(twdOverride)) newProd.twdOverride = twdOverride;
     if(extraSoldQty != null && !isNaN(extraSoldQty)) newProd.extraSoldQty = extraSoldQty;
     if(quoteOnly) newProd.quoteOnly = true;
+    if(hidden) newProd.hidden = true;
     products = [...products, newProd];
     const ok = await storageSet(PRODUCTS_KEY, products, true);
     if(!ok){ toast('儲存失敗,圖片可能太大,建議換更小的圖片或改用圖片網址'); }

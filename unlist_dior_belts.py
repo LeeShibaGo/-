@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-"""一次性:把 Dior 皮帶全部下架(標記缺貨,不刪除資料)
+"""一次性:把 Dior 皮帶全部隱藏(不刪除資料)
 ------------------------------------------------------------
 用途:
-  老闆要求把 Dior 皮帶這個分類先下架。這些商品沒有 colors 陣列(單一款式),
-  跟 UHA/DHC 同一套簡單 schema,下架方式比照:把 saleType 設成 "soldout",
-  商品卡片上會顯示「缺貨」、加入清單按鈕停用,但資料還在,之後想重新上架
-  只要把 saleType 改回 "instock" 就好,不用重新輸入一次商品資料。
+  老闆一開始要求把 Dior 皮帶下架,先做成標記缺貨(saleType: soldout)——
+  後來澄清是要「整個藏起來,不要顯示在主頁」,不只是顯示缺貨徽章。改成
+  額外加上 hidden: true,index.html 這邊客人瀏覽會用到的畫面(商品列表、
+  本週新品、熱銷商品、分類選單、分享連結)都已經改成用 visibleProducts()
+  (products.filter(p => !p.hidden))過濾掉這些商品,後台商品管理列表則
+  故意不套用這個過濾,老闆自己在後台還是看得到、可以隨時把 hidden 改回
+  false 重新上架。
 
   用服務帳號(Admin SDK)寫入,因為資料庫規則已經鎖起來。
 
@@ -39,11 +42,17 @@ def main():
     updated = 0
     for p in products:
         if p.get("brand") == "Dior" and p.get("subtype") == "皮帶":
+            changed = False
             if p.get("saleType") != "soldout":
                 p["saleType"] = "soldout"
+                changed = True
+            if not p.get("hidden"):
+                p["hidden"] = True
+                changed = True
+            if changed:
                 updated += 1
 
-    print(f"共下架 {updated} 件 Dior 皮帶")
+    print(f"共隱藏 {updated} 件 Dior 皮帶")
     db.reference(PRODUCTS_PATH).set(products)
     print("已寫回 Firebase,完成!")
 
