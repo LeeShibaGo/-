@@ -712,6 +712,11 @@ def extract_dhc_ldjson(html):
         return None
 
 
+# 特價商品(例如「WEB限定」組合包)官網會多顯示一個劃線原價,已經是稅込價,
+# 邏輯跟 scrape_dhc.py 的 ORIG_PRICE_RE 一致。
+DHC_ORIG_PRICE_RE = re.compile(r'class="c-price-delete">\s*<span class="d-inline-block">\s*([\d,]+)')
+
+
 def sync_dhc(items):
     print("=== DHC 同步開始 ===")
     cards = [p for p in items if p.get("brand") == "DHC"]
@@ -756,6 +761,14 @@ def sync_dhc(items):
             price_change_lines.append(f"[DHC] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
             card["jpy"] = new_jpy
             changed += 1
+
+        orig_match = DHC_ORIG_PRICE_RE.search(res.text)
+        orig_jpy = int(orig_match.group(1).replace(",", "")) if orig_match else None
+        if orig_jpy and orig_jpy > card.get("jpy", 0):
+            card["origJpy"] = orig_jpy
+        elif card.get("origJpy") is not None:
+            # 特價活動結束、或原價現在跟現價一樣了,把劃線價拿掉
+            card.pop("origJpy", None)
 
         if (idx + 1) % 100 == 0:
             print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},下架 {delisted},缺貨 {now_oos},錯誤 {errors})")

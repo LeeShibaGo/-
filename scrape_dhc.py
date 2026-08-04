@@ -51,6 +51,10 @@ WORKERS = 8
 HEALTH_CATEGORY_PREFIX = "/health/"
 
 LDJSON_RE = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.DOTALL)
+# 特價商品官網會多顯示一個劃線的原價(例如「WEB限定」組合包),這個
+# class 抓到的已經是稅込價(用「2,430 / 1,215(50%off)」這組交叉驗證過,
+# 兩邊都是稅込數字才會剛好差整數倍,不像 offers.price 未稅價那樣要再乘 1.08)。
+ORIG_PRICE_RE = re.compile(r'class="c-price-delete">\s*<span class="d-inline-block">\s*([\d,]+)')
 # 麵包屑第一層(HOME 之後的第一個 breadcrumb-item)的連結網址跟分類名稱
 FIRST_CRUMB_RE = re.compile(
     r'HOME\s*</a>\s*</li>.*?<li class="breadcrumb-item">\s*<a href="([^"]+)">\s*([^<]+?)\s*</a>',
@@ -137,7 +141,7 @@ def parse_product(pid):
     images = data.get("image") or []
     image = images[0] if isinstance(images, list) and images else (images or None)
 
-    return {
+    result = {
         "name": data.get("name", "").strip(),
         "jpy": jpy,
         "weight": guess_weight(),
@@ -148,6 +152,12 @@ def parse_product(pid):
         "link": url,
         "image": image,
     }
+    orig_match = ORIG_PRICE_RE.search(html)
+    if orig_match:
+        orig_jpy = int(orig_match.group(1).replace(",", ""))
+        if orig_jpy > jpy:
+            result["origJpy"] = orig_jpy
+    return result
 
 
 def main():

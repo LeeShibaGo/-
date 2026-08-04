@@ -17,7 +17,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install firebase-admin
+        run: pip install requests beautifulsoup4 firebase-admin
 
       - name: Write Firebase service account key
         run: |
@@ -26,5 +26,5 @@ jobs:
           EOF
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
-      - name: Fix DHC prices (apply 8% consumption tax)
+      - name: Fix DHC prices (apply 8% consumption tax) and add new product
         run: python fix_dhc_tax.py
