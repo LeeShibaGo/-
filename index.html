@@ -383,6 +383,10 @@
     .hero-cta-inner{ padding:22px 20px; }
     .hero-cta-title{ font-size:20px; }
   }
+  /* 首頁促銷 banner,點了直接跳轉、捲動到指定商品(用跟分享連結一樣的 ?p= 機制) */
+  .promo-banner{ display:block; max-width:1080px; margin:0 auto 18px; padding:0 20px; }
+  .promo-banner img{ width:100%; display:block; border-radius:var(--radius); box-shadow:var(--shadow); transition:opacity 0.2s; }
+  .promo-banner:hover img{ opacity:0.92; }
 
   .trust-section{ margin: 22px 0 34px; }
   .trust-stats{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:22px; }
@@ -668,6 +672,10 @@
     <a class="hero-cta-btn" id="heroCtaLineBtn" href="#" target="_blank" rel="noopener noreferrer">立即加入 LINE</a>
   </div>
 </div>
+
+<a class="promo-banner" href="?p=p_salomon_1784396678297_44">
+  <img src="images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
+</a>
 
 <div class="wrap">
   <div class="trust-section">
