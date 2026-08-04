@@ -399,9 +399,11 @@
   }
   .brand-showcase-item{
     border:1px solid var(--line-onlight); border-radius:8px; background:#FFFFFF;
-    padding:20px 10px; text-align:center; font-weight:800; font-size:15px;
-    color:var(--ink); cursor:pointer; transition:box-shadow 0.15s, transform 0.15s;
+    padding:16px 10px; text-align:center; cursor:pointer;
+    transition:box-shadow 0.15s, transform 0.15s;
+    display:flex; align-items:center; justify-content:center; height:76px;
   }
+  .brand-showcase-item img{ max-width:100%; max-height:44px; object-fit:contain; }
   .brand-showcase-item:hover{ box-shadow:var(--shadow); transform:translateY(-2px); }
   .brand-showcase-all-btn{
     display:block; width:100%; background:var(--ink); color:#fff; border:none;
@@ -2602,13 +2604,27 @@ function renderTrustSection(){
 // 首頁「BRAND」精選品牌方塊,固定挑幾個代表性品牌,點下去直接跳轉到
 // 該品牌的商品列表(邏輯比照分類選單裡點選品牌的 applyTopCatSelection)。
 // 只列出「目前真的有上架商品」的品牌,不會出現點了却空白的死連結。
-const BRAND_SHOWCASE_LIST = ['GU', 'UNIQLO', 'Salomon', 'On', 'AAPE', 'BAPE', 'Lacoste', 'Onitsuka Tiger', 'DHC', 'Dior'];
+// logo 檔案來自各品牌官網自己的 logotype/apple-touch-icon(見
+// images/brand-logos 底下,取得方式:直接讀官網首頁 <head> 裡的
+// icon/logo 連結下載,不是隨便找的圖),放進 images/brand-logos/。
+const BRAND_SHOWCASE_LIST = [
+  { brand: 'GU', logo: 'images/brand-logos/gu.png' },
+  { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
+  { brand: 'Salomon', logo: 'images/brand-logos/salomon.png' },
+  { brand: 'On', logo: 'images/brand-logos/on.png' },
+  { brand: 'AAPE', logo: 'images/brand-logos/aape.png' },
+  { brand: 'BAPE', logo: 'images/brand-logos/bape.png' },
+  { brand: 'Lacoste', logo: 'images/brand-logos/lacoste.png' },
+  { brand: 'Onitsuka Tiger', logo: 'images/brand-logos/onitsukatiger.svg' },
+  { brand: 'DHC', logo: 'images/brand-logos/dhc.svg' },
+  { brand: 'Dior', logo: 'images/brand-logos/dior.png' },
+];
 
 function renderBrandShowcase(){
   const grid = document.getElementById('brandShowcaseGrid');
   const visible = visibleProducts();
-  const present = BRAND_SHOWCASE_LIST.filter(b => visible.some(p => productBrand(p) === b));
-  grid.innerHTML = present.map(b => `<div class="brand-showcase-item" data-brand="${escapeHtml(b)}">${escapeHtml(b)}</div>`).join('');
+  const present = BRAND_SHOWCASE_LIST.filter(x => visible.some(p => productBrand(p) === x.brand));
+  grid.innerHTML = present.map(x => `<div class="brand-showcase-item" data-brand="${escapeHtml(x.brand)}"><img src="${escapeHtml(x.logo)}" alt="${escapeHtml(x.brand)}" loading="lazy"></div>`).join('');
   grid.querySelectorAll('.brand-showcase-item').forEach(el => {
     el.addEventListener('click', () => {
       const brand = el.dataset.brand;
