@@ -7,7 +7,10 @@
   拒絕、沒有真的存進去,只是後台畫面自己樂觀顯示成功。這支程式把老闆
   已經在後台操作過、但沒有真的存進去的這筆訂單狀態補回來。
 
-  用訂購人姓名+總額+訂金三個條件一起比對,避免同名訂單比對錯筆。
+  第一版用姓名+總額+訂金比對,結果沒找到——查了才發現這筆訂單存的
+  total/deposit 其實是帶小數的 1841.72304,畫面上用 fmtMoney() 四捨五入
+  顯示成 NT$1,842,不是真的整數 1842,比對失敗。改成直接用訂單編碼
+  (查資料庫查到的 N9PNM7)比對,不會再錯。
 
   用服務帳號(Admin SDK)寫入,因為資料庫規則已經鎖起來。
 
@@ -29,9 +32,7 @@ for _s in (sys.stdout, sys.stderr):
 FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
 ORDERS_PATH = "daigou-orders-v1"
 
-MATCH_NAME = "李哲寧"
-MATCH_TOTAL = 1842
-MATCH_DEPOSIT = 1842
+MATCH_CODE = "N9PNM7"
 NEW_STATUS = "採購中"
 
 
@@ -39,23 +40,12 @@ def main():
     cred = credentials.ApplicationDefault()
     firebase_admin.initialize_app(cred, {"databaseURL": FIREBASE_DB_URL})
 
-    orders = db.reference(ORDERS_PATH).get() or {}
-    if isinstance(orders, list):
-        orders = {str(i): o for i, o in enumerate(orders) if o}
-
-    matched_code = None
-    for code, o in orders.items():
-        if not o:
-            continue
-        if o.get("name") == MATCH_NAME and o.get("total") == MATCH_TOTAL and o.get("deposit") == MATCH_DEPOSIT:
-            matched_code = code
-            break
-
-    if not matched_code:
-        print(f"找不到符合條件的訂單(姓名={MATCH_NAME}, 總額={MATCH_TOTAL}, 訂金={MATCH_DEPOSIT})")
+    order = db.reference(f"{ORDERS_PATH}/{MATCH_CODE}").get()
+    if not order:
+        print(f"找不到訂單編碼 {MATCH_CODE}")
         return
 
-    order = orders[matched_code]
+    matched_code = MATCH_CODE
     print(f"找到訂單 {matched_code},目前狀態:{order.get('status')}")
 
     order.setdefault("statusTimestamps", {})
