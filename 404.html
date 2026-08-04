@@ -1531,11 +1531,24 @@ async function storageGet(key){
 }
 async function storageSet(key, value){
   try{
-    const res = await fetch(`${FIREBASE_DB_URL}/${key}.json`, {
+    // 資料庫規則現在要求寫入要有登入身分(auth != null)。之前這裡一直是
+    // 純沒有帶身分的 PUT,老闆登入後在後台改資料其實整個都被規則擋掉、
+    // 一直是 401——本機畫面看起來「已更新」只是因為畫面本身先樂觀改了
+    // 記憶體裡的資料,不代表真的寫進 Firebase,直到查訂單的客人看到的還是
+    // 舊資料才會發現(2026-08-04 抓到)。修法:有登入的話,把 ID token 用
+    // ?auth= 帶進 Firebase REST API 的網址,這是 Firebase 官方支援的
+    // REST API 身分驗證方式。
+    let url = `${FIREBASE_DB_URL}/${key}.json`;
+    if(fbAuth.currentUser){
+      const token = await fbAuth.currentUser.getIdToken();
+      url += `?auth=${encodeURIComponent(token)}`;
+    }
+    const res = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(value)
     });
+    if(!res.ok) console.error('storage set rejected', key, res.status, await res.text().catch(()=>''));
     return res.ok;
   }catch(e){ console.error('storage set failed', e); return false; }
 }
