@@ -333,7 +333,11 @@
     .cat-sidebar .cat-tab{
       width:auto; white-space:nowrap; flex:0 0 auto; font-size:12px; padding:6px 10px;
     }
-    .shop-main .grid{ grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    /* 固定寫死兩欄,不要用 auto-fill/minmax 讓瀏覽器自己算——部分手機瀏覽器
+       (實測某些 iOS Safari)在 flex 版面裡的格子容器算 auto-fill 欄數時
+       會出錯,算成寬度不夠只排一欄,導致手機上一排變成一張超大的卡片。
+       直接鎖定 2 欄不會有這個問題。 */
+    .shop-main .grid{ grid-template-columns: repeat(2, 1fr); }
     /* 手機版兩欄卡片較窄,商品名稱/說明用原本電腦版的字級會一直換行、
        整張卡都被文字塞滿,圖片反而不明顯。限制行數+縮小字級,圖片為主。 */
     .card{ padding:12px; gap:6px; }
