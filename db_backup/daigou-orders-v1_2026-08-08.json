@@ -1,0 +1,203 @@
+{
+  "9D9YS7": {
+    "code": "9D9YS7",
+    "deliveryFee": 60,
+    "deliveryMethod": "7-11 店到店",
+    "deposit": 10249.29552,
+    "device": "手機",
+    "email": "123@gmail.com",
+    "id": "ord_1785778257387",
+    "items": [
+      {
+        "color": "卡其",
+        "country": "JP",
+        "jpy": 13200,
+        "name": "AAPE FANCY MAIN TEE",
+        "productId": "p_aape_full_1784224360981_10",
+        "purchased": false,
+        "qty": 1,
+        "size": "S",
+        "weight": 0.3
+      },
+      {
+        "color": "粉紅色",
+        "country": "JP",
+        "jpy": 15400,
+        "name": "AAPE FANCY MAIN TEE",
+        "productId": "p_aape_full_1784224360981_12",
+        "purchased": false,
+        "qty": 1,
+        "size": "S",
+        "weight": 0.3
+      },
+      {
+        "color": "白色",
+        "country": "JP",
+        "jpy": 8250,
+        "name": "AAPE BASIC TEE",
+        "productId": "p_aape_full_1784224360981_17",
+        "purchased": false,
+        "qty": 1,
+        "size": "S",
+        "weight": 0.3
+      }
+    ],
+    "name": "我要去",
+    "note": "",
+    "phone": "0977777777",
+    "shipping": 117,
+    "status": "待確認訂金",
+    "statusTimestamps": {
+      "待確認訂金": 1785778257388
+    },
+    "storeName": "台中逢甲",
+    "subtotal": 10072.29552,
+    "time": 1785778257388,
+    "total": 10249.29552
+  },
+  "EQAKMY": {
+    "code": "EQAKMY",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 9599.648,
+    "device": "手機",
+    "email": "123@gmail.com",
+    "id": "ord_1785928581252",
+    "items": [
+      {
+        "color": "白 | 萊姆綠",
+        "country": "JP",
+        "jpy": 44000,
+        "name": "LightSpray Cloudboom Strike 2",
+        "productId": "p_on_1784204293742_11",
+        "purchased": false,
+        "qty": 1,
+        "size": "W22",
+        "weight": 0.7
+      },
+      {
+        "color": "白 | 萊姆綠",
+        "country": "JP",
+        "jpy": 35200,
+        "name": "Cloudboom Strike 2",
+        "productId": "p_on_1784204293742_10",
+        "purchased": false,
+        "qty": 1,
+        "size": "W22",
+        "weight": 0.7
+      }
+    ],
+    "name": "她媽媽",
+    "note": "",
+    "phone": "000000000",
+    "shipping": 182,
+    "status": "待確認訂金",
+    "statusTimestamps": {
+      "待確認訂金": 1785928581252
+    },
+    "subtotal": 18979.296,
+    "time": 1785928581252,
+    "total": 19199.296
+  },
+  "N9PNM7": {
+    "code": "N9PNM7",
+    "deliveryFee": 60,
+    "deliveryMethod": "7-11 店到店",
+    "deposit": 1841.72304,
+    "device": "電腦",
+    "email": "journeylee321@gmail.com",
+    "id": "ord_1785833278260",
+    "items": [
+      {
+        "country": "JP",
+        "jpy": 700,
+        "name": "ビタミンC（ハードカプセル）徳用90日分",
+        "productId": "p_dhc_1785681632499_3",
+        "purchased": false,
+        "qty": 1,
+        "weight": 0.15
+      },
+      {
+        "country": "JP",
+        "jpy": 3800,
+        "name": "濃縮プエラリアミリフィカ 30日分",
+        "productId": "p_dhc_1785681632499_0",
+        "purchased": false,
+        "qty": 1,
+        "weight": 0.15
+      },
+      {
+        "country": "JP",
+        "jpy": 1700,
+        "name": "エステミックス 30日分",
+        "productId": "p_dhc_1785681632499_7",
+        "purchased": false,
+        "qty": 1,
+        "weight": 0.15
+      }
+    ],
+    "name": "李哲寧",
+    "note": "",
+    "phone": "1231231235",
+    "shipping": 58.5,
+    "status": "採購中",
+    "statusTimestamps": {
+      "已收訂金": 1785855738740,
+      "待確認訂金": 1785833278261,
+      "採購中": 1785855738740
+    },
+    "storeName": "123123",
+    "subtotal": 1723.22304,
+    "time": 1785833278261,
+    "total": 1841.72304
+  },
+  "XNKHUR": {
+    "code": "XNKHUR",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 10793.85976,
+    "device": "電腦",
+    "email": "journeylee321@gmail.com",
+    "id": "ord_1786096668584",
+    "items": [
+      {
+        "color": "黑色",
+        "country": "JP",
+        "jpy": 33000,
+        "name": "FLIP STA #1",
+        "productId": "p_bape_1784732222300_7",
+        "purchased": false,
+        "qty": 1,
+        "size": "7",
+        "weight": 0.5
+      },
+      {
+        "color": "黑色",
+        "country": "JP",
+        "jpy": 25300,
+        "name": "ONE POINT SWAET SHORTS",
+        "productId": "p_bape_1784732222300_3",
+        "purchased": false,
+        "qty": 2,
+        "size": "XS",
+        "weight": 0.5
+      }
+    ],
+    "name": "李哲寧",
+    "note": "",
+    "phone": "1231231232",
+    "shipping": 195,
+    "status": "待確認訂金",
+    "statusTimestamps": {
+      "待確認訂金": 1786096668584
+    },
+    "subtotal": 21354.71952,
+    "time": 1786096668584,
+    "total": 21587.71952
+  },
+  "test_rule_check_delete_me": {
+    "code": "test_rule_check_delete_me",
+    "customer": "�W�h����-�i�R��",
+    "total": 0
+  }
+}
