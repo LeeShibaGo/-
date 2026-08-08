@@ -30,6 +30,8 @@ import time
 
 import requests
 
+from scrape_on_full import fix_size_key
+
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -131,7 +133,10 @@ def build_product(raw):
         color_en = (v.get("option1") or "").strip()
         if not color_en:
             continue
-        size = (v.get("option2") or "").strip() or "F"
+        # Firebase key 不能帶 . $ # [ ] /,帽子尺寸「7 1/2」、聯名尺寸「S/M」
+        # 這種帶斜線的寫法會直接擋掉整包寫入(2026-08-08 匯入失敗才發現)。
+        # fix_size_key 跟 sync_stussy() 用的是同一支,才不會兩邊尺寸字串對不起來。
+        size = fix_size_key((v.get("option2") or "").strip()) or "F"
         entry = by_color.setdefault(color_en, {
             "name": translate_color(color_en), "sizes": [], "stock": {}, "image": None,
         })
