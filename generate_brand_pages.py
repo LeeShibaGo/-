@@ -59,6 +59,7 @@ OUTPUT_DIR = "brand"
 BRAND_SLUGS = {
     "Salomon": "salomon",
     "BAPE": "bape",
+    "STUSSY": "stussy",
     "Carhartt WIP": "carhartt-wip",
     "DESCENTE": "descente",
     "AAPE": "aape",

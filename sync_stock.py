@@ -8,8 +8,12 @@
   直接更新 Firebase 上的商品資料,客人看到的缺貨狀態最多只落後一天。
 
 四種同步方式(2026-07-24 擴大範圍,2026-08-01 加入 GU,2026-08-04 加入 UNIQLO,
-2026-08-04 再把 AAPE/Lacoste 升級成真庫存同步、DESCENTE 升級成整體現貨同步):
-  A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE、GU、UNIQLO):
+2026-08-04 再把 AAPE/Lacoste 升級成真庫存同步、DESCENTE 升級成整體現貨同步,
+2026-08-08 加入 STUSSY):
+  A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE、STUSSY、GU、UNIQLO):
+     STUSSY(jp.stussy.com)跟 BAPE 一樣是 Shopify 官方 API,做法直接照搬
+     sync_bape(見 sync_stussy),差別只在顏色是英文(White、Faded Black
+     這種),用 scrape_stussy.py 的 translate_color() 反查回中文對照。
      這幾家官網的商品頁(或 API)本身就會把「每個顏色每個尺寸」的完整
      庫存用靜態資料吐出來,可以做到跟客人在網站上看到的一樣即時。
      UNIQLO 跟 GU 同屬 Fast Retailing,共用同一套 commerce API,
@@ -69,6 +73,7 @@
   python sync_stock.py salomon    # 只跑 Salomon(快,測試用)
   python sync_stock.py onitsuka   # 只跑 Onitsuka Tiger
   python sync_stock.py bape       # 只跑 BAPE
+  python sync_stock.py stussy     # 只跑 STUSSY
   python sync_stock.py aape       # 只跑 AAPE
   python sync_stock.py lacoste    # 只跑 Lacoste
   python sync_stock.py jlindeberg # 只跑 J.Lindeberg(只同步價格)
@@ -496,6 +501,82 @@ def sync_bape(items):
             card["jpy"] = new_jpy
             price_changed += 1
     print(f"BAPE 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
+          f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
+    merge_and_save(cards)
+
+
+# ---------- STUSSY(2026-08-08 新增,jp.stussy.com,Shopify,做法跟 BAPE
+# 幾乎一樣:option1 是顏色(英文),用 scrape_stussy.py 的 translate_color()
+# 反查回中文名稱去對照既有 colors[],option2 是尺寸)----------
+
+def stussy_handle_from_link(link):
+    return (link or "").rstrip("/").rsplit("/", 1)[-1]
+
+
+def sync_stussy(items):
+    print("=== STUSSY 同步開始 ===")
+    from scrape_stussy import translate_color
+
+    shop_products = []
+    page = 1
+    while True:
+        ps = fetch(f"https://jp.stussy.com/products.json?limit=250&page={page}").json().get("products", [])
+        shop_products.extend(ps)
+        if len(ps) < 250:
+            break
+        page += 1
+        time.sleep(0.6)
+    print(f"官網商品共 {len(shop_products)} 件")
+    by_handle = {p["handle"]: p for p in shop_products}
+
+    cards = [p for p in items if p.get("brand") == "STUSSY"]
+    stock_changed = price_changed = colors_gone = 0
+    for card in cards:
+        sp = by_handle.get(stussy_handle_from_link(card.get("link")))
+        if not sp or not sp.get("variants"):
+            for color in card.get("colors", []):
+                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                    colors_gone += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+            continue
+
+        by_raw_color = {}
+        for v in sp["variants"]:
+            raw = (v.get("option1") or "").strip()
+            by_raw_color.setdefault(raw, []).append(v)
+        by_translated_name = {}
+        for raw in by_raw_color:
+            by_translated_name.setdefault(translate_color(raw), raw)
+
+        for color in card.get("colors", []):
+            raw = by_translated_name.get(color.get("name"))
+            variants = by_raw_color.get(raw) if raw else None
+            if not variants:
+                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                    colors_gone += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+                continue
+            sizes, stock = [], {}
+            for v in variants:
+                s = fix_size_key((v.get("option2") or "F").strip())
+                if not s or s in stock:
+                    continue
+                sizes.append(s)
+                stock[s] = 5 if v.get("available") else 0
+            if stock != (color.get("stock") or {}):
+                stock_changed += 1
+            color["sizes"], color["stock"] = sizes, stock
+
+        try:
+            new_jpy = int(float(sp["variants"][0]["price"]))
+        except (KeyError, ValueError, TypeError, IndexError):
+            new_jpy = None
+        if new_jpy and new_jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[STUSSY] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+    print(f"STUSSY 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
           f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
     merge_and_save(cards)
 
@@ -1237,6 +1318,8 @@ def main():
         sync_honma(items)
     if only in (None, "bape"):
         sync_bape(items)
+    if only in (None, "stussy"):
+        sync_stussy(items)
     if only in (None, "aape"):
         sync_aape(items)
     if only in (None, "lacoste"):
