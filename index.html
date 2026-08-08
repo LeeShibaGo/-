@@ -1116,6 +1116,20 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const fbAuth = firebase.auth();
+
+// Firebase Auth 恢復「瀏覽器本來就記得的登入狀態」是非同步的,頁面剛載入
+// 那一刻 fbAuth.currentUser 很可能還是 null,就算老闆其實是登入的——
+// loadAll() 一開始就要讀訂單,如果太早讀、還沒等到登入狀態恢復完成,
+// storageGet() 就抓不到 token,規則會直接拒絕,訂單列表就會是空的
+// (2026-08-06 抓到,重新整理後台看不到訂單的原因)。用 onAuthStateChanged
+// 包一個「只等第一次」的 Promise,loadAll() 開頭 await 這個,確保登入
+// 狀態確定恢復完成才開始讀資料。
+const authReady = new Promise(resolve => {
+  const unsubscribe = fbAuth.onAuthStateChanged(() => {
+    unsubscribe();
+    resolve();
+  });
+});
 </script>
 
 <script>
@@ -1574,7 +1588,19 @@ const FIREBASE_DB_URL = 'https://shibago-4dd3c-default-rtdb.asia-southeast1.fire
 
 async function storageGet(key){
   try{
-    const res = await fetch(`${FIREBASE_DB_URL}/${key}.json`);
+    // 跟 storageSet 同樣的洞:訂單整包讀取(daigou-orders-v1 本身,不是
+    // 單筆 /code)現在規則要求要登入(auth != null),但這裡從來沒有帶過
+    // 登入身分的 ID token,不管老闆有沒有登入,每次讀取都直接被拒絕、
+    // orders 變成空陣列——後台訂單列表「一重新整理就不見」的原因就是這個
+    // (2026-08-06 抓到)。修法跟 storageSet 一樣:有登入的話帶 token。
+    // 對商品/設定這種本來就公開讀取的資料、或客人查單筆訂單(不用登入)
+    // 沒有影響,帶了 token 也不會壞事。
+    let url = `${FIREBASE_DB_URL}/${key}.json`;
+    if(fbAuth.currentUser){
+      const token = await fbAuth.currentUser.getIdToken();
+      url += `?auth=${encodeURIComponent(token)}`;
+    }
+    const res = await fetch(url);
     if(!res.ok) return null;
     return await res.json(); // 資料庫裡沒有這個 key 時,Firebase 會回傳 null
   }catch(e){ console.error('storage get failed', e); return null; }
@@ -1604,6 +1630,7 @@ async function storageSet(key, value){
 }
 
 async function loadAll(){
+  await authReady; // 確定登入狀態恢復完成,storageGet() 才抓得到 token 讀訂單
   const s = await storageGet(SETTINGS_KEY);
   const p = await storageGet(PRODUCTS_KEY);
   const o = await storageGet(ORDERS_KEY);
