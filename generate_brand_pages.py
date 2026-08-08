@@ -60,6 +60,7 @@ BRAND_SLUGS = {
     "Salomon": "salomon",
     "BAPE": "bape",
     "STUSSY": "stussy",
+    "CELINE": "celine",
     "Carhartt WIP": "carhartt-wip",
     "DESCENTE": "descente",
     "AAPE": "aape",

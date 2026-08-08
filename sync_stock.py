@@ -9,11 +9,15 @@
 
 四種同步方式(2026-07-24 擴大範圍,2026-08-01 加入 GU,2026-08-04 加入 UNIQLO,
 2026-08-04 再把 AAPE/Lacoste 升級成真庫存同步、DESCENTE 升級成整體現貨同步,
-2026-08-08 加入 STUSSY):
-  A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE、STUSSY、GU、UNIQLO):
+2026-08-08 加入 STUSSY、CELINE):
+  A) 庫存 + 價格都同步(Salomon、On、Onitsuka Tiger、BAPE、STUSSY、CELINE、GU、UNIQLO):
      STUSSY(jp.stussy.com)跟 BAPE 一樣是 Shopify 官方 API,做法直接照搬
      sync_bape(見 sync_stussy),差別只在顏色是英文(White、Faded Black
      這種),用 scrape_stussy.py 的 translate_color() 反查回中文對照。
+     CELINE(celine.com/ja-jp,LVMH 集團旗下但跟 Dior/LV 不同,沒有擋
+     非瀏覽器請求)是 Salesforce Commerce Cloud 靜態輸出,每個顏色是
+     獨立網址,尺寸庫存直接寫在 HTML 裡(缺貨的尺寸 <input> 帶
+     class="s-disabled"),見 sync_celine 的說明。
      這幾家官網的商品頁(或 API)本身就會把「每個顏色每個尺寸」的完整
      庫存用靜態資料吐出來,可以做到跟客人在網站上看到的一樣即時。
      UNIQLO 跟 GU 同屬 Fast Retailing,共用同一套 commerce API,
@@ -74,6 +78,7 @@
   python sync_stock.py onitsuka   # 只跑 Onitsuka Tiger
   python sync_stock.py bape       # 只跑 BAPE
   python sync_stock.py stussy     # 只跑 STUSSY
+  python sync_stock.py celine     # 只跑 CELINE
   python sync_stock.py aape       # 只跑 AAPE
   python sync_stock.py lacoste    # 只跑 Lacoste
   python sync_stock.py jlindeberg # 只跑 J.Lindeberg(只同步價格)
@@ -1009,6 +1014,113 @@ def sync_descente(items):
     merge_and_save(cards)
 
 
+# ---------- CELINE(2026-08-08 新增,celine.com/ja-jp,Salesforce
+# Commerce Cloud 靜態輸出,沒有機器人偵測。跟其他品牌不一樣的地方:
+# 每個顏色是獨立網址(不是一頁涵蓋全部顏色),商品卡存的 link 只會是
+# 「上架當時第一個顏色」的網址——但那頁本身就會列出所有顏色的 swatch
+# 連結(<a href> + data-gtm-interactiontype="Color swatch - 顏色名"),
+# 所以同步時先讀 link 這頁,「順便」發現所有顏色的網址,再一個一個顏色
+# 去抓最新的尺寸庫存,不需要另外存每個顏色自己的連結。) ----------
+
+CELINE_COLOR_SWATCH_RE = re.compile(
+    r'data-gtm-interactiontype="Color swatch - ([^"]+)"(?:(?!</li>).)*?href="([^"]+)"',
+    re.S,
+)
+
+
+def celine_extract_size_stock(html):
+    sizes, stock = [], {}
+    for li in re.findall(r'<li\s+data-mselector-listitem.*?</li>', html, re.S):
+        if "Size Selector" not in li:
+            continue
+        vm = re.search(r'data-value="([^"]+)"', li)
+        if not vm:
+            continue
+        size = fix_size_key(vm.group(1).strip())
+        if not size or size in stock:
+            continue
+        sizes.append(size)
+        stock[size] = 0 if "s-disabled" in li else 5
+    if sizes:
+        return sizes, stock
+    # 沒有尺寸選單的商品(大部分配件類),跟 scrape_celine.py 的
+    # parse_page() 一樣,退回用 JSON-LD 的 offers.availability 當唯一的
+    # 庫存狀態,不能回傳空的 sizes/stock,不然呼叫端會誤判成「這頁抓失敗」
+    # 而完全不更新,舊庫存(可能早就賣完了)就會一直卡著。
+    availability = ""
+    m = re.search(r'"availability"\s*:\s*"([^"]+)"', html)
+    if m:
+        availability = m.group(1)
+    return ["F"], {"F": 0 if "OutOfStock" in availability else 5}
+
+
+def sync_celine(items):
+    print("=== CELINE 同步開始 ===")
+    cards = [p for p in items if p.get("brand") == "CELINE"]
+    stock_changed = price_changed = errors = delisted = 0
+    for idx, card in enumerate(cards):
+        link = card.get("link")
+        if not link:
+            continue
+        try:
+            res = fetch_or_none_if_404(link, timeout=25)
+            time.sleep(0.4)
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+        if res is None:
+            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+                mark_all_sold_out(card)
+                delisted += 1
+                delisted_lines.append(f"[CELINE] {card.get('name')} 官網已下架(404)")
+            continue
+
+        # 這頁本身的 JSON-LD 拿現在這個顏色的最新售價
+        new_jpy = extract_ldjson_price(res.text)
+        if new_jpy and int(new_jpy) != card.get("jpy"):
+            new_jpy = int(new_jpy)
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[CELINE] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+
+        # 從這頁的顏色 swatch 列表,找出全部顏色各自的網址
+        swatch_urls = {}
+        for name, href in CELINE_COLOR_SWATCH_RE.findall(res.text):
+            full_url = href if href.startswith("http") else f"https://www.celine.com{href}"
+            swatch_urls.setdefault(name.strip(), full_url)
+
+        for color in card.get("colors", []):
+            color_url = swatch_urls.get(color.get("name"))
+            # 目前這頁本身也是某個顏色,直接沿用剛剛抓到的 res,不用重抓
+            html = res.text if color_url == link or not color_url else None
+            if html is None and color_url:
+                try:
+                    r2 = fetch_or_none_if_404(color_url, timeout=25)
+                    time.sleep(0.4)
+                    html = r2.text if r2 is not None else None
+                except Exception:
+                    html = None
+            if not html:
+                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                    stock_changed += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+                continue
+            sizes, stock = celine_extract_size_stock(html)
+            if not sizes:
+                continue
+            if stock != (color.get("stock") or {}):
+                stock_changed += 1
+            color["sizes"], color["stock"] = sizes, stock
+
+        if (idx + 1) % 100 == 0:
+            print(f"  進度 {idx+1}/{len(cards)}(庫存有變 {stock_changed},價格變動 {price_changed},下架 {delisted},錯誤 {errors})")
+    print(f"CELINE 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
+          f"價格變動 {price_changed} 件,下架 {delisted} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
+
+
 # ---------- UHA(零食/保健食品,uha-shop.jp) ----------
 # 商品沒有顏色/尺寸選項(colors 陣列是空的),所以不是用 Salomon/On 那種
 # 「鎖定某個顏色/尺寸」的缺貨標記,而是直接把整張商品卡的 saleType 設成
@@ -1341,6 +1453,8 @@ def main():
         sync_bape(items)
     if only in (None, "stussy"):
         sync_stussy(items)
+    if only in (None, "celine"):
+        sync_celine(items)
     if only in (None, "aape"):
         sync_aape(items)
     if only in (None, "lacoste"):
