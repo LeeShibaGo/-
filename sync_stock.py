@@ -437,6 +437,24 @@ def bape_handle_from_link(link):
     return (link or "").rstrip("/").rsplit("/", 1)[-1]
 
 
+def bape_variant_image(product, variant):
+    """variant.featured_image 在部分商品上會是 null(實測確認過,不是每件
+    都這樣,原因不明,猜是 Shopify 資料本身的狀況),這種情況下原本的做法
+    沒有 fallback,同一個商品的好幾個顏色就會全部抓不到圖片、變成共用
+    同一張(通常是第一個顏色的圖)——這就是「BAPE 衣服顏色圖片不會動」
+    的原因(2026-08-08 抓到)。修法:featured_image 是 null 的話,改用
+    images[] 陣列裡「variant_ids 包含這個 variant id」的那張圖片,這個
+    欄位實測兩種情況下都有正確填。"""
+    img = variant.get("featured_image")
+    if img and img.get("src"):
+        return img["src"]
+    vid = variant.get("id")
+    for image in product.get("images", []):
+        if vid in (image.get("variant_ids") or []):
+            return image.get("src")
+    return None
+
+
 def sync_bape(items):
     print("=== BAPE 同步開始 ===")
     shop_products = []
@@ -490,6 +508,9 @@ def sync_bape(items):
             if stock != (color.get("stock") or {}):
                 stock_changed += 1
             color["sizes"], color["stock"] = sizes, stock
+            new_image = bape_variant_image(sp, variants[0])
+            if new_image:
+                color["image"] = new_image
 
         try:
             new_jpy = int(float(sp["variants"][0]["price"]))
