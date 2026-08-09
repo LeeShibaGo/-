@@ -1496,17 +1496,38 @@ function shoeMarginPrice(p){
   return cost * 1.2;
 }
 
+// CELINE 有一部份商品(twRefPrice 有值的)台灣官網有實際在賣、我們有抓到
+// 台灣售價當參考(2026-08-09 用款式代碼比對 celine.com/zht-tw 抓到的快照,
+// 不會每天自動更新,但精品調價不頻繁,堪用)。這幾類(T恤/圍巾/針織衫/長褲/
+// 襯衫/洋裝等)原本套一般分級匯率表會比台灣貴 10~17%,陌生客人一比價就走。
+// 目標是「比台灣官網便宜,但還是要有基本margin,不做賠本生意」:
+//   目標價 = 台灣參考價打 92 折(比台灣便宜 8%)
+//   保底價 = 成本(日幣原價換算+運費,跟鞋類同一套算法) × 1.15(至少留 15% margin)
+// 取兩者較高者——大部分商品目標價會贏過保底價,直接比台灣便宜;少數客單價
+// 很高的大衣/外套類,台灣官網價格本身已經逼近我們的成本,打 92 折會低於
+// 保底margin,這種就退回保底價(可能還是比台灣貴一點,但不會賠錢賣)。
+function celineBeatTwPrice(p){
+  const cost = p.jpy * settings.rate + (p.weight || 0) * settings.shippingPerKg;
+  const target = p.twRefPrice * 0.92;
+  const floor = cost * 1.15;
+  return Math.max(target, floor);
+}
+
 // 商品實際賣給客人的台幣價格。優先順序:
 // 1. 商品自己填了 twdOverride(手動對照台灣專櫃價或個別談好的價格)就直接用這個數字。
 // 2. 鞋類(見上面 SHOE_SUBTYPES)固定抓成本 × 1.2,不套用分級匯率表。
-// 3. 韓幣商品維持原本單一 rateKRW 換算(目前沒有分級需求)。
-// 4. 其他日幣商品依原幣價格,用累進級距匯率換算(見 tieredJpyToTwd)。
+// 3. CELINE 裡有台灣參考價(twRefPrice)的,套「比台灣便宜但保底有margin」的算法。
+// 4. 韓幣商品維持原本單一 rateKRW 換算(目前沒有分級需求)。
+// 5. 其他日幣商品依原幣價格,用累進級距匯率換算(見 tieredJpyToTwd)。
 function sellPriceTwd(p){
   if(p.twdOverride != null && p.twdOverride !== '' && !isNaN(p.twdOverride)){
     return Number(p.twdOverride);
   }
   if(SHOE_SUBTYPES.has(p.subtype)){
     return shoeMarginPrice(p);
+  }
+  if(p.brand === 'CELINE' && typeof p.twRefPrice === 'number'){
+    return celineBeatTwPrice(p);
   }
   if((p.country || 'JP') === 'KR'){
     return p.jpy * settings.rateKRW;
