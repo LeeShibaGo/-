@@ -2716,7 +2716,7 @@ document.getElementById('lookupSubmitBtn').onclick = async () => {
         <span>訂購人:${escapeHtml(found.name)}</span>
         <span class="status-chip" style="cursor:default;">${escapeHtml(found.status)}</span>
       </div>
-      <div class="order-items">${found.items.map(i => {
+      <div class="order-items">${(found.items || []).map(i => {
         // 訂金都還沒確認的話,先不用顯示「採購中」,避免客人誤會已經開始採購
         const showStatus = i.purchased || found.status !== '待確認訂金';
         const statusLabel = i.purchased ? '✓ 已購入' : '採購中';
@@ -3323,7 +3323,7 @@ function renderOrdersAdminList(){
         </div>
       </div>
       <div><b>${escapeHtml(o.name)}</b>　${escapeHtml(o.phone)}${o.email ? `　${escapeHtml(o.email)}` : ''}${o.code ? `　<span class="cart-item-sub">編碼:${escapeHtml(o.code)}</span>` : ''}</div>
-      <div class="order-items">${o.items.map((i, idx) => `
+      <div class="order-items">${(o.items || []).map((i, idx) => `
         <label style="display:flex; align-items:center; gap:6px; padding:2px 0; cursor:pointer;">
           <input type="checkbox" ${i.purchased ? 'checked' : ''} onchange="toggleItemPurchased('${o.id}', ${idx})">
           <span style="${i.purchased ? 'text-decoration:line-through; color:#B5AE9C;' : ''}">${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}</span>
@@ -3407,7 +3407,7 @@ function renderOrdersAdminList(){
 }
 
 function buildConfirmationMailto(o){
-    const itemLines = o.items.map(i => `- ${i.name}${i.color ? ' ['+i.color+']' : ''}${i.size ? ' ('+i.size+')' : ''} × ${i.qty}`).join('\n');
+    const itemLines = (o.items || []).map(i => `- ${i.name}${i.color ? ' ['+i.color+']' : ''}${i.size ? ' ('+i.size+')' : ''} × ${i.qty}`).join('\n');
     const balance = o.total - o.deposit;
     const subject = `【${settings.shopName}】訂單確認通知(編碼:${o.code || o.id})`;
     const body = `${o.name} 您好:
