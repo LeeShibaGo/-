@@ -1075,6 +1075,8 @@
       <input type="text" id="lineOfficialIdInput" placeholder="@wlw7925n">
       <label>Threads 網址</label>
       <input type="text" id="threadsUrlInput" placeholder="https://www.threads.com/@...">
+      <label>意見回饋表單網址(頁尾卡片,留空就不顯示這張卡)</label>
+      <input type="text" id="feedbackFormUrlInput" placeholder="https://docs.google.com/forms/...">
       <div class="field-row" style="margin-top:16px;">
         <div><label>已完成訂單數(信任感區塊顯示)</label><input type="number" id="completedOrdersInput" placeholder="100"></div>
         <div><label>LINE 社群人數(選填,自己去社群看人數填寫)</label><input type="number" id="lineCommunityMembersInput" placeholder="例如 1500"></div>
@@ -1293,6 +1295,7 @@ const DEFAULT_SETTINGS = {
   lineGroupUrl: 'https://line.me/ti/g2/khKQ6_1RbId40z6zQpTLA37XQNXEa4tT9vPd5w?utm_source=invitation&utm_medium=link_copy&utm_campaign=default',
   lineOfficialId: '@wlw7925n',
   threadsUrl: 'https://www.threads.com/@shiba_worldwide_go?invite=0',
+  feedbackFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSecwkCZA_FSgKvFDOV4fkKzLb9jAfjrzRllYkZZcueoFh_t9Q/viewform?usp=dialog',
   completedOrders: 100,
   lineCommunityMembers: null, // 老闆自己去 LINE 社群看人數,手動填,填了才會顯示
   purchaseGuide: `【2026/06/18】～【2026/06/29】
@@ -2605,12 +2608,13 @@ function renderSocialLinks(){
     footerCustomLink.style.display = 'none';
   }
 
-  // 頁尾上排的社群卡片,只列這個店真正有在經營的管道(LINE 社群/官方帳號/Threads),
-  // 沒有粉專/IG 就不硬湊。
+  // 頁尾上排的社群卡片,只列這個店真正有在經營的管道(LINE 社群/官方帳號/Threads/
+  // 意見回饋表單),沒有粉專/IG 就不硬湊。
   const cards = [];
   if(settings.lineOfficialId) cards.push({ icon: '💬', title: 'LINE 官方帳號', tagline: '加入官方帳號,總柴在等你', url: lineOfficialUrl(settings.lineOfficialId) });
   if(settings.lineGroupUrl) cards.push({ icon: '👥', title: 'LINE 社群', tagline: '加入社群,搶先知道搶手商品', url: settings.lineGroupUrl });
   if(settings.threadsUrl) cards.push({ icon: '🧵', title: 'THREADS', tagline: '追蹤帳號,最新消息不錯過', url: settings.threadsUrl });
+  if(settings.feedbackFormUrl) cards.push({ icon: '📝', title: '意見回饋', tagline: '分享購物體驗,讓我們做得更好', url: settings.feedbackFormUrl });
   document.getElementById('footerSocialCards').innerHTML = cards
     .map(c => `<a href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer" class="footer-social-card">
       <div class="card-title">${c.icon} ${escapeHtml(c.title)}</div>
@@ -2780,6 +2784,7 @@ function openAdmin(){
   document.getElementById('lineGroupUrlInput').value = settings.lineGroupUrl || '';
   document.getElementById('lineOfficialIdInput').value = settings.lineOfficialId || '';
   document.getElementById('threadsUrlInput').value = settings.threadsUrl || '';
+  document.getElementById('feedbackFormUrlInput').value = settings.feedbackFormUrl || '';
   document.getElementById('completedOrdersInput').value = settings.completedOrders || '';
   document.getElementById('lineCommunityMembersInput').value = settings.lineCommunityMembers || '';
   document.getElementById('batchStatusInput').value = settings.batchStatus || '';
@@ -2878,6 +2883,7 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.lineGroupUrl = document.getElementById('lineGroupUrlInput').value.trim();
   settings.lineOfficialId = document.getElementById('lineOfficialIdInput').value.trim();
   settings.threadsUrl = document.getElementById('threadsUrlInput').value.trim();
+  settings.feedbackFormUrl = document.getElementById('feedbackFormUrlInput').value.trim();
   const completedOrdersVal = parseInt(document.getElementById('completedOrdersInput').value, 10);
   settings.completedOrders = isNaN(completedOrdersVal) ? null : completedOrdersVal;
   const lineMembersVal = parseInt(document.getElementById('lineCommunityMembersInput').value, 10);
