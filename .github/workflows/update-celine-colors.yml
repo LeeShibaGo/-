@@ -17,7 +17,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install firebase-admin requests
+        run: pip install firebase-admin requests beautifulsoup4
 
       - name: Write Firebase service account key
         run: |
