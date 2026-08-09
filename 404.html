@@ -2515,11 +2515,21 @@ document.getElementById('lineFriendConfirmSubmitBtn').onclick = async () => {
     // 只是記錄下單當下的畫面寬度,不是真的去讀裝置型號。
     device: window.innerWidth <= 640 ? '手機' : '電腦',
   };
-  orders = [order, ...orders];
   // 訂單改成一筆一個獨立 key(用訂單編碼當 key),不是整包陣列覆寫——
   // 這樣資料庫規則才擋得住「隨便一個人就把全部訂單蓋掉」的風險,
   // 也才能只公開單筆讀取(查訂單用),不整包公開所有客人的資料。
-  await storageSet(`${ORDERS_KEY}/${order.code}`, order);
+  // 2026-08-09:這裡原本不管 storageSet 有沒有真的成功,一律往下走、
+  // 直接顯示「訂單已送出」——如果寫入失敗(網路不穩、token 過期等),
+  // 客人會看到感覺很正常的確認畫面跟訂單編碼,但老闆後台永遠不會出現
+  // 這筆訂單,而且客人手上的「證明」只是瀏覽器自己算出來的編碼,資料庫
+  // 裡根本沒有。所以先確認真的寫進去,失敗就不要清購物車、不要顯示
+  // 確認畫面,讓客人知道要重試,而不是誤以為訂單成立。
+  const orderSaved = await storageSet(`${ORDERS_KEY}/${order.code}`, order);
+  if(!orderSaved){
+    toast('訂單送出失敗,請檢查網路連線後再試一次(購物車內容還在,不會遺失)');
+    return;
+  }
+  orders = [order, ...orders];
   notifyOrderInstant(order);
   cart = {};
   saveCart();
@@ -2866,8 +2876,9 @@ document.getElementById('saveRateBtn').onclick = async () => {
   settings.priceTiers = priceTiersRaw;
   settings.shippingPerKg = ship;
   settings.lastUpdated = Date.now();
-  await storageSet(SETTINGS_KEY, settings, true);
+  const ok = await storageSet(SETTINGS_KEY, settings, true);
   render();
+  if(!ok){ toast('儲存失敗,請檢查登入狀態或網路後再試一次(畫面上是新的,但還沒真的存進資料庫)'); return; }
   document.getElementById('rateDisplayJPY').classList.add('flash');
   document.getElementById('rateDisplayKRW').classList.add('flash');
   setTimeout(()=> {
@@ -2897,9 +2908,9 @@ document.getElementById('saveShopBtn').onclick = async () => {
   settings.deliveryOptions = document.getElementById('deliveryOptionsInput').value;
   settings.faq = document.getElementById('faqInput').value;
   settings.brandIntros = document.getElementById('brandIntrosInput').value;
-  await storageSet(SETTINGS_KEY, settings, true);
+  const ok = await storageSet(SETTINGS_KEY, settings, true);
   render();
-  toast('店家資訊已儲存');
+  toast(ok ? '店家資訊已儲存' : '儲存失敗,請檢查登入狀態或網路後再試一次(畫面上是新的,但還沒真的存進資料庫)');
 };
 
 function renderAdminCountryTabs(){
@@ -3029,8 +3040,15 @@ function renderAdminPagination(totalPages){
 }
 
 window.deleteProduct = async function(id){
+  const before = products;
   products = products.filter(p => p.id !== id);
-  await storageSet(PRODUCTS_KEY, products, true);
+  const ok = await storageSet(PRODUCTS_KEY, products, true);
+  if(!ok){
+    products = before; // 寫入失敗就把畫面上樂觀移除的商品還原,不然重新整理才會發現其實沒刪掉
+    renderProductAdminList();
+    toast('刪除失敗,請檢查登入狀態或網路後再試一次');
+    return;
+  }
   renderProductAdminList();
   renderProducts();
   toast('已刪除商品');
@@ -3349,9 +3367,9 @@ function renderOrdersAdminList(){
       o.cancelReason = reason.trim();
       o.status = newStatus;
       o.statusTimestamps[newStatus] = Date.now();
-      await storageSet(`${ORDERS_KEY}/${o.code}`, o);
+      const ok = await storageSet(`${ORDERS_KEY}/${o.code}`, o);
       renderOrdersAdminList();
-      toast('訂單狀態已更新');
+      toast(ok ? '訂單狀態已更新' : '更新失敗,請檢查登入狀態或網路後再試一次');
       return;
     }
 
@@ -3373,15 +3391,21 @@ function renderOrdersAdminList(){
     o.status = newStatus;
     o.statusTimestamps[newStatus] = Date.now();
     delete o.cancelReason; // 離開「無法完成」狀態後,舊的原因就沒有意義了
-    await storageSet(`${ORDERS_KEY}/${o.code}`, o);
+    const ok = await storageSet(`${ORDERS_KEY}/${o.code}`, o);
     renderOrdersAdminList();
-    toast('訂單狀態已更新');
+    toast(ok ? '訂單狀態已更新' : '更新失敗,請檢查登入狀態或網路後再試一次');
   };
   window.deleteOrder = async function(id){
     if(!confirm('確定要刪除這筆訂單嗎?這個動作無法復原。')) return;
     const target = orders.find(x => x.id === id);
     orders = orders.filter(x => x.id !== id);
-    if(target) await storageSet(`${ORDERS_KEY}/${target.code}`, null); // PUT null 等於刪除這個 key
+    const ok = target ? await storageSet(`${ORDERS_KEY}/${target.code}`, null) : true; // PUT null 等於刪除這個 key
+    if(!ok && target){
+      orders = [target, ...orders]; // 寫入失敗就把畫面上樂觀移除的訂單還原
+      renderOrdersAdminList();
+      toast('刪除失敗,請檢查登入狀態或網路後再試一次');
+      return;
+    }
     renderOrdersAdminList();
     toast('訂單已刪除');
   };
@@ -3390,7 +3414,11 @@ function renderOrdersAdminList(){
     const o = orders.find(x => x.id === orderId);
     const item = o.items[itemIndex];
     item.purchased = !item.purchased;
-    await storageSet(`${ORDERS_KEY}/${o.code}`, o);
+    const ok = await storageSet(`${ORDERS_KEY}/${o.code}`, o);
+    if(!ok){
+      item.purchased = !item.purchased; // 寫入失敗就把打勾狀態還原
+      toast('更新失敗,請檢查登入狀態或網路後再試一次');
+    }
     renderOrdersAdminList();
   };
 
