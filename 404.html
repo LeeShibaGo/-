@@ -756,7 +756,12 @@
         <div class="footer-col-title">INFORMATION</div>
         <button type="button" class="footer-col-link" id="footerGuideBtn">代購須知</button>
         <button type="button" class="footer-col-link" id="footerFaqBtn">FAQ</button>
-        <button type="button" class="footer-col-link" id="footerOwnerLoginBtn" style="opacity:0.55; font-size:12px;">老闆登入</button>
+        <!-- 2026-08-09:原本 padding:0、字又小(12px)、透明度又低(0.55),手機上
+        點擊熱區幾乎等於文字本身那幾個像素,老闆自己實測常常點不到("按鈕好像壞掉了"),
+        其實不是壞掉、也不是 onclick 綁定的問題(JS 觸發 .click() 一定能開),單純是熱區
+        太小點不準。用 padding 撐大實際可點擊範圍、用負 margin 抵銷掉多出來的視覺空間,
+        文字本身看起來大小不變,但熱區明顯變大;順便把透明度/字級調高一點,好認一點。 -->
+        <button type="button" class="footer-col-link" id="footerOwnerLoginBtn" style="opacity:0.7; font-size:13px; padding:10px 4px; margin:-10px -4px -1px -4px;">老闆登入</button>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">CONTACT US</div>
