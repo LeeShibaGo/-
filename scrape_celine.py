@@ -41,6 +41,7 @@ from urllib.parse import urljoin
 
 import requests
 
+from scrape_aape import COLOR_JA_TO_ZH as _BASE_COLOR_JA_TO_ZH
 from scrape_on_full import fix_size_key
 
 for _s in (sys.stdout, sys.stderr):
@@ -115,6 +116,66 @@ def guess_weight(subtype):
     return WEIGHT_BY_SUBTYPE.get(subtype, 0.3)
 
 
+# CELINE 的顏色名稱一直是原始日文,2026-08-09 實測發現陌生客人看到
+# 「マルチカラー」「ブラック / ゴールド」這種完全看不懂,決定補上翻譯。
+# CELINE 自己的命名習慣是「形容詞+色名」黏在一起、中間不分隔的複合詞
+# (例如「イエローゴールド」=黃色調金色、「ダークブラウン」=深棕色),直接
+# 沿用 AAPE 那份基礎色表(scrape_aape.COLOR_JA_TO_ZH)靠子字串比對也抓得到
+# (因為抓得到裡面的「ゴールド」「ブラウン」詞根),但會少了「深/淺/亮」這種
+# 修飾語,語意還是對的顏色只是不夠精準。這裡先收錄幾組 CELINE 常見、值得
+# 精準翻譯的複合詞,順序放在基礎表「前面」——translate_celine_color() 是
+# 「先試完全比對、比對不到才退回子字串比對」,只有子字串那一段才需要在意
+# 順序(比對到就傳回,不會再往下比),完全比對那一段不用擔心順序。
+CELINE_COLOR_OVERRIDES = [
+    ("イエローゴールド", "黃金色"),
+    ("ホワイトゴールド", "白金色"),
+    ("ダークブラウン", "深棕色"),
+    ("ライトカーキ", "淺卡其"),
+    ("ウルトラレッド", "亮紅色"),
+    ("ウルトラブルー", "亮藍色"),
+    ("ブライトレッド", "鮮紅色"),
+    ("ソフトタン", "淺駝棕色"),
+    ("ゴールデンタン", "金駝棕色"),
+    ("ティールブルー", "藍綠色"),
+    ("オプティックホワイト", "純白色"),
+    ("ソフトライム", "淺萊姆綠"),
+    ("ソフトクリーム", "淺奶油色"),
+    ("タン", "駝棕色"),
+    ("ナチュラル", "原色"),
+    ("チェスナッツ", "栗棕色"),
+    ("ライスカラー", "米色"),
+    ("ライス", "米色"),
+    ("バニラ", "香草色"),
+    ("バーガンディ", "酒紅色"),
+    ("デニム", "丹寧藍"),
+    ("クリーム", "奶油色"),
+]
+CELINE_COLOR_JA_TO_ZH = CELINE_COLOR_OVERRIDES + _BASE_COLOR_JA_TO_ZH
+# 「タン」這種只有兩個字的詞,拿去做子字串比對風險很高——實測發現「07
+# コンスタンス」(其實是某個包款系列名稱,不是顏色,應該是官網那頁色票資料
+# 本身標錯)裡面剛好包得住「タン」兩個字,子字串比對會誤翻成「07 駝棕色」。
+# 兩個字的詞只做「完全比對」,三個字以上的詞才允許子字串比對,兩者風險差很多。
+_EXACT_ONLY_MIN_LEN = 3
+
+
+def translate_celine_color(name):
+    name = (name or "").strip()
+    if not name:
+        return name
+    # CELINE 顏色欄位常見「黑 / 金」這種用「/」隔開的雙色/撞色款,
+    # 兩邊分開翻譯再組回去,跟 scrape_aape.translate_color() 處理
+    # 「黑×紫」的邏輯是同一個道理。
+    if "/" in name:
+        return " / ".join(translate_celine_color(part.strip()) for part in name.split("/") if part.strip())
+    for ja, zh in CELINE_COLOR_JA_TO_ZH:
+        if ja == name:
+            return zh
+    for ja, zh in CELINE_COLOR_JA_TO_ZH:
+        if len(ja) >= _EXACT_ONLY_MIN_LEN and ja in name:
+            return zh
+    return name  # 沒對到的通常是皮革專用色號(37TT)或法式色名,照原文顯示,不亂猜
+
+
 def fetch_text(url, retries=3, timeout=25):
     for attempt in range(retries):
         try:
@@ -170,7 +231,7 @@ def parse_page(url, html):
         html, re.S,
     )
     if cm:
-        color_name = cm.group(1).strip()
+        color_name = translate_celine_color(cm.group(1).strip())
 
     # 尺寸庫存:s-disabled = 缺貨。有些商品(單一尺寸的配件類)完全沒有
     # 尺寸選單,這種就當作「無尺寸選項」的單一庫存商品處理。

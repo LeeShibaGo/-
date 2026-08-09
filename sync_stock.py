@@ -1056,6 +1056,7 @@ def celine_extract_size_stock(html):
 
 def sync_celine(items):
     print("=== CELINE 同步開始 ===")
+    from scrape_celine import translate_celine_color
     cards = [p for p in items if p.get("brand") == "CELINE"]
     stock_changed = price_changed = errors = delisted = 0
     for idx, card in enumerate(cards):
@@ -1085,11 +1086,15 @@ def sync_celine(items):
             card["jpy"] = new_jpy
             price_changed += 1
 
-        # 從這頁的顏色 swatch 列表,找出全部顏色各自的網址
+        # 從這頁的顏色 swatch 列表,找出全部顏色各自的網址。官網抓下來的
+        # swatch 名稱一定是日文,但我們資料庫裡存的 color.name 是已經翻譯過
+        # 的中文(2026-08-09 補的翻譯,見 scrape_celine.translate_celine_color)
+        # ——這裡也要用同一個函式把剛抓到的日文名稱轉成中文,兩邊才是同一種
+        # 語言,比對得起來,不然每次同步都會找不到對應顏色,庫存就再也不會更新。
         swatch_urls = {}
         for name, href in CELINE_COLOR_SWATCH_RE.findall(res.text):
             full_url = href if href.startswith("http") else f"https://www.celine.com{href}"
-            swatch_urls.setdefault(name.strip(), full_url)
+            swatch_urls.setdefault(translate_celine_color(name.strip()), full_url)
 
         for color in card.get("colors", []):
             color_url = swatch_urls.get(color.get("name"))
