@@ -655,7 +655,11 @@
 <div class="board-outer">
   <div class="board-top">
     <div id="logoHomeLink" style="cursor:pointer; display:flex; align-items:center; gap:10px;" title="回到首頁">
-      <img src="shiba-avatar.jpg" alt="柴代購" class="shop-avatar">
+      <!-- 2026-08-09 抓到:相對路徑的圖片在 /brand/AAPE 這種路徑式深連結網址下
+      (瀏覽器把目前網址列的路徑當基準去解析相對路徑)會整個載入失敗變成
+      404(例如變成去要求 /brand/AAPE/shiba-avatar.jpg 這種不存在的路徑)。
+      改用絕對網址,不管目前網址列停在哪個路徑都一定載得到。 -->
+      <img src="https://leeshibago.github.io/-/shiba-avatar.jpg" alt="柴代購" class="shop-avatar">
       <h1 class="shop-name" id="shopName">柴代購網站</h1>
     </div>
     <div class="board-top-nav">
@@ -705,8 +709,8 @@
   </div>
 </div>
 
-<a class="promo-banner" href="?p=p_salomon_1784396678297_44">
-  <img src="images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
+<a class="promo-banner" href="https://leeshibago.github.io/-/?p=p_salomon_1784396678297_44">
+  <img src="https://leeshibago.github.io/-/images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
 </a>
 
 <div class="wrap brand-showcase">
@@ -2669,8 +2673,12 @@ function renderTrustSection(){
     .map(s => `<div class="trust-stat"><div class="trust-stat-num">${escapeHtml(s.num)}</div><div class="trust-stat-label">${escapeHtml(s.label)}</div></div>`)
     .join('');
 
+  // 2026-08-09 抓到:相對路徑圖片在 /brand/AAPE 這種路徑式深連結網址下,
+  // 瀏覽器會拿目前網址列的路徑當基準去解析,整批 404——用 SITE_BASE_PATH
+  // 補成絕對路徑,不管目前停在哪個路徑都載得到(shiba-avatar.jpg/
+  // salomon-nami-xt6-banner.jpg 那兩張改法一樣,見那兩處註解)。
   document.getElementById('testimonialGrid').innerHTML = TESTIMONIAL_IMAGES
-    .map(src => `<a href="${src}" target="_blank" rel="noopener noreferrer"><img src="${src}" alt="客戶真實回饋截圖" loading="lazy"></a>`)
+    .map(src => `<a href="${SITE_BASE_PATH}${src}" target="_blank" rel="noopener noreferrer"><img src="${SITE_BASE_PATH}${src}" alt="客戶真實回饋截圖" loading="lazy"></a>`)
     .join('');
 }
 
@@ -2697,7 +2705,9 @@ function renderBrandShowcase(){
   const grid = document.getElementById('brandShowcaseGrid');
   const visible = visibleProducts();
   const present = BRAND_SHOWCASE_LIST.filter(x => visible.some(p => productBrand(p) === x.brand));
-  grid.innerHTML = present.map(x => `<div class="brand-showcase-item" data-brand="${escapeHtml(x.brand)}"><img src="${escapeHtml(x.logo)}" alt="${escapeHtml(x.brand)}" loading="lazy"></div>`).join('');
+  // 相對路徑圖片在路徑式深連結網址下會 404,見 renderTrustSection() 裡
+  // testimonialGrid 那段同樣的說明,這裡也補 SITE_BASE_PATH。
+  grid.innerHTML = present.map(x => `<div class="brand-showcase-item" data-brand="${escapeHtml(x.brand)}"><img src="${SITE_BASE_PATH}${escapeHtml(x.logo)}" alt="${escapeHtml(x.brand)}" loading="lazy"></div>`).join('');
   grid.querySelectorAll('.brand-showcase-item').forEach(el => {
     el.addEventListener('click', () => {
       const brand = el.dataset.brand;
