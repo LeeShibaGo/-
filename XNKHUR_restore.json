@@ -1,0 +1,44 @@
+{
+  "code": "XNKHUR",
+  "deliveryFee": 38,
+  "deliveryMethod": "賣貨便",
+  "deposit": 10793.85976,
+  "device": "電腦",
+  "email": "journeylee321@gmail.com",
+  "id": "ord_1786096668584",
+  "items": [
+    {
+      "color": "黑色",
+      "country": "JP",
+      "jpy": 33000,
+      "name": "FLIP STA #1",
+      "productId": "p_bape_1784732222300_7",
+      "purchased": false,
+      "qty": 1,
+      "size": "7",
+      "weight": 0.5
+    },
+    {
+      "color": "黑色",
+      "country": "JP",
+      "jpy": 25300,
+      "name": "ONE POINT SWAET SHORTS",
+      "productId": "p_bape_1784732222300_3",
+      "purchased": false,
+      "qty": 2,
+      "size": "XS",
+      "weight": 0.5
+    }
+  ],
+  "name": "李哲寧",
+  "note": "",
+  "phone": "1231231232",
+  "shipping": 195,
+  "status": "待確認訂金",
+  "statusTimestamps": {
+    "待確認訂金": 1786096668584
+  },
+  "subtotal": 21354.71952,
+  "time": 1786096668584,
+  "total": 21587.71952
+}

@@ -1,0 +1,44 @@
+{
+  "code": "EQAKMY",
+  "deliveryFee": 38,
+  "deliveryMethod": "賣貨便",
+  "deposit": 9599.648,
+  "device": "手機",
+  "email": "123@gmail.com",
+  "id": "ord_1785928581252",
+  "items": [
+    {
+      "color": "白 | 萊姆綠",
+      "country": "JP",
+      "jpy": 44000,
+      "name": "LightSpray Cloudboom Strike 2",
+      "productId": "p_on_1784204293742_11",
+      "purchased": false,
+      "qty": 1,
+      "size": "W22",
+      "weight": 0.7
+    },
+    {
+      "color": "白 | 萊姆綠",
+      "country": "JP",
+      "jpy": 35200,
+      "name": "Cloudboom Strike 2",
+      "productId": "p_on_1784204293742_10",
+      "purchased": false,
+      "qty": 1,
+      "size": "W22",
+      "weight": 0.7
+    }
+  ],
+  "name": "她媽媽",
+  "note": "",
+  "phone": "000000000",
+  "shipping": 182,
+  "status": "待確認訂金",
+  "statusTimestamps": {
+    "待確認訂金": 1785928581252
+  },
+  "subtotal": 18979.296,
+  "time": 1785928581252,
+  "total": 19199.296
+}
