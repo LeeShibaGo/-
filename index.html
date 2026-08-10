@@ -2788,12 +2788,13 @@ function renderTrustSection(){
 // icon/logo 連結下載,不是隨便找的圖),放進 images/brand-logos/。
 // 2026-08-10:原本只收錄 10 個精選品牌,老闆說「所有品牌都要有圖片」,
 // 補齊目前資料庫裡實際在賣的全部 21 個品牌(用 brand 欄位的精確字串比對,
-// 缺一個都不會出現在 present 清單裡)。J.Lindeberg/Louis Vuitton/
-// TaylorMade/MUJI 這四家官網要嘛擋爬蟲、要嘛連不上(TaylorMade 之前查
-// 台灣官網時就確認過是 DataDome 擋機器人,這次一樣擋),抓不到官方圖檔,
-// 用跟 Dior/CELINE 同一種「黑底白字」風格做的文字版當替代,不是隨便找的
-// 圖庫圖案。原本「Dior 日本限定」是另一個獨立的 brand 字串,2026-08-10
-// 併回 Dior(見 merge_dior_japan_exclusive.py),這裡不用再重複列一次。
+// 缺一個都不會出現在 present 清單裡)。J.Lindeberg/MUJI 官網原本抓不到
+// 圖檔,後來老闆直接提供官方圖檔換掉文字版。Louis Vuitton/TaylorMade
+// 這兩家官網還是擋爬蟲、連不上(TaylorMade 之前查台灣官網時就確認過是
+// DataDome 擋機器人,這次一樣擋),暫時還是用跟 Dior/CELINE 同一種
+// 「黑底白字」風格的文字版頂著。原本「Dior 日本限定」是另一個獨立的
+// brand 字串,2026-08-10 併回 Dior(見 merge_dior_japan_exclusive.py),
+// 這裡不用再重複列一次。
 const BRAND_SHOWCASE_LIST = [
   { brand: 'GU', logo: 'images/brand-logos/gu.png' },
   { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
@@ -2809,9 +2810,9 @@ const BRAND_SHOWCASE_LIST = [
   { brand: 'UHA', logo: 'images/brand-logos/uha.png' },
   { brand: 'DESCENTE', logo: 'images/brand-logos/descente.ico' },
   { brand: 'HONMA', logo: 'images/brand-logos/honma.png' },
-  { brand: 'J.Lindeberg', logo: 'images/brand-logos/jlindeberg.svg' },
+  { brand: 'J.Lindeberg', logo: 'images/brand-logos/jlindeberg.png' },
   { brand: 'TaylorMade', logo: 'images/brand-logos/taylormade.svg' },
-  { brand: 'MUJI', logo: 'images/brand-logos/muji.svg' },
+  { brand: 'MUJI', logo: 'images/brand-logos/muji.png' },
   { brand: 'CELINE', logo: 'images/brand-logos/celine.png' },
   { brand: 'Dior', logo: 'images/brand-logos/dior.png' },
   { brand: 'Louis Vuitton', logo: 'images/brand-logos/lv.svg' },
