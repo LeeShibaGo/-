@@ -17,7 +17,7 @@ for _s in (sys.stdout, sys.stderr):
 
 FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
 ORDERS_PATH = "daigou-orders-v1"
-BAD_KEY = "VULNTEST4"
+BAD_KEY = "MMB9XN"
 
 
 def main():
