@@ -398,10 +398,16 @@
     text-align:center; font-family:'Noto Serif TC',serif; font-size:34px;
     font-weight:900; letter-spacing:6px; color:var(--ink); margin-bottom:18px;
   }
+  /* 2026-08-10:品牌從 21 家的固定格狀排列改成橫向滑動的一排——21 個
+     LOGO 排成 grid 換行太長,首頁一打開要一直往下滑才看得完;改成
+     手機/滑鼠都能左右滑的單排,品牌數量再增加也只是滑動範圍變長,
+     不會撐高整個首頁。scroll-snap 讓滑動停下來的時候自然對齊格子。 */
   .brand-showcase-grid{
-    display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; margin-bottom:14px;
+    display:flex; gap:10px; margin-bottom:14px; overflow-x:auto; padding-bottom:4px;
+    scroll-snap-type:x proximity;
   }
   .brand-showcase-item{
+    flex:0 0 108px; scroll-snap-align:start;
     border:1px solid var(--line-onlight); border-radius:8px; background:#FFFFFF;
     padding:16px 10px; text-align:center; cursor:pointer;
     transition:box-shadow 0.15s, transform 0.15s;
@@ -417,7 +423,7 @@
   }
   .brand-showcase-all-btn:hover{ background:var(--gold-dim); }
   @media (max-width:640px){
-    .brand-showcase-grid{ grid-template-columns:repeat(2, 1fr); }
+    .brand-showcase-item{ flex-basis:92px; }
     .brand-showcase-title{ font-size:26px; letter-spacing:4px; }
     .brand-showcase-all-btn{ font-size:14px; padding:14px 8px; }
   }
@@ -683,6 +689,11 @@
         <span id="userName" style="font-size:13px; font-weight:600; color:var(--text-page);"></span>
         <button class="ghost-btn" id="logoutBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); padding:4px 10px; font-size:12px;">登出</button>
       </div>
+      <!-- 2026-08-10:原本後台入口只放在頁尾「老闆登入」文字連結,老闆自己
+      反應不好找,改成放在 LINE 登入按鈕旁邊的齒輪圖示,跟其他按鈕一樣用
+      ghost-btn 樣式(尺寸/熱區跟其他按鈕一致,不會重蹈之前頁尾連結太小
+      點不到的問題)。點了一樣是呼叫 openPinOverlay()。 -->
+      <button class="ghost-btn" id="ownerGearBtn" title="老闆登入" style="border-color:var(--line-strong-onlight); color:var(--text-page); font-size:16px; padding:8px 12px;">⚙️</button>
     </div>
   </div>
   <div class="board" style="display:none;">
@@ -784,12 +795,6 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
         <div class="footer-col-title">INFORMATION</div>
         <button type="button" class="footer-col-link" id="footerGuideBtn">代購須知</button>
         <button type="button" class="footer-col-link" id="footerFaqBtn">FAQ</button>
-        <!-- 2026-08-09:原本 padding:0、字又小(12px)、透明度又低(0.55),手機上
-        點擊熱區幾乎等於文字本身那幾個像素,老闆自己實測常常點不到("按鈕好像壞掉了"),
-        其實不是壞掉、也不是 onclick 綁定的問題(JS 觸發 .click() 一定能開),單純是熱區
-        太小點不準。用 padding 撐大實際可點擊範圍、用負 margin 抵銷掉多出來的視覺空間,
-        文字本身看起來大小不變,但熱區明顯變大;順便把透明度/字級調高一點,好認一點。 -->
-        <button type="button" class="footer-col-link" id="footerOwnerLoginBtn" style="opacity:0.7; font-size:13px; padding:10px 4px; margin:-10px -4px -1px -4px;">老闆登入</button>
       </div>
       <div class="footer-col">
         <div class="footer-col-title">CONTACT US</div>
@@ -1447,6 +1452,28 @@ const TIER_BY_BRAND = {
 };
 const TIER_ORDER = ['精品', '運動品牌', '潮流品牌', '生活選物'];
 function productTier(p){ return TIER_BY_BRAND[productBrand(p)] || '生活選物'; }
+
+// 搜尋常見的品牌縮寫/中文俗稱,例如客人打「鬼塚」找不到「Onitsuka Tiger」,
+// 因為商品名稱裡通常是英文原名,單純比對商品名稱不夠——這裡額外查一次
+// 「輸入的字是不是某個品牌的別名」,是的話連同該品牌底下全部商品一起算
+// 進搜尋結果。key 一律小寫(英文字母)或原文(中文本身沒有大小寫問題),
+// 搜尋時查詢字串也會先轉小寫再比對,兩邊才對得起來。GM/NB 目前還沒有
+// 上架對應品牌,先收在表裡不影響任何搜尋結果,以後真的上架直接就通。
+const BRAND_SEARCH_ALIASES = {
+  'gm': 'Gentle Monster',
+  'nb': 'New Balance',
+  '鬼塚': 'Onitsuka Tiger',
+  '鬼塚虎': 'Onitsuka Tiger',
+  'lv': 'Louis Vuitton',
+  '路易威登': 'Louis Vuitton',
+  '迪桑特': 'DESCENTE',
+  '卡哈特': 'Carhartt WIP',
+  '鱷魚': 'Lacoste',
+  '鱷魚牌': 'Lacoste',
+  '無印良品': 'MUJI',
+  '无印良品': 'MUJI',
+  '思琳': 'CELINE', // CELINE 在台灣/香港的舊中文譯名
+};
 
 // 品牌底下的細項種類(subtype)太多、太雜,客人要一個一個點才找得到,
 // 所以在「品牌」跟「種類」之間多加一層大分類(上身/褲子/裙子/外套/鞋子/包包/配件),
@@ -2125,7 +2152,12 @@ function renderProducts(){
   }
   const q = searchQuery.trim().toLowerCase();
   if(q){
-    list = list.filter(p => p.name.toLowerCase().includes(q));
+    const aliasBrand = BRAND_SEARCH_ALIASES[q];
+    list = list.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.brand || '').toLowerCase().includes(q) ||
+      (aliasBrand && p.brand === aliasBrand)
+    );
   }
   if(list.length === 0){
     grid.innerHTML = `<div class="empty-note">${q ? '找不到符合「' + escapeHtml(searchQuery.trim()) + '」的商品。' : '這個分類目前沒有商品。'}</div>`;
@@ -2683,9 +2715,9 @@ document.getElementById('closeFaq').onclick = () => document.getElementById('faq
 // 頁尾的「代購須知」「FAQ」「LINE 詢問」直接借用上面已經寫好的按鈕邏輯,不重複一份。
 document.getElementById('footerGuideBtn').onclick = () => document.getElementById('purchaseGuideBtn').click();
 document.getElementById('footerFaqBtn').onclick = () => document.getElementById('faqBtn').click();
-// 現在真正的防線是 Firebase 登入(帳號密碼),不再是「入口藏起來」,
-// 所以直接在頁尾放一個不顯眼的連結,不用再靠 ?owner=1 網址或長按觸發。
-document.getElementById('footerOwnerLoginBtn').onclick = () => openPinOverlay();
+// 真正的防線是 Firebase 登入(帳號密碼),不是「入口藏起來」——後台入口
+// 2026-08-10 從頁尾文字連結搬到 LINE 登入按鈕旁邊的齒輪圖示,比較好找。
+document.getElementById('ownerGearBtn').onclick = () => openPinOverlay();
 document.getElementById('footerLineInquiryBtn').onclick = () => document.getElementById('cartBarLineBtn').click();
 
 // ===== 客製化代購 / 聯繫方式(直接顯示連結,不用再點開視窗) =====
@@ -2752,6 +2784,13 @@ function renderTrustSection(){
 // logo 檔案來自各品牌官網自己的 logotype/apple-touch-icon(見
 // images/brand-logos 底下,取得方式:直接讀官網首頁 <head> 裡的
 // icon/logo 連結下載,不是隨便找的圖),放進 images/brand-logos/。
+// 2026-08-10:原本只收錄 10 個精選品牌,老闆說「所有品牌都要有圖片」,
+// 補齊目前資料庫裡實際在賣的全部 21 個品牌(用 brand 欄位的精確字串比對,
+// 缺一個都不會出現在 present 清單裡)。J.Lindeberg/Louis Vuitton/
+// TaylorMade/MUJI 這四家官網要嘛擋爬蟲、要嘛連不上(TaylorMade 之前查
+// 台灣官網時就確認過是 DataDome 擋機器人,這次一樣擋),抓不到官方圖檔,
+// 用跟 Dior/CELINE 同一種「黑底白字」風格做的文字版當替代,不是隨便找的
+// 圖庫圖案。「Dior 日本限定」是另一個獨立的 brand 字串,共用 dior.png。
 const BRAND_SHOWCASE_LIST = [
   { brand: 'GU', logo: 'images/brand-logos/gu.png' },
   { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
@@ -2759,10 +2798,21 @@ const BRAND_SHOWCASE_LIST = [
   { brand: 'On', logo: 'images/brand-logos/on.png' },
   { brand: 'AAPE', logo: 'images/brand-logos/aape.png' },
   { brand: 'BAPE', logo: 'images/brand-logos/bape.png' },
+  { brand: 'STUSSY', logo: 'images/brand-logos/stussy.jpg' },
   { brand: 'Lacoste', logo: 'images/brand-logos/lacoste.png' },
   { brand: 'Onitsuka Tiger', logo: 'images/brand-logos/onitsukatiger.svg' },
+  { brand: 'Carhartt WIP', logo: 'images/brand-logos/carhartt.ico' },
   { brand: 'DHC', logo: 'images/brand-logos/dhc.svg' },
+  { brand: 'UHA', logo: 'images/brand-logos/uha.png' },
+  { brand: 'DESCENTE', logo: 'images/brand-logos/descente.ico' },
+  { brand: 'HONMA', logo: 'images/brand-logos/honma.png' },
+  { brand: 'J.Lindeberg', logo: 'images/brand-logos/jlindeberg.svg' },
+  { brand: 'TaylorMade', logo: 'images/brand-logos/taylormade.svg' },
+  { brand: 'MUJI', logo: 'images/brand-logos/muji.svg' },
   { brand: 'CELINE', logo: 'images/brand-logos/celine.png' },
+  { brand: 'Dior', logo: 'images/brand-logos/dior.png' },
+  { brand: 'Dior 日本限定', logo: 'images/brand-logos/dior.png' },
+  { brand: 'Louis Vuitton', logo: 'images/brand-logos/lv.svg' },
 ];
 
 function renderBrandShowcase(){
@@ -2771,7 +2821,11 @@ function renderBrandShowcase(){
   const present = BRAND_SHOWCASE_LIST.filter(x => visible.some(p => productBrand(p) === x.brand));
   // 相對路徑圖片在路徑式深連結網址下會 404,見 renderTrustSection() 裡
   // testimonialGrid 那段同樣的說明,這裡也補 SITE_BASE_PATH。
-  grid.innerHTML = present.map(x => `<div class="brand-showcase-item" data-brand="${escapeHtml(x.brand)}"><img src="${SITE_BASE_PATH}${escapeHtml(x.logo)}" alt="${escapeHtml(x.brand)}" loading="lazy"></div>`).join('');
+  // 2026-08-10 抓到:loading="lazy" 放在橫向捲動容器(overflow-x:auto)
+  // 裡面,瀏覽器的「進入畫面才載入」判斷在還沒捲動過的當下完全不會觸發,
+  // 21 個 LOGO 一張都load不出來——這排本來就一直在畫面最上面、數量也不多,
+  // 直接全部正常載入就好,不需要 lazy。
+  grid.innerHTML = present.map(x => `<div class="brand-showcase-item" data-brand="${escapeHtml(x.brand)}"><img src="${SITE_BASE_PATH}${escapeHtml(x.logo)}" alt="${escapeHtml(x.brand)}"></div>`).join('');
   grid.querySelectorAll('.brand-showcase-item').forEach(el => {
     el.addEventListener('click', () => {
       const brand = el.dataset.brand;
