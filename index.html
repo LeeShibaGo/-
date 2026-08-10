@@ -680,7 +680,12 @@
     <div class="board-top-nav">
       <button class="ghost-btn" id="purchaseGuideBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">代購須知</button>
       <button class="ghost-btn" id="faqBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">FAQ</button>
-      <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); display:none;">客戶真實回饋</button>
+      <!-- 2026-08-10 抓到:這顆按鈕原本就寫死 display:none,整個網站
+      沒有任何程式碼會去改它,等於「客戶真實回饋」這個功能(10張真實
+      LINE 截圖)做完之後客人其實完全看不到入口,一直是個死功能。
+      拿掉 display:none,補上這個真的漏洞。 -->
+      <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">客戶真實回饋</button>
+      <button class="ghost-btn" id="purchaseProofBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">海外採購實拍</button>
       <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong-onlight); color:var(--text-page); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">查詢訂單</button>
       <button class="ghost-btn" id="loginBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">LINE 登入</button>
@@ -942,6 +947,20 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
     </div>
     <div style="font-size:13px; color:var(--muted); margin-bottom:14px;">LINE 對話截圖,非文字捏造</div>
     <div class="testimonial-grid" id="testimonialGrid"></div>
+  </div>
+</div>
+
+<!-- 海外採購實拍 overlay:老闆自己每次去日本挑貨、實際採購到的商品現場
+照片(跟上面「客戶真實回饋」不同,那是客人的回饋截圖,這裡是採購當下
+的實拍,證明真的有親自飛過去挑貨,不是隨便找圖庫圖) -->
+<div class="overlay" id="purchaseProofOverlay">
+  <div class="sheet" style="max-width:640px;">
+    <div class="sheet-head">
+      <h2>🛫 海外採購實拍</h2>
+      <button class="close-x" id="closePurchaseProof">✕</button>
+    </div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:14px;">每次親飛日本挑貨,現場實拍,不是圖庫圖片</div>
+    <div class="testimonial-grid" id="purchaseProofGrid"></div>
   </div>
 </div>
 
@@ -2699,6 +2718,11 @@ document.getElementById('testimonialBtn').onclick = () => {
 };
 document.getElementById('closeTestimonial').onclick = () => document.getElementById('testimonialOverlay').classList.remove('open');
 
+document.getElementById('purchaseProofBtn').onclick = () => {
+  document.getElementById('purchaseProofOverlay').classList.add('open');
+};
+document.getElementById('closePurchaseProof').onclick = () => document.getElementById('purchaseProofOverlay').classList.remove('open');
+
 document.getElementById('faqBtn').onclick = () => {
   const blocks = (settings.faq || '').split('---').map(b => b.trim()).filter(Boolean);
   const box = document.getElementById('faqContent');
@@ -2763,6 +2787,11 @@ function renderSocialLinks(){
 // 客戶真實回饋截圖(LINE 對話截圖,證明不是編出來的評價)
 const TESTIMONIAL_IMAGES = ['testimonials/1.jpg','testimonials/2.jpg','testimonials/3.jpg','testimonials/4.jpg','testimonials/5.jpg','testimonials/6.jpg','testimonials/7.jpg','testimonials/8.jpg','testimonials/9.jpg','testimonials/10.jpg'];
 
+// 2026-08-10 老闆提供的海外採購實拍照片(老闆本人去日本挑貨/實際購入
+// 的商品現場照,跟上面客人回饋截圖不同,壓縮到跟 testimonials 同等級,
+// 見 images/purchase-proof/ 底下)。
+const PURCHASE_PROOF_IMAGES = ['images/purchase-proof/1.jpg','images/purchase-proof/2.jpg','images/purchase-proof/3.jpg','images/purchase-proof/4.jpg'];
+
 function renderTrustSection(){
   const stats = [];
   if(settings.completedOrders) stats.push({ num: `${settings.completedOrders}+`, label: '已完成訂單' });
@@ -2777,6 +2806,10 @@ function renderTrustSection(){
   // salomon-nami-xt6-banner.jpg 那兩張改法一樣,見那兩處註解)。
   document.getElementById('testimonialGrid').innerHTML = TESTIMONIAL_IMAGES
     .map(src => `<a href="${SITE_BASE_PATH}${src}" target="_blank" rel="noopener noreferrer"><img src="${SITE_BASE_PATH}${src}" alt="客戶真實回饋截圖" loading="lazy"></a>`)
+    .join('');
+
+  document.getElementById('purchaseProofGrid').innerHTML = PURCHASE_PROOF_IMAGES
+    .map(src => `<a href="${SITE_BASE_PATH}${src}" target="_blank" rel="noopener noreferrer"><img src="${SITE_BASE_PATH}${src}" alt="海外採購實拍" loading="lazy"></a>`)
     .join('');
 }
 
