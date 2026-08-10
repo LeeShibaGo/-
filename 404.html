@@ -754,8 +754,14 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
 </div>
 
 <div class="wrap">
+  <!-- topCatNav 留在外面、一直顯示:「所有品牌」按鈕是靠捲到這裡、點開
+  它的下拉選單才能選品牌,如果連這排 tab 都藏起來,「所有品牌」會失效
+  (捲過去也看不到可以點的東西)。真正看起來「亂」的是底下這一大片
+  (種類/系列篩選 + 搜尋框 + 一次 12 件、共上千頁的商品格子)——首頁剛
+  進站、什麼都還沒選的時候先不要顯示,等客人主動選了品牌/分類、或按了
+  「所有商品」才出現(見 updateHomeSectionsVisibility)。 -->
   <nav class="top-cat-nav" id="topCatNav"></nav>
-  <div class="shop-layout">
+  <div class="shop-layout" id="shopLayoutSection" style="display:none;">
     <aside class="cat-sidebar">
       <div class="cat-tabs subcat" id="groupTabs"></div>
       <div class="cat-tabs subcat" id="subtypeTabs"></div>
@@ -1811,7 +1817,12 @@ function isBrowsingProducts(){
     || currentGroup !== 'all' || currentSubtype !== 'all' || currentSeries !== 'all';
 }
 function updateHomeSectionsVisibility(){
-  document.getElementById('homeIntroSections').style.display = isBrowsingProducts() ? 'none' : '';
+  const browsing = isBrowsingProducts();
+  document.getElementById('homeIntroSections').style.display = browsing ? 'none' : '';
+  // 種類/系列篩選 + 搜尋框 + 商品格子(一次 12 件、上千頁)這一整片是真正
+  // 造成首頁「看起來很亂」的部分,首頁剛進站時先藏起來,等客人主動選了
+  // 品牌/分類或按了「所有商品」才出現。
+  document.getElementById('shopLayoutSection').style.display = browsing ? '' : 'none';
 }
 
 function render(){
