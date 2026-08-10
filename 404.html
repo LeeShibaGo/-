@@ -586,11 +586,18 @@
 
   .delivery-options{ display:flex; flex-direction:column; gap:8px; }
   .delivery-option{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
     border:1px solid #D8D2C3; border-radius:9px; padding:9px 12px; font-size:14px; cursor:pointer;
   }
   .delivery-option.active{ border-color:var(--stamp); background:#FBF3E4; }
-  .delivery-option span:last-child{ font-family:'JetBrains Mono',monospace; color:#6B7686; }
+  .delivery-option-fee{ font-family:'JetBrains Mono',monospace; color:#6B7686; white-space:nowrap; }
+  /* 「店到店」旁邊直接把「需付全額/抵台後直接取貨」這種重要規則寫出來,
+     不用等客人選了之後才跳確認框才看到——先講清楚,選錯的機率比較低,
+     也比較不會有人選到一半才發現條件跟預期不同。 */
+  .delivery-option-note{
+    display:block; font-size:11.5px; color:var(--stamp); margin-top:3px; line-height:1.5;
+    font-weight:400;
+  }
 
   .totals{ margin-top:16px; padding-top:14px; border-top:1px solid #D8D2C3; font-family:'JetBrains Mono',monospace; font-size:14px; }
   .totals-row{ display:flex; justify-content:space-between; margin:5px 0; }
@@ -2462,8 +2469,11 @@ function renderCartDrawer(){
   } else {
     deliveryBox.innerHTML = deliveryOptions.map(o => `
       <label class="delivery-option ${o.label === selectedDeliveryLabel ? 'active' : ''}">
-        <span><input type="radio" name="deliveryOption" value="${escapeHtml(o.label)}" ${o.label === selectedDeliveryLabel ? 'checked' : ''}> ${escapeHtml(o.label)}</span>
-        <span>${fmtMoney(o.fee)}</span>
+        <span>
+          <span><input type="radio" name="deliveryOption" value="${escapeHtml(o.label)}" ${o.label === selectedDeliveryLabel ? 'checked' : ''}> ${escapeHtml(o.label)}</span>
+          ${o.label.includes('店到店') ? '<span class="delivery-option-note">⚠️ 此方式需於下單時支付全額<br>商品抵台後直接取貨</span>' : ''}
+        </span>
+        <span class="delivery-option-fee">${fmtMoney(o.fee)}</span>
       </label>
     `).join('');
     deliveryBox.querySelectorAll('input[name="deliveryOption"]').forEach(input => {
@@ -2619,11 +2629,16 @@ document.getElementById('orderLookupBtn').onclick = () => {
   document.getElementById('lookupOverlay').classList.add('open');
 };
 document.getElementById('closeLookup').onclick = () => document.getElementById('lookupOverlay').classList.remove('open');
+// 2026-08-10 抓到:客人選了品牌之後,updateUrl() 會把網址列重寫成
+// /brand/CELINE 這種路徑式網址,這時候點 Logo/標題如果只是重新整理
+// 「目前這個網址」(location.pathname),等於原地重新整理同一個已經被
+// 篩選過的頁面,不會真的回到首頁——要導去 SITE_BASE_PATH(真正的網站
+// 根目錄),不是目前網址列顯示的路徑。
 document.getElementById('logoHomeLink').onclick = () => {
-  location.href = location.pathname;
+  location.href = SITE_BASE_PATH;
 };
 document.getElementById('mobileStickyBar').onclick = () => {
-  location.href = location.pathname;
+  location.href = SITE_BASE_PATH;
 };
 document.getElementById('loginBtn').onclick = startLineLogin;
 document.getElementById('logoutBtn').onclick = logoutUser;
