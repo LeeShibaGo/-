@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>柴代購 ShibaGo - 日本韓國代購,正版保證,每周固定寄送</title>
-<meta name="description" content="柴代購 ShibaGo,日本/韓國潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。AAPE、BAPE、Salomon、Carhartt WIP、DESCENTE 等品牌即時更新現貨與價格。">
+<title>柴代購 ShibaGo - 日本代購,正版保證,每周固定寄送</title>
+<meta name="description" content="柴代購 ShibaGo,日本潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。AAPE、BAPE、Salomon、Carhartt WIP、DESCENTE 等品牌即時更新現貨與價格。">
 <meta property="og:type" content="website">
-<meta property="og:title" content="柴代購 ShibaGo - 日本韓國代購,正版保證,每周固定寄送">
-<meta property="og:description" content="日本/韓國潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。即時更新現貨與價格。">
+<meta property="og:title" content="柴代購 ShibaGo - 日本代購,正版保證,每周固定寄送">
+<meta property="og:description" content="日本潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。即時更新現貨與價格。">
 <meta property="og:image" content="https://leeshibago.github.io/-/shiba-avatar.jpg">
 <meta property="og:url" content="https://leeshibago.github.io/-/">
 <link rel="canonical" href="https://leeshibago.github.io/-/">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Organization","name":"柴代購 ShibaGo","url":"https://leeshibago.github.io/-/","logo":"https://leeshibago.github.io/-/shiba-avatar.jpg","description":"日本/韓國潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。"}
+{"@context":"https://schema.org","@type":"Organization","name":"柴代購 ShibaGo","url":"https://leeshibago.github.io/-/","logo":"https://leeshibago.github.io/-/shiba-avatar.jpg","description":"日本潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。"}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1026,9 +1026,12 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <hr class="divider">
       <div id="productFormTitle" style="font-weight:700; margin-bottom:8px; font-size:14px;">新增商品</div>
       <label>大項目(國家)</label>
+      <!-- 2026-08-10:老闆說現在只做日本代購,先把「韓國代購」選項拿掉,
+      避免以後不小心選錯——底層 KRW 匯率/countryRate() 那些程式碼還留著
+      沒刪,純粹是萬一以後真的又要做韓國代購,不用整套重寫,現在資料庫裡
+      也確認過沒有任何 country=KR 的商品。 -->
       <select id="newProdCountry">
         <option value="JP">日本代購</option>
-        <option value="KR">韓國代購</option>
       </select>
       <label>商品名稱</label>
       <input type="text" id="newProdName" placeholder="例如:UNIQLO 刷毛連帽外套">
@@ -1371,14 +1374,14 @@ The North Face、Carhartt、Aape、Human Made、Bape、Beams…
 如顧客在知情的情況下依舊下單,不願補償差額符合民法惡意下單之情形,我方將依法律流程處理,請悉知。`,
   // 國內取貨方式,每行一個「名稱,運費」,結帳時客人選一個,金額會自動加進訂單總額
   // (這是台灣境內的取貨/配送費用,跟上面「每公斤運費」是不同的東西 ——
-  // 每公斤運費是日本/韓國運回台灣的國際運費,這裡是到customer手上最後一哩路的費用)
+  // 每公斤運費是日本運回台灣的國際運費,這裡是到customer手上最後一哩路的費用)
   deliveryOptions: `賣貨便,38\n7-11 店到店,60\n台中市區面交,0`,
   // FAQ 雛形,一題一組用 --- 分隔,每組第一行是問題、其餘是答案
   faq: `如何確定不會被捲款跑路?
 可以先付一半訂金、貨到後再付尾款,也接受台中市區面交當面交易。目前已經完成 100+ 筆訂單,LINE 社群也有其他客人的真實回饋可以參考。
 ---
 訂金為什麼要先付 50%?
-代購需要先在日本/韓國把商品買下來,50% 訂金是用來確保這筆採購成本,尾款於商品到貨、交貨時結清。
+代購需要先在日本把商品買下來,50% 訂金是用來確保這筆採購成本,尾款於商品到貨、交貨時結清。
 ---
 大概多久會收到商品?
 依照當期收單公告的時程,商品抵台後會盡快通知取貨,實際天數請參考首頁「代購須知」裡本期公告的抵台時間。
