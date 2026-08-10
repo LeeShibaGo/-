@@ -70,7 +70,6 @@ BRAND_SLUGS = {
     "UNIQLO": "uniqlo",
     "J.Lindeberg": "j-lindeberg",
     "HONMA": "honma",
-    "Dior 日本限定": "dior-japan-exclusive",
     "Louis Vuitton": "louis-vuitton",
     "TaylorMade": "taylormade",
     "Dior": "dior",

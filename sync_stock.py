@@ -45,8 +45,8 @@
   - HONMA:售價是頁面載入後才用 JS 動態渲染,靜態抓不到數字(不過這個
     可以用 Playwright 渲染後讀到,見 sync_honma——DESCENTE 也是同樣道理)。
   - TaylorMade:官網有 DataDome 機器人偵測,會被導到驗證頁。
-  - Dior、Dior 日本限定、Louis Vuitton:官網對非瀏覽器的請求直接回
-    HTTP 403。
+  - Dior、Louis Vuitton:官網對非瀏覽器的請求直接回 HTTP 403(Dior 日本
+    限定系列 2026-08-10 併回 Dior,不再是獨立品牌)。
   - Gentle Monster:CloudFront 會偵測「這是自動化瀏覽器」直接回 403,
     純 requests 讀得到但沒有 JS 執行不出商品資料,矛盾的組合導致
     plain requests/真瀏覽器兩種方式都不能用。

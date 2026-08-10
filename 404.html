@@ -1429,7 +1429,6 @@ function countryRate(country){ return country === 'KR' ? settings.rateKRW : sett
 // 拿來當最上層分類用,匯率換算跟商品卡片上的產地標示還是照舊看 country。
 const TIER_BY_BRAND = {
   'Dior': '精品',
-  'Dior 日本限定': '精品',
   'Louis Vuitton': '精品',
   'CELINE': '精品',
   'On': '運動品牌',
@@ -2790,7 +2789,8 @@ function renderTrustSection(){
 // TaylorMade/MUJI 這四家官網要嘛擋爬蟲、要嘛連不上(TaylorMade 之前查
 // 台灣官網時就確認過是 DataDome 擋機器人,這次一樣擋),抓不到官方圖檔,
 // 用跟 Dior/CELINE 同一種「黑底白字」風格做的文字版當替代,不是隨便找的
-// 圖庫圖案。「Dior 日本限定」是另一個獨立的 brand 字串,共用 dior.png。
+// 圖庫圖案。原本「Dior 日本限定」是另一個獨立的 brand 字串,2026-08-10
+// 併回 Dior(見 merge_dior_japan_exclusive.py),這裡不用再重複列一次。
 const BRAND_SHOWCASE_LIST = [
   { brand: 'GU', logo: 'images/brand-logos/gu.png' },
   { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
@@ -2811,7 +2811,6 @@ const BRAND_SHOWCASE_LIST = [
   { brand: 'MUJI', logo: 'images/brand-logos/muji.svg' },
   { brand: 'CELINE', logo: 'images/brand-logos/celine.png' },
   { brand: 'Dior', logo: 'images/brand-logos/dior.png' },
-  { brand: 'Dior 日本限定', logo: 'images/brand-logos/dior.png' },
   { brand: 'Louis Vuitton', logo: 'images/brand-logos/lv.svg' },
 ];
 
