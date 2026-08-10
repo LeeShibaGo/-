@@ -409,8 +409,9 @@
   }
   .brand-showcase-item img{ max-width:100%; max-height:44px; object-fit:contain; }
   .brand-showcase-item:hover{ box-shadow:var(--shadow); transform:translateY(-2px); }
+  .brand-showcase-buttons{ display:flex; gap:10px; }
   .brand-showcase-all-btn{
-    display:block; width:100%; background:var(--ink); color:#fff; border:none;
+    display:block; flex:1; background:var(--ink); color:#fff; border:none;
     border-radius:999px; padding:15px; font-weight:700; font-size:16px; cursor:pointer;
     font-family:'Noto Sans TC',sans-serif;
   }
@@ -418,6 +419,7 @@
   @media (max-width:640px){
     .brand-showcase-grid{ grid-template-columns:repeat(2, 1fr); }
     .brand-showcase-title{ font-size:26px; letter-spacing:4px; }
+    .brand-showcase-all-btn{ font-size:14px; padding:14px 8px; }
   }
 
   .trust-section{ margin: 22px 0 34px; }
@@ -699,29 +701,38 @@
   </div>
 </div>
 
-<div class="hero-cta">
-  <div class="hero-cta-inner">
-    <div class="hero-cta-title">日本代購</div>
-    <div class="hero-cta-sub">正版保證</div>
-    <div class="hero-cta-sub">每周固定寄送,每月親飛日本</div>
-    <div class="hero-cta-arrow">↓</div>
-    <a class="hero-cta-btn" id="heroCtaLineBtn" href="#" target="_blank" rel="noopener noreferrer">立即加入 LINE</a>
+<!-- 只有「首頁剛進站、什麼篩選都還沒選」的狀態才顯示這一整塊(見
+isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商品」
+或選了特定品牌,就會整塊隱藏,直接看導覽列+搜尋+商品清單,不用滑過一堆
+行銷區塊——跳轉到「所有商品」那個畫面感覺才像真的換了一頁。 -->
+<div id="homeIntroSections">
+  <div class="hero-cta">
+    <div class="hero-cta-inner">
+      <div class="hero-cta-title">日本代購</div>
+      <div class="hero-cta-sub">正版保證</div>
+      <div class="hero-cta-sub">每周固定寄送,每月親飛日本</div>
+      <div class="hero-cta-arrow">↓</div>
+      <a class="hero-cta-btn" id="heroCtaLineBtn" href="#" target="_blank" rel="noopener noreferrer">立即加入 LINE</a>
+    </div>
   </div>
-</div>
 
-<a class="promo-banner" href="https://leeshibago.github.io/-/?p=p_salomon_1784396678297_44">
-  <img src="https://leeshibago.github.io/-/images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
-</a>
+  <a class="promo-banner" href="https://leeshibago.github.io/-/?p=p_salomon_1784396678297_44">
+    <img src="https://leeshibago.github.io/-/images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
+  </a>
 
-<div class="wrap brand-showcase">
-  <h2 class="brand-showcase-title">BRAND</h2>
-  <div class="brand-showcase-grid" id="brandShowcaseGrid"></div>
-  <button type="button" class="brand-showcase-all-btn" id="brandShowcaseAllBtn">所有品牌 ▶</button>
-</div>
+  <div class="wrap brand-showcase">
+    <h2 class="brand-showcase-title">BRAND</h2>
+    <div class="brand-showcase-grid" id="brandShowcaseGrid"></div>
+    <div class="brand-showcase-buttons">
+      <button type="button" class="brand-showcase-all-btn" id="brandShowcaseAllBtn">所有品牌 ▶</button>
+      <button type="button" class="brand-showcase-all-btn" id="brandShowcaseAllProductsBtn">所有商品 ▶</button>
+    </div>
+  </div>
 
-<div class="wrap">
-  <div class="trust-section">
-    <div class="trust-stats" id="trustStats"></div>
+  <div class="wrap">
+    <div class="trust-section">
+      <div class="trust-stats" id="trustStats"></div>
+    </div>
   </div>
 </div>
 
@@ -1566,6 +1577,11 @@ let currentBrand = 'all';
 let currentGroup = 'all'; // 上身/褲子/裙子/外套/鞋子/包包/配件...(見 SUBTYPE_GROUP)
 let currentSubtype = 'all';
 let currentSeries = 'all';
+// 「所有商品 ▶」按的時候,篩選條件其實全部都是 'all'(跟一開始進站什麼都
+// 沒選一樣),單看 currentBrand/currentTier 沒辦法分辨「客人剛進站」跟
+// 「客人主動按了所有商品要逛全部」——這個旗標專門記這件事,只有按下
+// 「所有商品」才會是 true,回首頁(logo/重新整理)會整頁重載自動歸零。
+let browseAllProductsMode = false;
 let pendingProductId = null; // 從分享連結 ?p=商品id 進來時,要捲動到的那件商品
 let searchQuery = '';
 let currentPage = 1;
@@ -1779,7 +1795,20 @@ function updateCountdownDisplay(){
 }
 setInterval(updateCountdownDisplay, 1000);
 
+// 「首頁行銷區塊(hero/BRAND 展示/信任感)」該不該顯示的判斷:客人主動按了
+// 「所有商品」,或是已經選了特定品牌/大分類/種類/系列(不管是點選單、點
+// BRAND 縮圖、還是從分享連結直接進站),都算是在「逛商品」而不是「剛進站
+// 的首頁」,這時候應該直接看導覽列+商品清單,不要再看一次行銷區塊。
+function isBrowsingProducts(){
+  return browseAllProductsMode || currentBrand !== 'all' || currentTier !== 'all'
+    || currentGroup !== 'all' || currentSubtype !== 'all' || currentSeries !== 'all';
+}
+function updateHomeSectionsVisibility(){
+  document.getElementById('homeIntroSections').style.display = isBrowsingProducts() ? 'none' : '';
+}
+
 function render(){
+  updateHomeSectionsVisibility();
   document.getElementById('shopName').textContent = settings.shopName;
   document.getElementById('rateDisplayJPY').textContent = `1 JPY = ${Number(settings.rate).toFixed(3)} TWD`;
   document.getElementById('rateDisplayKRW').textContent = `1 KRW = ${Number(settings.rateKRW).toFixed(4)} TWD`;
@@ -1897,8 +1926,12 @@ function applyTopCatSelection(tier, brand){
   currentBrand = brand;
   currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all'; // 換大分類/品牌時,底下的種類/系列篩選重設
   currentPage = 1;
+  if(tier === 'all' && brand === 'all') browseAllProductsMode = false; // 點「全部」等於回到首頁式的瀏覽,行銷區塊要放回來
   closeAllTopCatDropdowns();
+  updateHomeSectionsVisibility();
   renderProducts();
+  renderNewArrivals();
+  renderBestSellers();
   triggerPageTransition();
   scrollToProductGrid();
 }
@@ -2225,9 +2258,13 @@ function wireCardEvents(grid, onChange){
   });
 }
 
-// 本週新品:只看最近 7 天內上架的商品,沒有的話整塊隱藏,不留一個空區塊
+// 本週新品:只看最近 7 天內上架的商品,沒有的話整塊隱藏,不留一個空區塊。
+// 客人已經在逛「所有商品」或特定品牌時也整塊隱藏(見 isBrowsingProducts),
+// 這種通用的「本週新品/熱銷商品」是首頁才有意義的行銷區塊,選定品牌之後
+// 客人要看的是那個品牌的東西,不是全站熱銷排行。
 function renderNewArrivals(){
   const wrap = document.getElementById('newArrivalsWrap');
+  if(isBrowsingProducts()){ wrap.style.display = 'none'; return; }
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const recent = visibleProducts()
     .filter(p => productAddedAt(p) >= cutoff)
@@ -2247,6 +2284,7 @@ function renderNewArrivals(){
 // 目前沒有任何一件賣出紀錄的話整塊隱藏。
 function renderBestSellers(){
   const wrap = document.getElementById('bestSellersWrap');
+  if(isBrowsingProducts()){ wrap.style.display = 'none'; return; }
   const ranked = visibleProducts()
     .map(p => ({ p, qty: getSoldQty(p) }))
     .filter(x => x.qty > 0)
@@ -2717,7 +2755,10 @@ function renderBrandShowcase(){
       currentBrand = brand;
       currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all';
       currentPage = 1;
+      updateHomeSectionsVisibility();
       renderProducts();
+      renderNewArrivals();
+      renderBestSellers();
       triggerPageTransition();
       scrollToProductGrid();
     });
@@ -2730,6 +2771,22 @@ document.getElementById('brandShowcaseAllBtn').addEventListener('click', () => {
     const btn = Array.from(nav.querySelectorAll('.top-cat-nav-btn')).find(b => b.textContent.includes('所有品牌'));
     if(btn) btn.click();
   }, 400);
+});
+// 「所有商品」:不像「所有品牌」只是打開品牌下拉選單讓客人自己選,這個
+// 直接把全部篩選條件(大分類/品牌/群組/種類/系列)清空,秀出真正全部的商品,
+// 給不知道要選哪個品牌、單純想從頭逛的客人用。
+document.getElementById('brandShowcaseAllProductsBtn').addEventListener('click', () => {
+  currentTier = 'all'; currentBrand = 'all'; currentGroup = 'all';
+  currentSubtype = 'all'; currentSeries = 'all'; searchQuery = '';
+  document.getElementById('searchInput').value = '';
+  currentPage = 1;
+  browseAllProductsMode = true;
+  updateHomeSectionsVisibility();
+  renderProducts();
+  renderNewArrivals();
+  renderBestSellers();
+  triggerPageTransition();
+  scrollToProductGrid();
 });
 
 document.getElementById('lookupSubmitBtn').onclick = async () => {
