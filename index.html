@@ -680,11 +680,10 @@
     <div class="board-top-nav">
       <button class="ghost-btn" id="purchaseGuideBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">代購須知</button>
       <button class="ghost-btn" id="faqBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">FAQ</button>
-      <!-- 2026-08-10 抓到:這顆按鈕原本就寫死 display:none,整個網站
-      沒有任何程式碼會去改它,等於「客戶真實回饋」這個功能(10張真實
-      LINE 截圖)做完之後客人其實完全看不到入口,一直是個死功能。
-      拿掉 display:none,補上這個真的漏洞。 -->
-      <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">客戶真實回饋</button>
+      <!-- 2026-08-10:老闆決定先把「客戶真實回饋」入口收起來,暫時不給
+      客人看到(維持 display:none)。按鈕本身、彈窗跟資料都還在,之後
+      要打開的話只要拿掉 display:none 即可。 -->
+      <button class="ghost-btn" id="testimonialBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page); display:none;">客戶真實回饋</button>
       <button class="ghost-btn" id="purchaseProofBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">海外採購實拍</button>
       <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong-onlight); color:var(--text-page); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">查詢訂單</button>
