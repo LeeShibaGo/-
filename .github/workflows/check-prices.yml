@@ -12,6 +12,14 @@ permissions:
 jobs:
   check-prices:
     runs-on: ubuntu-latest
+    # 2026-08-11 抓到:GitHub Actions 沒特別設定的話,job 預設 6 小時就會被
+    # 強制取消(對照 Aug 9、Aug 10 兩次都卡在「Sync all brands' stock and
+    # prices」這步、跑滿 6:00:xx 準時被砍,後面連 generate_brand_pages.py
+    # 都沒機會跑到,SEO 靜態頁跟著沒更新)。商品數量比當初寫這支
+    # workflow 時多很多,現在單趟同步常態性超過 6 小時,拉長上限給足
+    # 空間跑完,不然排在同步順序後面的品牌永遠等不到重新對庫存,客人
+    # 這邊看到的「已售完自動隱藏」也會一直卡在舊資料。
+    timeout-minutes: 600
     steps:
       - uses: actions/checkout@v4
 
