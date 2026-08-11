@@ -10,16 +10,40 @@ permissions:
   contents: write
 
 jobs:
-  check-prices:
+  # 2026-08-11 抓到:GitHub Actions 的 GitHub-hosted runner 對單一 job 有
+  # 6 小時執行時間的硬性上限,這是平台本身的限制,不是 timeout-minutes
+  # 可以往上調的(先前以為調高 timeout-minutes 就能延長,實測兩次手動
+  # 重跑都還是準時在 6:00:xx 被砍,證實那個判斷是錯的)。
+  #
+  # 商品數量比當初寫這支 workflow 時多很多,原本「15 個品牌排一列依序
+  # 同步」的寫法現在單趟常態性超過 6 小時,導致排在後面的品牌永遠等不到
+  # 重新對庫存——改成每個品牌各自獨立一個 job、平行跑(matrix),個別品牌
+  # 單獨抓完全用不到 6 小時(當初這幾個最重的品牌 On/DESCENTE/Lacoste/
+  # AAPE 加起來也才 1.5~2.5 小時),互相之間也不用等,同時每個品牌各自
+  # 的 6 小時預算不會被其他品牌吃掉。sync_stock.py 已經支援
+  # `python sync_stock.py <brand關鍵字>` 只跑單一品牌,不用改 sync_stock.py
+  # 本身。
+  sync-brand:
+    strategy:
+      fail-fast: false
+      matrix:
+        brand:
+          - salomon
+          - "on"
+          - gu
+          - uniqlo
+          - uha
+          - dhc
+          - onitsuka
+          - honma
+          - bape
+          - stussy
+          - celine
+          - aape
+          - lacoste
+          - jlindeberg
+          - descente
     runs-on: ubuntu-latest
-    # 2026-08-11 抓到:GitHub Actions 沒特別設定的話,job 預設 6 小時就會被
-    # 強制取消(對照 Aug 9、Aug 10 兩次都卡在「Sync all brands' stock and
-    # prices」這步、跑滿 6:00:xx 準時被砍,後面連 generate_brand_pages.py
-    # 都沒機會跑到,SEO 靜態頁跟著沒更新)。商品數量比當初寫這支
-    # workflow 時多很多,現在單趟同步常態性超過 6 小時,拉長上限給足
-    # 空間跑完,不然排在同步順序後面的品牌永遠等不到重新對庫存,客人
-    # 這邊看到的「已售完自動隱藏」也會一直卡在舊資料。
-    timeout-minutes: 600
     steps:
       - uses: actions/checkout@v4
 
@@ -43,21 +67,40 @@ jobs:
 
       # HONMA(售價)、DESCENTE(現貨/缺貨)都是頁面載入後才用 JS 算出來/
       # 套版,一般的 HTTP 請求抓不到,需要用真的瀏覽器(Playwright)把 JS
-      # 跑完再讀畫面上的資料,所以要多這一步下載瀏覽器執行檔,其他品牌
-      # 不需要。
+      # 跑完再讀畫面上的資料,所以只有這兩個品牌的 job 需要多裝這個,其他
+      # 品牌不用等這個安裝步驟。
       - name: Install Playwright browser (for HONMA and DESCENTE)
+        if: matrix.brand == 'honma' || matrix.brand == 'descente'
         run: python -m playwright install --with-deps chromium
 
-      # 每個品牌各自的庫存/價格同步邏輯見 sync_stock.py 開頭的說明。
-      # On、DESCENTE、Lacoste、AAPE 加起來要逐一抓好幾千個商品頁,這步
-      # 跑 1.5~2.5 小時屬正常,merge_and_save() 已經處理過中途被其他
-      # 寫入蓋掉的風險。
-      - name: Sync all brands' stock and prices
+      # merge_and_save() 已經處理過中途被其他寫入蓋掉的風險,15 個品牌
+      # 平行寫不同的 brand 範圍,彼此不會互蓋。
+      - name: Sync this brand's stock and prices
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-        run: python sync_stock.py
+        run: python sync_stock.py ${{ matrix.brand }}
 
-      # 商品/庫存/品牌介紹更新之後,SEO 用的靜態品牌頁面(brand/*/index.html)
-      # 跟 sitemap.xml 也要跟著重新產生,不然會顯示過期的商品資訊。
+  # 全部品牌都同步完之後才重新產生 SEO 用的靜態品牌頁面(brand/*/index.html)
+  # 跟 sitemap.xml,不然會拿還沒同步完的舊資料生頁面。
+  regenerate-pages:
+    needs: sync-brand
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          EOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
       - name: Regenerate static brand pages for SEO
         run: python generate_brand_pages.py
