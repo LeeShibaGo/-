@@ -1949,7 +1949,34 @@ function productBrand(p){ return p.brand || p.category || '其他'; }
 // 那樣還留著卡片、只是標缺貨),但後台商品管理列表要看得到、才能重新
 // 打開——所以只在「客人瀏覽會用到」的畫面套用這個過濾,後台(admin 開頭
 // 的那組函式)刻意不套用,繼續讀 products 本身。
-function visibleProducts(){ return products.filter(p => !p.hidden); }
+function visibleProducts(){ return products.filter(p => !p.hidden && !isFullySoldOut(p)); }
+
+// 2026-08-11 老闆說「已售完的話先隱藏,不然看起來會很亂」——判斷邏輯
+// 跟單張卡片裡「這個顏色/尺寸缺貨」的算法(buildCardHTML 裡的 soldOut)
+// 一樣,只是這裡要展開檢查全部顏色 x 尺寸的組合,不是只看客人目前選到
+// 的那一個。只要還有任何一個顏色/尺寸組合有庫存,就不算整張賣完,卡片
+// 繼續留著。沒有庫存資料可查的顏色一律當作還有貨(跟卡片內邏輯一致,
+// 不會無中生有把沒在追蹤庫存的商品也判定成賣完)。
+//
+// 故意不用「賣完就存一個 hidden 旗標」的做法,而是每次都用當下的庫存
+// 資料現算——這樣 sync_stock.py 每天跟官網核對回來的庫存只要一有貨,
+// 這裡自動就會重新算出「沒賣完」,不用另外寫程式記得把商品「上架」
+// 回來,也不會有旗標忘記清掉、商品永遠卡在隱藏狀態的風險。
+function isFullySoldOut(p){
+  const saleType = p.saleType || 'instock';
+  if(saleType === 'preorder') return false;
+  if(saleType === 'soldout') return true;
+  if(p.colors && p.colors.length > 0){
+    return p.colors.every(c => {
+      const stock = c.stock;
+      if(!stock) return false;
+      const sizes = c.sizes && c.sizes.length > 0 ? c.sizes : Object.keys(stock);
+      if(sizes.length === 0) return false;
+      return sizes.every(s => (stock[s] || 0) <= 0);
+    });
+  }
+  return false;
+}
 
 // 鞋類的尺寸選項通常比服飾多很多(例如跑鞋一款可能有 14 個尺寸),
 // 選項一多用小按鈕全部攤開會很亂,鞋子尺寸選項才需要收進下拉選單。
