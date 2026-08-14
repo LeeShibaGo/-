@@ -15,14 +15,14 @@ jobs:
   # 可以往上調的(先前以為調高 timeout-minutes 就能延長,實測兩次手動
   # 重跑都還是準時在 6:00:xx 被砍,證實那個判斷是錯的)。
   #
-  # 商品數量比當初寫這支 workflow 時多很多,原本「15 個品牌排一列依序
-  # 同步」的寫法現在單趟常態性超過 6 小時,導致排在後面的品牌永遠等不到
-  # 重新對庫存——改成每個品牌各自獨立一個 job、平行跑(matrix),個別品牌
-  # 單獨抓完全用不到 6 小時(當初這幾個最重的品牌 On/DESCENTE/Lacoste/
-  # AAPE 加起來也才 1.5~2.5 小時),互相之間也不用等,同時每個品牌各自
-  # 的 6 小時預算不會被其他品牌吃掉。sync_stock.py 已經支援
+  # 商品數量比當初寫這支 workflow 時多很多,原本「品牌排一列依序同步」的
+  # 寫法現在單趟常態性超過 6 小時,導致排在後面的品牌永遠等不到重新對
+  # 庫存——改成每個品牌各自獨立一個 job、平行跑(matrix),個別品牌單獨
+  # 抓完全用不到 6 小時(當初這幾個最重的品牌 On/DESCENTE/Lacoste/AAPE
+  # 加起來也才 1.5~2.5 小時),互相之間也不用等,同時每個品牌各自的
+  # 6 小時預算不會被其他品牌吃掉。sync_stock.py 已經支援
   # `python sync_stock.py <brand關鍵字>` 只跑單一品牌,不用改 sync_stock.py
-  # 本身。
+  # 本身(2026-08-13 新增 3coins,同一套 matrix 機制直接沿用)。
   sync-brand:
     strategy:
       fail-fast: false
@@ -43,6 +43,7 @@ jobs:
           - lacoste
           - jlindeberg
           - descente
+          - 3coins
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

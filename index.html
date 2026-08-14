@@ -1513,7 +1513,7 @@ const SUBTYPE_GROUP = {
   '帽子': '配件', '皮帶': '配件', '配件': '配件', '手錶': '配件', '圍巾配件': '配件',
   '眼鏡': '配件', '手套護腕': '配件', '香水': '配件', '網球用品': '配件', '服飾配件': '配件',
   '毛巾': '配件', '泳裝': '配件', '珠寶飾品': '配件', '內著': '配件', '運動內衣': '配件', '服飾': '配件', '襪類': '配件',
-  '鑰匙圈吊飾': '配件', '手機周邊': '配件', '徽章貼紙': '配件', '安全帽': '配件',
+  '鑰匙圈吊飾': '配件', '手機周邊': '配件', '徽章貼紙': '配件', '安全帽': '配件', '髮飾': '配件',
   '一號木桿': '球具', '球道木桿': '球具', '複合鐵木桿': '球具', '鐵桿': '球具', '球桿套裝': '球具',
   '挖起桿': '球具', '推桿': '球具', '球桿零件': '球具', '槌球式高爾夫用品': '球具', '高爾夫球': '球具',
   '高爾夫球鞋': '鞋子', '高爾夫球袋': '包包', '波士頓包': '包包', '其他包款': '包包',
@@ -2853,7 +2853,11 @@ function renderTrustSection(){
 // DataDome 擋機器人,這次一樣擋),暫時還是用跟 Dior/CELINE 同一種
 // 「黑底白字」風格的文字版頂著。原本「Dior 日本限定」是另一個獨立的
 // brand 字串,2026-08-10 併回 Dior(見 merge_dior_japan_exclusive.py),
-// 這裡不用再重複列一次。
+// 這裡不用再重複列一次。2026-08-13 新增 3COINS(掛在 PAL CLOSET 商城
+// palcloset.jp 底下,只抓時尚配件類,見 scrape_3coins.py),官網首頁
+// <head> 裡只有整個商城通用的 favicon,沒有 3COINS 自己專屬的
+// logotype 圖檔可以抓,所以跟 LV/TaylorMade 一樣先用文字版頂著,顏色
+// 用官方的桃紅色。
 const BRAND_SHOWCASE_LIST = [
   { brand: 'GU', logo: 'images/brand-logos/gu.png' },
   { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
@@ -2875,6 +2879,7 @@ const BRAND_SHOWCASE_LIST = [
   { brand: 'CELINE', logo: 'images/brand-logos/celine.png' },
   { brand: 'Dior', logo: 'images/brand-logos/dior.png' },
   { brand: 'Louis Vuitton', logo: 'images/brand-logos/lv.svg' },
+  { brand: '3COINS', logo: 'images/brand-logos/3coins.svg' },
 ];
 
 function renderBrandShowcase(){

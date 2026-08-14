@@ -54,6 +54,14 @@
     "Reference #..." 代碼,連正常錯誤頁都不會顯示。
   - MUSINSA、Nike、零食伴手禮:這些是手動加的參考商品,沒有官網連結
     可以查價。
+  D) 庫存 + 價格都同步,商城平台伺服器端渲染,不需要 Playwright(3COINS):
+     3COINS 掛在 PAL CLOSET 商城(palcloset.jp)底下,分類頁預設是 JS
+     載入後才灌商品進去,但只要網址加上 mode=zSearch 參數,伺服器就會
+     直接把完整商品清單渲染進 HTML 回傳,詳細頁本身也是純伺服器渲染,
+     兩邊都純 requests + BeautifulSoup 就能讀到,見 scrape_3coins.py。
+     這裡只跑「已上架商品」的每日庫存/價格重新核對,新商品要另外重新
+     跑一次 scrape_3coins.py(2026-08-13 老闆確認只抓時尚配件類——包包/
+     髮飾/飾品/帽子/錢包小物,不含 3COINS 官網其餘的生活雜貨分類)。
 
 比對方式:
   商品顏色名稱在網站上已翻成中文,沒辦法拿名字對照官網,
@@ -87,6 +95,7 @@
   python sync_stock.py uniqlo     # 只跑 UNIQLO
   python sync_stock.py uha        # 只跑 UHA
   python sync_stock.py dhc        # 只跑 DHC
+  python sync_stock.py 3coins     # 只跑 3COINS
 """
 
 import json
@@ -1432,6 +1441,70 @@ def sync_uniqlo(items):
     merge_and_save(cards)
 
 
+# ---------- 3COINS(PAL CLOSET 商城,palcloset.jp,只上架時尚配件類——
+# 包包/髮飾/飾品/帽子/錢包小物,2026-08-13 加入)----------
+# 商品頁是純 requests + BeautifulSoup 就能讀到完整顏色/庫存的伺服器端渲染
+# 頁面,不需要 Playwright,詳細技術細節、分類/庫存解析邏輯都寫在
+# scrape_3coins.py 開頭的說明跟 fetch_product_detail() 裡,這裡只是每天
+# 重新呼叫同一支 fetch_product_detail() 去比對現有商品的最新庫存/價格,
+# 不會發現新商品(新商品要另外重新跑一次 scrape_3coins.py)。
+
+_3COINS_ITEM_RE = re.compile(r"/display/item/([^/]+)/")
+
+
+def sync_3coins(items):
+    print("=== 3COINS 同步開始 ===")
+    from scrape_3coins import fetch_product_detail
+
+    cards = [p for p in items if p.get("brand") == "3COINS"]
+    stock_changed = price_changed = errors = 0
+    for idx, card in enumerate(cards):
+        m = _3COINS_ITEM_RE.search(card.get("link") or "")
+        if not m:
+            errors += 1
+            continue
+        slug = m.group(1)
+        try:
+            name, jpy, colors = fetch_product_detail(slug)
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+
+        if not colors:
+            # 商品在官網已經下架,全部標成缺貨,不刪除商品本身
+            if any(v > 0 for c in card.get("colors", []) for v in (c.get("stock") or {}).values()):
+                stock_changed += 1
+                delisted_lines.append(f"[3COINS] {card.get('name')} 官網已下架,標記全面缺貨")
+            for color in card.get("colors", []):
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+            time.sleep(0.3)
+            continue
+
+        # 詳細頁不一定每次都回傳圖片(極少數款式頁面結構跟預期不同),
+        # 沿用原本每個顏色已經存好的圖片當備援。
+        old_images = {c.get("name"): c.get("image") for c in card.get("colors", []) if c.get("image")}
+        for c in colors:
+            if not c.get("image") and c["name"] in old_images:
+                c["image"] = old_images[c["name"]]
+        if colors != card.get("colors"):
+            stock_changed += 1
+        card["colors"] = colors
+
+        if jpy and jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{jpy}")
+            price_change_lines.append(f"[3COINS] {card.get('name')}:¥{card.get('jpy'):,} → ¥{jpy:,}")
+            card["jpy"] = jpy
+            price_changed += 1
+
+        time.sleep(0.3)
+        if (idx + 1) % 100 == 0:
+            print(f"  進度 {idx+1}/{len(cards)}(庫存有變 {stock_changed},價格變動 {price_changed},錯誤 {errors})")
+    print(f"3COINS 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色組合,"
+          f"價格變動 {price_changed} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
+
+
 def main():
     only = sys.argv[1].lower() if len(sys.argv) > 1 else None
     items = load_products()
@@ -1446,6 +1519,8 @@ def main():
         sync_gu(items)
     if only in (None, "uniqlo"):
         sync_uniqlo(items)
+    if only in (None, "3coins"):
+        sync_3coins(items)
     if only in (None, "uha"):
         sync_uha(items)
     if only in (None, "dhc"):
