@@ -1,0 +1,90 @@
+{
+  "K5YYGE": {
+    "code": "K5YYGE",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 36063.53125,
+    "device": "手機",
+    "email": "123@gmail.com",
+    "id": "ord_1786700098905",
+    "items": [
+      {
+        "color": "多彩花色",
+        "country": "JP",
+        "jpy": 247500,
+        "name": "ÉTÉ CELINE金色飾面長款耳環",
+        "productId": "p_celine_1786198437884_0",
+        "purchased": false,
+        "qty": 1,
+        "size": "F",
+        "weight": 0.2
+      },
+      {
+        "color": "象牙白 | 薄荷白",
+        "country": "JP",
+        "jpy": 27500,
+        "name": "男款 Cloudmonster 3 Hyper",
+        "productId": "p_on_1784204293742_1",
+        "purchased": false,
+        "qty": 2,
+        "size": "25",
+        "weight": 0.7
+      }
+    ],
+    "name": "李哲寧",
+    "note": "",
+    "phone": "0000000000",
+    "shipping": 240,
+    "status": "待確認訂金",
+    "statusTimestamps": {
+      "待確認訂金": 1786700098906
+    },
+    "subtotal": 71849.0625,
+    "time": 1786700098906,
+    "total": 72127.0625
+  },
+  "ZGHSFT": {
+    "code": "ZGHSFT",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 509.2945,
+    "device": "手機",
+    "email": "123@gmail.com",
+    "id": "ord_1786718776905",
+    "items": [
+      {
+        "color": "ブラック",
+        "country": "JP",
+        "jpy": 1980,
+        "name": "2way巾着ショルダーバッグ",
+        "productId": "p_3coins_1786710092125_0",
+        "purchased": false,
+        "qty": 1,
+        "size": "FREE",
+        "weight": 0.35
+      },
+      {
+        "color": "ブラック",
+        "country": "JP",
+        "jpy": 880,
+        "name": "《撥水加工》防災サコッシュ／SOBANI",
+        "productId": "p_3coins_1786710092125_1",
+        "purchased": false,
+        "qty": 1,
+        "size": "FREE",
+        "weight": 0.35
+      }
+    ],
+    "name": "你看看",
+    "note": "",
+    "phone": "0000000000",
+    "shipping": 105,
+    "status": "待確認訂金",
+    "statusTimestamps": {
+      "待確認訂金": 1786718776905
+    },
+    "subtotal": 875.589,
+    "time": 1786718776905,
+    "total": 1018.589
+  }
+}
