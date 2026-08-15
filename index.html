@@ -193,6 +193,18 @@
     display:flex; flex-direction:column; gap:10px;
     border: 1px solid rgba(0,0,0,0.06);
   }
+  /* 2026-08-14 商品資料改成按需載入之後,切品牌/翻頁那一刻完整資料
+     (顏色/尺寸/庫存/圖片)還沒抓回來,先用這個佔位卡片頂著,不要讓畫面
+     整片空白看起來像壞掉——套用跟真正商品卡一樣的 .card 才能維持
+     版面格線不跳動,裡面只是幾個會閃爍的灰色色塊。 */
+  .card.skeleton{ gap:12px; }
+  .card.skeleton .skeleton-block{
+    background: rgba(0,0,0,0.08); border-radius:8px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .card.skeleton .skeleton-img{ aspect-ratio:1/1; width:100%; }
+  .card.skeleton .skeleton-line{ height:14px; width:80%; }
+  .card.skeleton .skeleton-line.short{ width:45%; }
   /* 從分享連結 ?p= 直達的那件商品,亮框幾秒讓客人一眼看到 */
   .card.deep-linked{
     border: 2px solid var(--gold, #C9A227);
@@ -1196,6 +1208,7 @@ const authReady = new Promise(resolve => {
 <script>
 const SETTINGS_KEY = 'daigou-settings-v1';
 const PRODUCTS_KEY = 'daigou-products-v1';
+const PRODUCTS_INDEX_KEY = 'daigou-products-index-v1'; // 精簡版商品索引,見 loadAll() 說明
 const ORDERS_KEY = 'daigou-orders-v1';
 const CART_KEY = 'daigou-cart-v1'; // 只存本機瀏覽器,換裝置/清瀏覽器資料還是會不見(見 loadCart 說明)
 const USER_KEY = 'daigou-user-v1'; // 登入後記住身分用,只是「這台裝置記得你登入過」,不是安全機制
@@ -1611,6 +1624,20 @@ function sellPriceTwd(p){
 }
 
 let settings = { ...DEFAULT_SETTINGS };
+// 2026-08-14 商品資料改成按需載入(見 loadAll()/fetchProductsByBrand()/
+// fetchProductsByIds() 的說明):
+// - productsIndex:精簡版索引(daigou-products-index-v1),一開站就抓,
+//   只有品牌/分類/排行榜篩選用得到的欄位,沒有顏色/尺寸/庫存/圖片明細。
+//   customer 端所有畫面邏輯(品牌導覽、篩選、搜尋、分頁、已售完判斷)
+//   都改讀這個,不再讀 products。
+// - productsFull:Map<商品id, 完整商品物件>,一開始是空的,客人實際瀏覽
+//   到哪個品牌/哪一頁,才把那批商品的完整資料抓進來、快取住,同一個
+//   session 內不會重複抓。
+// - products:保留給後台管理頁用,後台開啟時才整包抓(admin 開頭那組
+//   函式不受這次改動影響,邏輯、變數名稱都維持原樣)。
+let productsIndex = [];
+const productsFull = new Map();
+let adminProductsLoaded = false;
 let products = [...DEFAULT_PRODUCTS];
 let orders = [];
 let cart = {}; // { 'productId::size': { productId, size, qty } }
@@ -1740,16 +1767,79 @@ async function storageSet(key, value){
   }catch(e){ console.error('storage set failed', e); return false; }
 }
 
+// Firebase RTDB REST API 的條件查詢語法:orderBy/equalTo 的值要是
+// JSON 字面值(字串要帶雙引號),見官方文件
+// https://firebase.google.com/docs/database/rest/retrieve-data#rest_1
+function productsQueryUrl(field, value){
+  const orderBy = encodeURIComponent(`"${field}"`);
+  const equalTo = encodeURIComponent(`"${String(value).replace(/"/g, '\\"')}"`);
+  return `${FIREBASE_DB_URL}/${PRODUCTS_KEY}.json?orderBy=${orderBy}&equalTo=${equalTo}`;
+}
+
+// 2026-08-14 商品資料改成按需載入:客人瀏覽到某個品牌,才抓那個品牌的
+// 完整商品資料(顏色/尺寸/庫存/圖片),存進 productsFull 快取。同一個
+// 品牌一個 session 只會真的送出一次網路請求(brandFullyCached 記錄
+// 「這個品牌已經抓過了」,即使那個品牌其實是空的也一樣不重抓),之後
+// 客人在同一個品牌底下切分頁、切子分類、切系列都直接用快取,不用
+// 重新跟 Firebase 要資料。
+const brandFullyCached = new Set();
+async function fetchProductsByBrand(brand){
+  if(!brand || brandFullyCached.has(brand)) return;
+  try{
+    const res = await fetch(productsQueryUrl('brand', brand));
+    if(res.ok){
+      const data = await res.json();
+      const items = data ? Object.values(data) : [];
+      for(const p of items){ if(p && p.id) productsFull.set(p.id, p); }
+    }
+  }catch(e){ console.error('fetchProductsByBrand failed', brand, e); }
+  brandFullyCached.add(brand);
+}
+
+// 「所有商品」不篩選品牌瀏覽,或是還沒選品牌就搜尋、購物車/分享連結
+// 需要補資料時用這個——只針對真正需要的那幾個 id 各自查詢,平行送出,
+// 已經在快取裡的直接跳過,不會因為這樣就整包抓全站商品。
+async function fetchProductsByIds(ids){
+  const missing = [...new Set(ids)].filter(id => id && !productsFull.has(id));
+  if(missing.length === 0) return;
+  await Promise.all(missing.map(async id => {
+    try{
+      const res = await fetch(productsQueryUrl('id', id));
+      if(res.ok){
+        const data = await res.json();
+        const items = data ? Object.values(data) : [];
+        if(items[0]) productsFull.set(id, items[0]);
+      }
+    }catch(e){ console.error('fetchProductsByIds failed', id, e); }
+  }));
+}
+
+// 後台商品管理需要看到完整明細(圖片/顏色庫存/售價)才能編輯/刪除,
+// 進後台當下才整包抓一次 daigou-products-v1 到 products(後台那組
+// admin 開頭的函式邏輯完全不變,繼續讀 products),同一個 session
+// 只抓一次,不會每次打開後台都重抓。
+async function ensureAdminProductsLoaded(){
+  if(adminProductsLoaded) return;
+  const p = await storageGet(PRODUCTS_KEY);
+  products = p ? (Array.isArray(p) ? p : Object.values(p)) : [];
+  adminProductsLoaded = true;
+}
+
 async function loadAll(){
   await authReady; // 確定登入狀態恢復完成,storageGet() 才抓得到 token 讀訂單
   const s = await storageGet(SETTINGS_KEY);
-  const p = await storageGet(PRODUCTS_KEY);
+  // 2026-08-14 起首頁不再整包抓 daigou-products-v1(17,897 件、12.5MB,
+  // 實測光這個請求就要 1.4 秒以上,手機用 LINE 內建瀏覽器+行動網路只會
+  // 更久),改抓小很多的精簡索引 daigou-products-index-v1,客人實際
+  // 瀏覽到哪個品牌/哪一頁,才用 fetchProductsByBrand()/fetchProductsByIds()
+  // 各自補完整資料,見這兩個函式的說明。
+  const idx = await storageGet(PRODUCTS_INDEX_KEY);
   const o = await storageGet(ORDERS_KEY);
   if(s) settings = { ...DEFAULT_SETTINGS, ...s };
   // Firebase 存的 key 如果不是連續從 0 開始的索引(例如混雜了手動批次匯入用的
   // 自訂 id),讀出來會是物件而不是陣列,這裡一律轉成陣列,避免後面所有
-  // products.map()/orders.map() 直接整頁壞掉。
-  if(p) products = Array.isArray(p) ? p : Object.values(p);
+  // .map()/orders.map() 直接整頁壞掉。
+  if(idx) productsIndex = Array.isArray(idx) ? idx : Object.values(idx);
   if(o) orders = Array.isArray(o) ? o : Object.values(o);
   loadUser();
   loadCart();
@@ -1799,18 +1889,21 @@ function applyUrlParams(){
     try { return decodeURIComponent(s); } catch(e) { return s; }
   });
 
+  // 2026-08-14 起 products 只在後台開啟時才會整包載入,深連結解析這裡
+  // 改讀一開站就有的精簡索引 productsIndex(brand/subtype/series 這幾個
+  // 深連結要比對的欄位,索引裡都有)。
   const brand = segments[0] || q.get('brand');
   if(brand){
-    const match = products.find(x => productBrand(x).toLowerCase() === brand.toLowerCase());
+    const match = productsIndex.find(x => productBrand(x).toLowerCase() === brand.toLowerCase());
     if(match){
       currentBrand = productBrand(match);
       currentTier = productTier(match);
       const sub = segments[1] || q.get('subtype');
-      if(sub && products.some(x => productBrand(x) === currentBrand && x.subtype === sub)){
+      if(sub && productsIndex.some(x => productBrand(x) === currentBrand && x.subtype === sub)){
         currentSubtype = sub;
         currentGroup = subtypeGroup(sub) || 'all';
         const ser = segments[2] || q.get('series');
-        if(ser && products.some(x => productBrand(x) === currentBrand && x.subtype === sub && x.series === ser)){
+        if(ser && productsIndex.some(x => productBrand(x) === currentBrand && x.subtype === sub && x.series === ser)){
           currentSeries = ser;
         }
       }
@@ -1899,7 +1992,7 @@ function render(){
   updateCountdownDisplay();
   // 目前沒有韓幣商品的話,看板不需要顯示 KRW 匯率,不然客人會誤以為有韓國代購。
   // 之後如果又上架韓國商品,這裡會自動偵測到、自己重新顯示,不用手動切換。
-  const hasKrProducts = products.some(p => (p.country || 'JP') === 'KR');
+  const hasKrProducts = productsIndex.some(p => (p.country || 'JP') === 'KR');
   document.getElementById('krwRateCol').style.display = hasKrProducts ? '' : 'none';
   soldMaps = computeSoldMaps();
   renderSocialLinks();
@@ -1949,7 +2042,9 @@ function productBrand(p){ return p.brand || p.category || '其他'; }
 // 那樣還留著卡片、只是標缺貨),但後台商品管理列表要看得到、才能重新
 // 打開——所以只在「客人瀏覽會用到」的畫面套用這個過濾,後台(admin 開頭
 // 的那組函式)刻意不套用,繼續讀 products 本身。
-function visibleProducts(){ return products.filter(p => !p.hidden && !isFullySoldOut(p)); }
+// 2026-08-14 起客人端一律讀 productsIndex(一開站就有的精簡索引),不再
+// 讀 products(那個現在只在後台開啟時才會整包載入)。
+function visibleProducts(){ return productsIndex.filter(p => !p.hidden && !isFullySoldOut(p)); }
 
 // 2026-08-11 老闆說「已售完的話先隱藏,不然看起來會很亂」——判斷邏輯
 // 跟單張卡片裡「這個顏色/尺寸缺貨」的算法(buildCardHTML 裡的 soldOut)
@@ -1962,7 +2057,14 @@ function visibleProducts(){ return products.filter(p => !p.hidden && !isFullySol
 // 資料現算——這樣 sync_stock.py 每天跟官網核對回來的庫存只要一有貨,
 // 這裡自動就會重新算出「沒賣完」,不用另外寫程式記得把商品「上架」
 // 回來,也不會有旗標忘記清掉、商品永遠卡在隱藏狀態的風險。
+//
+// 2026-08-14 起精簡索引(productsIndex)裡沒有 colors 明細,後端已經
+// 用同一套邏輯的 Python 版本(sync_stock.py 的 _is_fully_sold_out())
+// 算好 p.soldOut 存進索引——這裡拿到的物件如果有 soldOut 這個欄位就直接
+// 信任它(索引資料),沒有的話代表這是完整資料(productsFull 裡查到的
+// 商品),繼續用原本的明細算法現算,兩種資料形狀都能正確處理。
 function isFullySoldOut(p){
+  if(typeof p.soldOut === 'boolean') return p.soldOut;
   const saleType = p.saleType || 'instock';
   if(saleType === 'preorder') return false;
   if(saleType === 'soldout') return true;
@@ -2168,13 +2270,27 @@ function renderSeriesTabs(){
   });
 }
 
+// 2026-08-14 商品資料改成按需載入之後,這個函式改成 async:篩選/分頁的
+// 「算出這一頁要顯示哪些商品」永遠對 productsIndex(一開站就有的精簡
+// 索引)做,邏輯完全不變;但要真的畫出完整商品卡(顏色/尺寸/庫存/圖片)
+// 之前,要先確認這一頁的商品在 productsFull 快取裡有完整資料——沒有的話
+// 才去跟 Firebase 要,只要那一頁的份量(選定品牌就整個品牌一次抓,沒選
+// 品牌就只抓這頁最多 12 件的 id),不會整包抓全站商品。
+//
+// 呼叫端(搜尋框、分頁按鈕、篩選標籤...)全部維持原本「呼叫時不等結果」
+// 的寫法,這裡不需要跟著全部加 await——renderProductsToken 用來避免
+// 「客人手速很快連續切了好幾次品牌/分頁,較慢的那次網路回應才回來,
+// 反而把新畫面蓋掉」的問題:每次呼叫都拿一個新號碼,非同步抓資料回來
+// 之後如果號碼已經不是最新的,就代表篩選條件在等待期間又變了,直接放棄
+// 這次的畫面更新。
+let renderProductsToken = 0;
 function renderProducts(){
   renderTopCatNav();
   renderGroupTabs();
   renderSubtypeTabs();
   renderSeriesTabs();
   const grid = document.getElementById('productGrid');
-  if(products.length === 0){
+  if(productsIndex.length === 0){
     grid.innerHTML = '<div class="empty-note">目前尚未上架商品。</div>';
     return;
   }
@@ -2222,17 +2338,51 @@ function renderProducts(){
   const pageList = list.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   renderPagination(totalPages);
 
-  grid.innerHTML = pageList.map(buildCardHTML).join('');
-  wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); renderBestSellers(); });
-  if(pendingProductId){
-    const el = grid.querySelector(`[data-pid="${CSS.escape(pendingProductId)}"]`);
-    if(el){
-      el.classList.add('deep-linked');
-      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
-    }
-    pendingProductId = null;
+  const token = ++renderProductsToken;
+  const pageIds = pageList.map(p => p.id);
+  const alreadyFull = pageIds.every(id => productsFull.has(id));
+
+  // 完整資料還沒抓齊的話,先用骨架卡片頂著版面(避免整片空白像壞掉),
+  // 已經抓過的話(同一批 id 之前瀏覽過)直接畫真正的卡片,不用多一次
+  // 閃爍。
+  if(!alreadyFull){
+    grid.innerHTML = pageIds.map(buildSkeletonCardHTML).join('');
   }
-  updateUrl();
+
+  (async () => {
+    if(!alreadyFull){
+      if(currentBrand !== 'all'){
+        await fetchProductsByBrand(currentBrand);
+      } else {
+        await fetchProductsByIds(pageIds);
+      }
+    }
+    if(token !== renderProductsToken) return; // 篩選條件在等待期間又變了,這次抓回來的資料不需要了
+
+    const fullPageList = pageIds.map(id => productsFull.get(id)).filter(Boolean);
+    grid.innerHTML = fullPageList.map(buildCardHTML).join('');
+    wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); renderBestSellers(); });
+    if(pendingProductId){
+      const el = grid.querySelector(`[data-pid="${CSS.escape(pendingProductId)}"]`);
+      if(el){
+        el.classList.add('deep-linked');
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+      }
+      pendingProductId = null;
+    }
+    updateUrl();
+  })();
+}
+
+// renderProducts() 補齊完整資料前的佔位卡片,只需要 id 就能畫(參考同一份
+// .card 骨架,詳見上面 .card.skeleton 的 CSS 說明)。
+function buildSkeletonCardHTML(id){
+  return `
+    <div class="card skeleton" data-pid="${escapeHtml(id)}">
+      <div class="skeleton-block skeleton-img"></div>
+      <div class="skeleton-block skeleton-line"></div>
+      <div class="skeleton-block skeleton-line short"></div>
+    </div>`;
 }
 
 // 單張商品卡片的 HTML,商品清單跟「本週新品」都共用這份樣板
@@ -2359,7 +2509,11 @@ function wireCardEvents(grid, onChange){
 // 客人已經在逛「所有商品」或特定品牌時也整塊隱藏(見 isBrowsingProducts),
 // 這種通用的「本週新品/熱銷商品」是首頁才有意義的行銷區塊,選定品牌之後
 // 客人要看的是那個品牌的東西,不是全站熱銷排行。
-function renderNewArrivals(){
+// 2026-08-14 起排行(哪 5 件是新品/熱銷)都對 productsIndex 算,邏輯不變;
+// 但 buildCardHTML() 要畫出完整可互動的卡片(顏色/尺寸/庫存/圖片),
+// 所以排出這 5 個 id 之後,要先確認 productsFull 裡有完整資料,沒有的話
+// 用 fetchProductsByIds() 只補這 5 筆,不會整包抓全站商品。
+async function renderNewArrivals(){
   const wrap = document.getElementById('newArrivalsWrap');
   if(isBrowsingProducts()){ wrap.style.display = 'none'; return; }
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -2372,14 +2526,17 @@ function renderNewArrivals(){
     return;
   }
   wrap.style.display = '';
+  const ids = recent.map(p => p.id);
+  await fetchProductsByIds(ids);
   const grid = document.getElementById('newArrivalsGrid');
-  grid.innerHTML = recent.map(buildCardHTML).join('');
+  const fullList = ids.map(id => productsFull.get(id)).filter(Boolean);
+  grid.innerHTML = fullList.map(buildCardHTML).join('');
   wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); renderBestSellers(); });
 }
 
 // 熱銷商品:依「已售數量」排序,跟本週新品共用同一份卡片樣板/橫向捲動樣式,
 // 目前沒有任何一件賣出紀錄的話整塊隱藏。
-function renderBestSellers(){
+async function renderBestSellers(){
   const wrap = document.getElementById('bestSellersWrap');
   if(isBrowsingProducts()){ wrap.style.display = 'none'; return; }
   const ranked = visibleProducts()
@@ -2393,8 +2550,11 @@ function renderBestSellers(){
     return;
   }
   wrap.style.display = '';
+  const ids = ranked.map(p => p.id);
+  await fetchProductsByIds(ids);
   const grid = document.getElementById('bestSellersGrid');
-  grid.innerHTML = ranked.map(buildCardHTML).join('');
+  const fullList = ids.map(id => productsFull.get(id)).filter(Boolean);
+  grid.innerHTML = fullList.map(buildCardHTML).join('');
   wireCardEvents(grid, () => { renderProducts(); renderNewArrivals(); renderBestSellers(); });
 }
 
@@ -2440,9 +2600,20 @@ function addToCart(id, color, size){
   toast('已加入清單');
 }
 
+// 2026-08-14 起完整商品資料改成按需載入,購物車裡的商品不保證都已經在
+// productsFull 快取裡(例如客人這次進站還沒瀏覽過那個品牌,購物車卻是
+// 上次逛的時候加進去的)——所以每次要真的組出結帳用的品項明細之前,
+// 一定要先呼叫 ensureCartProductsLoaded() 把缺的資料補齊,不然這裡會
+// 靜靜把找不到資料的品項濾掉,客人送出的訂單可能少東西卻不會有任何錯誤
+// 提示。cartLines() 本身維持同步(呼叫端很多,不想全部改成 async),
+// 呼叫前務必先 await 過 ensureCartProductsLoaded()。
+async function ensureCartProductsLoaded(){
+  const ids = Object.values(cart).map(entry => entry.productId);
+  await fetchProductsByIds(ids);
+}
 function cartLines(){
   return Object.values(cart).map(entry => {
-    const p = products.find(pp => pp.id === entry.productId);
+    const p = productsFull.get(entry.productId);
     if(!p) return null;
     return { ...p, qty: entry.qty, size: entry.size, color: entry.color };
   }).filter(Boolean);
@@ -2494,9 +2665,13 @@ function computeTotals(){
   return { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit, isStorePickup };
 }
 
+// 2026-08-14 起改成直接數 cart 這個原始狀態裡的數量,不再透過
+// computeTotals()/cartLines()(那條路徑現在依賴 productsFull 快取,
+// 商品資料還沒補齊的話會把還沒載入的品項濾掉,角落的購物車數字就會
+// 短暫算錯)——單純數購物車按鈕上的數字,不需要知道商品細節,直接讀
+// cart 本身最準,也不用等任何非同步資料回來。
 function renderCartBar(){
-  const { lines } = computeTotals();
-  const count = lines.reduce((s,l)=> s+l.qty, 0);
+  const count = Object.values(cart).reduce((s, entry) => s + (entry.qty || 0), 0);
   const badge = document.getElementById('cartBarBadge');
   badge.textContent = count;
   badge.style.display = count > 0 ? '' : 'none';
@@ -2518,7 +2693,8 @@ document.getElementById('cartBarLineBtn').onclick = () => {
 };
 document.getElementById('closeCart').onclick = () => document.getElementById('cartOverlay').classList.remove('open');
 
-function renderCartDrawer(){
+async function renderCartDrawer(){
+  await ensureCartProductsLoaded();
   const { lines, subtotal, shipping, deliveryOptions, deliveryOption, deliveryFee, total, deposit, isStorePickup } = computeTotals();
   if(deliveryOptions.length && !selectedDeliveryLabel){
     selectedDeliveryLabel = deliveryOptions[0].label;
@@ -2639,12 +2815,16 @@ function notifyOrderInstant(order){
 
 // 送出訂單前一定要先經過「已加 LINE 好友」確認彈窗,不能直接送單——
 // 老闆需要能透過 LINE 聯繫客人確認訂金/出貨,沒加好友的話後續完全聯絡不到人。
-document.getElementById('submitOrderBtn').onclick = () => {
+document.getElementById('submitOrderBtn').onclick = async () => {
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
   const email = document.getElementById('custEmail').value.trim();
   if(!name || !phone || !email){ toast('請填寫姓名、電話與 Email'); return; }
   if(!/^\S+@\S+\.\S+$/.test(email)){ toast('請填寫正確格式的 Email'); return; }
+  // 送單流程一開始就先確認購物車商品完整資料都補齊了(下面
+  // lineFriendConfirmSubmitBtn 真正組訂單品項時才不會因為資料還沒到位
+  // 而漏掉品項),提早在這裡等,後面確認彈窗那步才不會有感覺得到的延遲。
+  await ensureCartProductsLoaded();
   const { isStorePickup } = computeTotals();
   if(isStorePickup && !document.getElementById('custStoreName').value.trim()){ toast('請填寫取貨 7-11 門市'); return; }
   document.getElementById('lineFriendAddLink').href = lineOfficialUrl(settings.lineOfficialId);
@@ -2662,6 +2842,11 @@ document.getElementById('lineFriendConfirmSubmitBtn').onclick = async () => {
   const phone = document.getElementById('custPhone').value.trim();
   const email = document.getElementById('custEmail').value.trim();
   const note = document.getElementById('custNote').value.trim();
+  // 保險起見再確認一次(submitOrderBtn 那步已經等過一次,這裡已經在
+  // 快取裡的話 fetchProductsByIds() 會直接跳過,不會多花時間)——這是
+  // 真正組出訂單品項明細的地方,絕對不能漏抓,不然客人送出的訂單會
+  // 少東西卻沒有任何錯誤提示。
+  await ensureCartProductsLoaded();
   const { lines, subtotal, shipping, deliveryOption, deliveryFee, total, deposit, isStorePickup } = computeTotals();
   const storeName = isStorePickup ? document.getElementById('custStoreName').value.trim() : '';
   const order = {
@@ -3019,7 +3204,12 @@ document.getElementById('pinSubmit').onclick = async () => {
   }
 };
 
-function openAdmin(){
+// 2026-08-14 起 products(完整明細:圖片/顏色/庫存/售價)不再一開站就
+// 整包載入,後台開啟時才抓,所以這裡改成 async——overlay 先打開、settings
+// 欄位/訂單列表(本來就已經載入,不受影響)先顯示,商品管理列表區先放一個
+// 「載入中」訊息,等 ensureAdminProductsLoaded() 抓完整包商品資料才真正
+// 畫出來,避免打開後台當下商品管理列表是空的、看起來像壞掉。
+async function openAdmin(){
   document.getElementById('rateInput').value = settings.rate;
   document.getElementById('rateKRWInput').value = settings.rateKRW;
   document.getElementById('priceTiersInput').value = settings.priceTiers || '';
@@ -3042,9 +3232,11 @@ function openAdmin(){
   document.getElementById('faqInput').value = settings.faq || '';
   document.getElementById('brandIntrosInput').value = settings.brandIntros || '';
   resetProductForm();
-  renderProductAdminList();
-  renderOrdersAdminList();
   document.getElementById('adminOverlay').classList.add('open');
+  document.getElementById('productList').innerHTML = '<div class="empty-note">商品資料載入中...</div>';
+  renderOrdersAdminList();
+  await ensureAdminProductsLoaded();
+  renderProductAdminList();
 }
 document.getElementById('closeAdmin').onclick = () => document.getElementById('adminOverlay').classList.remove('open');
 document.getElementById('ownerLogoutBtn').onclick = async () => {
