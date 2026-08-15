@@ -211,10 +211,30 @@ def _is_fully_sold_out(p):
             stock = c.get("stock")
             if not stock:
                 return False
-            sizes = c.get("sizes") or list(stock.keys())
+            # Firebase 的怪癖:size 如果剛好是連續數字字串(常見於鞋類,
+            # 例如 "5","7","8","9","10","11"),讀出來的 stock 會被自動
+            # 轉成「陣列」而不是物件(index 0~該數字之間補 null),不是
+            # 存成 {"5":0,"7":8,...} 這種字典——這裡兩種形狀都要能處理,
+            # 不然會直接噴錯(2026-08-15 實測抓到,AAPE SLIDER 就是這樣)。
+            # 前端 JS 那邊因為陣列本來就支援用字串數字當索引存取
+            # (stock["5"] 等同 stock[5]),不會有這個問題,只有 Python
+            # 這邊的 dict 專用寫法需要另外處理。
+            if isinstance(stock, dict):
+                sizes = c.get("sizes") or list(stock.keys())
+                get_stock = lambda s: stock.get(s) or 0
+            elif isinstance(stock, list):
+                sizes = c.get("sizes") or [str(i) for i in range(len(stock))]
+                def get_stock(s, _stock=stock):
+                    try:
+                        idx = int(s)
+                    except (TypeError, ValueError):
+                        return 0
+                    return (_stock[idx] or 0) if 0 <= idx < len(_stock) else 0
+            else:
+                return False
             if not sizes:
                 return False
-            if any((stock.get(s) or 0) > 0 for s in sizes):
+            if any(get_stock(s) > 0 for s in sizes):
                 return False
         return True
     return False
