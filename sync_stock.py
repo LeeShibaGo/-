@@ -246,6 +246,25 @@ def save_products(items):
 PRODUCTS_INDEX_PATH = "daigou-products-index-v1"
 
 
+def _stock_values(stock):
+    """統一處理 Firebase 的怪癖:size 如果剛好是連續數字字串(常見於
+    鞋類,例如 "5","7","8","9","10","11"),讀出來的 stock 會被自動轉成
+    「陣列」而不是物件,不是存成 {"5":0,"7":8,...} 這種字典——直接呼叫
+    .values() 會噴 AttributeError(2026-08-15 實測抓到兩次:AAPE SLIDER
+    在 _is_fully_sold_out() 這裡先抓到過一次;3COINS 同步當天又在另一個
+    地方——判斷「這件商品官網已下架、要不要標記缺貨通知」的邏輯——用
+    同一個沒防到陣列形狀的寫法再爆一次,這支 sync_stock.py 裡原本共有
+    16 處都是這個沒有防陣列形狀的寫法,一次全部改用這支函式,不要再
+    一個一個抓到才修)。兩種形狀都轉成一份「數值列表」讓呼叫端可以直接
+    用 any()/sum() 等,陣列裡的 null 缺口跳過不算。
+    """
+    if isinstance(stock, dict):
+        return stock.values()
+    if isinstance(stock, list):
+        return [v for v in stock if v is not None]
+    return []
+
+
 def _is_fully_sold_out(p):
     """跟 index.html 的 isFullySoldOut() 邏輯逐行對照,兩邊要保持一致。"""
     sale_type = p.get("saleType") or "instock"
@@ -383,7 +402,7 @@ def sync_salomon(items):
         for ci, color in enumerate(card.get("colors", [])):
             sp = by_image.get(salomon_image_key(color.get("image")))
             if not sp or not sp.get("variants"):
-                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
                     colors_gone += 1
                 color["stock"] = {s: 0 for s in color.get("sizes", [])}
                 continue
@@ -528,7 +547,7 @@ def sync_onitsuka(items):
             sku = onitsuka_sku_from_image(color.get("image"))
             fp = by_sku.get(sku)
             if not fp:
-                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
                     colors_gone += 1
                 color["stock"] = {s: 0 for s in color.get("sizes", [])}
                 continue
@@ -629,7 +648,7 @@ def sync_bape(items):
         sp = by_handle.get(bape_handle_from_link(card.get("link")))
         if not sp or not sp.get("variants"):
             for color in card.get("colors", []):
-                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
                     colors_gone += 1
                 color["stock"] = {s: 0 for s in color.get("sizes", [])}
             continue
@@ -648,7 +667,7 @@ def sync_bape(items):
             raw = by_translated_name.get(color.get("name"))
             variants = by_raw_color.get(raw) if raw else None
             if not variants:
-                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
                     colors_gone += 1
                 color["stock"] = {s: 0 for s in color.get("sizes", [])}
                 continue
@@ -710,7 +729,7 @@ def sync_stussy(items):
         sp = by_handle.get(stussy_handle_from_link(card.get("link")))
         if not sp or not sp.get("variants"):
             for color in card.get("colors", []):
-                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
                     colors_gone += 1
                 color["stock"] = {s: 0 for s in color.get("sizes", [])}
             continue
@@ -727,7 +746,7 @@ def sync_stussy(items):
             raw = by_translated_name.get(color.get("name"))
             variants = by_raw_color.get(raw) if raw else None
             if not variants:
-                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
                     colors_gone += 1
                 color["stock"] = {s: 0 for s in color.get("sizes", [])}
                 continue
@@ -783,7 +802,7 @@ def sync_polene(items):
     for card in cards:
         sp = by_handle.get(stussy_handle_from_link(card.get("link")))
         if not sp or not sp.get("variants"):
-            if any(v > 0 for c in card.get("colors", []) for v in (c.get("stock") or {}).values()):
+            if any(v > 0 for c in card.get("colors", []) for v in _stock_values(c.get("stock"))):
                 stock_changed += 1
                 delisted_lines.append(f"[POLENE] {card.get('name')} 官網已下架,標記全面缺貨")
             for color in card.get("colors", []):
@@ -891,7 +910,7 @@ def sync_price_only(items, brand, extractor):
             # 上還是看得到、點得到「現貨」的商品,但連到官網的連結其實
             # 已經失效——這裡改成跟 Salomon/BAPE 對不到商品時一樣的做法,
             # 把所有顏色的庫存都歸零,不刪資料,網站上會自動顯示缺貨。
-            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+            if any(v > 0 for color in card.get("colors", []) for v in _stock_values(color.get("stock"))):
                 mark_all_sold_out(card)
                 delisted += 1
                 print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
@@ -937,7 +956,7 @@ def sync_aape(items):
             errors += 1
             continue
         if res is None:
-            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+            if any(v > 0 for color in card.get("colors", []) for v in _stock_values(color.get("stock"))):
                 mark_all_sold_out(card)
                 delisted += 1
                 print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
@@ -1026,7 +1045,7 @@ def sync_lacoste(items):
             errors += 1
             continue
         if res is None:
-            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+            if any(v > 0 for color in card.get("colors", []) for v in _stock_values(color.get("stock"))):
                 mark_all_sold_out(card)
                 delisted += 1
                 print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
@@ -1136,7 +1155,7 @@ def sync_honma(items):
             try:
                 res = page.goto(link, timeout=30000, wait_until="domcontentloaded")
                 if res is not None and res.status == 404:
-                    if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+                    if any(v > 0 for color in card.get("colors", []) for v in _stock_values(color.get("stock"))):
                         mark_all_sold_out(card)
                         delisted += 1
                         print(f"  官網已下架(404):{card.get('name')},已標記全面缺貨")
@@ -1285,7 +1304,7 @@ def sync_celine(items):
             errors += 1
             continue
         if res is None:
-            if any(v > 0 for color in card.get("colors", []) for v in (color.get("stock") or {}).values()):
+            if any(v > 0 for color in card.get("colors", []) for v in _stock_values(color.get("stock"))):
                 mark_all_sold_out(card)
                 delisted += 1
                 delisted_lines.append(f"[CELINE] {card.get('name')} 官網已下架(404)")
@@ -1322,7 +1341,7 @@ def sync_celine(items):
                 except Exception:
                     html = None
             if not html:
-                if any(v > 0 for v in (color.get("stock") or {}).values()):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
                     stock_changed += 1
                 color["stock"] = {s: 0 for s in color.get("sizes", [])}
                 continue
@@ -1527,7 +1546,7 @@ def sync_gu(items):
 
         if data.get("status") != "ok":
             # 商品在官網已經下架(通常是 302/404),全部標成缺貨,不刪除商品本身
-            if any(v > 0 for c in card.get("colors", []) for v in (c.get("stock") or {}).values()):
+            if any(v > 0 for c in card.get("colors", []) for v in _stock_values(c.get("stock"))):
                 stock_changed += 1
                 delisted_lines.append(f"[GU] {card.get('name')} 官網已下架,標記全面缺貨")
             for color in card.get("colors", []):
@@ -1597,7 +1616,7 @@ def sync_uniqlo(items):
             continue
 
         if data.get("status") != "ok":
-            if any(v > 0 for c in card.get("colors", []) for v in (c.get("stock") or {}).values()):
+            if any(v > 0 for c in card.get("colors", []) for v in _stock_values(c.get("stock"))):
                 stock_changed += 1
                 delisted_lines.append(f"[UNIQLO] {card.get('name')} 官網已下架,標記全面缺貨")
             for color in card.get("colors", []):
@@ -1678,7 +1697,7 @@ def sync_3coins(items):
 
         if not colors:
             # 商品在官網已經下架,全部標成缺貨,不刪除商品本身
-            if any(v > 0 for c in card.get("colors", []) for v in (c.get("stock") or {}).values()):
+            if any(v > 0 for c in card.get("colors", []) for v in _stock_values(c.get("stock"))):
                 stock_changed += 1
                 delisted_lines.append(f"[3COINS] {card.get('name')} 官網已下架,標記全面缺貨")
             for color in card.get("colors", []):
