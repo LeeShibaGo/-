@@ -3035,14 +3035,16 @@ function renderTrustSection(){
 // 缺一個都不會出現在 present 清單裡)。J.Lindeberg/MUJI 官網原本抓不到
 // 圖檔,後來老闆直接提供官方圖檔換掉文字版。Louis Vuitton/TaylorMade
 // 這兩家官網還是擋爬蟲、連不上(TaylorMade 之前查台灣官網時就確認過是
-// DataDome 擋機器人,這次一樣擋),暫時還是用跟 Dior/CELINE 同一種
-// 「黑底白字」風格的文字版頂著。原本「Dior 日本限定」是另一個獨立的
-// brand 字串,2026-08-10 併回 Dior(見 merge_dior_japan_exclusive.py),
-// 這裡不用再重複列一次。2026-08-13 新增 3COINS(掛在 PAL CLOSET 商城
-// palcloset.jp 底下,只抓時尚配件類,見 scrape_3coins.py),官網首頁
-// <head> 裡只有整個商城通用的 favicon,沒有 3COINS 自己專屬的
-// logotype 圖檔可以抓,所以跟 LV/TaylorMade 一樣先用文字版頂著,顏色
-// 用官方的桃紅色。
+// DataDome 擋機器人,這次一樣擋),曾經先用跟 Dior/CELINE 同一種
+// 「黑底白字」風格的文字版頂著,2026-08-15 老闆直接提供官方圖檔
+// (taylormade.png/lv.png,原圖是 TaylorMade-logo.jpg/LB.png,縮到
+// 高度 180px 存進 brand-logos),換掉文字版。原本「Dior 日本限定」是
+// 另一個獨立的 brand 字串,2026-08-10 併回 Dior(見
+// merge_dior_japan_exclusive.py),這裡不用再重複列一次。2026-08-13
+// 新增 3COINS(掛在 PAL CLOSET 商城 palcloset.jp 底下,只抓時尚配件類,
+// 見 scrape_3coins.py),官網首頁 <head> 裡只有整個商城通用的
+// favicon,沒有 3COINS 自己專屬的 logotype 圖檔可以抓,暫時繼續用
+// 文字版頂著,顏色用官方的桃紅色。
 const BRAND_SHOWCASE_LIST = [
   { brand: 'GU', logo: 'images/brand-logos/gu.png' },
   { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
@@ -3059,11 +3061,11 @@ const BRAND_SHOWCASE_LIST = [
   { brand: 'DESCENTE', logo: 'images/brand-logos/descente.ico' },
   { brand: 'HONMA', logo: 'images/brand-logos/honma.png' },
   { brand: 'J.Lindeberg', logo: 'images/brand-logos/jlindeberg.png' },
-  { brand: 'TaylorMade', logo: 'images/brand-logos/taylormade.svg' },
+  { brand: 'TaylorMade', logo: 'images/brand-logos/taylormade.png' },
   { brand: 'MUJI', logo: 'images/brand-logos/muji.png' },
   { brand: 'CELINE', logo: 'images/brand-logos/celine.png' },
   { brand: 'Dior', logo: 'images/brand-logos/dior.png' },
-  { brand: 'Louis Vuitton', logo: 'images/brand-logos/lv.svg' },
+  { brand: 'Louis Vuitton', logo: 'images/brand-logos/lv.png' },
   { brand: '3COINS', logo: 'images/brand-logos/3coins.svg' },
 ];
 
