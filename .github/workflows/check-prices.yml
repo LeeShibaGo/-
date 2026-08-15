@@ -44,6 +44,7 @@ jobs:
           - jlindeberg
           - descente
           - 3coins
+          - polene
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

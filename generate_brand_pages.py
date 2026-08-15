@@ -77,6 +77,7 @@ BRAND_SLUGS = {
     "UHA": "uha",
     "DHC": "dhc",
     "3COINS": "3coins",
+    "POLENE": "polene",
 }
 
 

@@ -96,6 +96,7 @@
   python sync_stock.py uha        # 只跑 UHA
   python sync_stock.py dhc        # 只跑 DHC
   python sync_stock.py 3coins     # 只跑 3COINS
+  python sync_stock.py polene     # 只跑 POLENE
 """
 
 import json
@@ -705,6 +706,71 @@ def sync_stussy(items):
             price_changed += 1
     print(f"STUSSY 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
           f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
+    merge_and_save(cards)
+
+
+# ---------- POLENE(jp.polene-paris.com,2026-08-15 加入,包包/皮件品牌)----------
+# 跟 STUSSY 一樣是 Shopify 官方 products.json API,但顏色不是同一個商品
+# 底下的 variant,而是每個顏色各自獨立一個 Shopify 商品(見
+# scrape_polene.py 開頭的說明),所以這裡不用像 sync_stussy 那樣拆
+# by_raw_color 再逐色比對,直接用 link 裡的 handle 對到「那一個」Shopify
+# 商品、重建它唯一的那組 colors[0] 即可,邏輯簡單很多。
+
+def sync_polene(items):
+    print("=== POLENE 同步開始 ===")
+
+    shop_products = []
+    page = 1
+    while True:
+        ps = fetch(f"https://jp.polene-paris.com/products.json?limit=250&page={page}").json().get("products", [])
+        shop_products.extend(ps)
+        if len(ps) < 250:
+            break
+        page += 1
+        time.sleep(0.6)
+    print(f"官網商品共 {len(shop_products)} 件")
+    by_handle = {p["handle"]: p for p in shop_products}
+
+    cards = [p for p in items if p.get("brand") == "POLENE"]
+    stock_changed = price_changed = errors = 0
+    for card in cards:
+        sp = by_handle.get(stussy_handle_from_link(card.get("link")))
+        if not sp or not sp.get("variants"):
+            if any(v > 0 for c in card.get("colors", []) for v in (c.get("stock") or {}).values()):
+                stock_changed += 1
+                delisted_lines.append(f"[POLENE] {card.get('name')} 官網已下架,標記全面缺貨")
+            for color in card.get("colors", []):
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+            continue
+
+        sizes, stock = [], {}
+        for v in sp["variants"]:
+            raw_title = (v.get("title") or "").strip()
+            s = "FREE" if raw_title == "Default Title" else (fix_size_key(raw_title) or "FREE")
+            if s not in stock:
+                sizes.append(s)
+            stock[s] = max(stock.get(s, 0), 5 if v.get("available") else 0)
+
+        if card.get("colors"):
+            color = card["colors"][0]
+            if stock != (color.get("stock") or {}):
+                stock_changed += 1
+            color["sizes"], color["stock"] = sizes, stock
+        else:
+            errors += 1
+
+        try:
+            new_jpy = int(float(sp["variants"][0]["price"]))
+        except (KeyError, ValueError, TypeError, IndexError):
+            new_jpy = None
+        if new_jpy and new_jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[POLENE] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+
+    print(f"POLENE 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 件,"
+          f"價格變動 {price_changed} 件,錯誤 {errors} 件")
     merge_and_save(cards)
 
 
@@ -1613,6 +1679,8 @@ def main():
         sync_uniqlo(items)
     if only in (None, "3coins"):
         sync_3coins(items)
+    if only in (None, "polene"):
+        sync_polene(items)
     if only in (None, "uha"):
         sync_uha(items)
     if only in (None, "dhc"):
