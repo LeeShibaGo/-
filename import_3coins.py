@@ -22,12 +22,15 @@ import time
 import firebase_admin
 from firebase_admin import credentials, db
 
+from sync_stock import build_products_index
+
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 FIREBASE_DB_URL = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
 PRODUCTS_PATH = "daigou-products-v1"
+PRODUCTS_INDEX_PATH = "daigou-products-index-v1"
 
 
 def main():
@@ -58,6 +61,13 @@ def main():
     print(f"新增 {added} 件(其餘已存在,略過)")
     db.reference(PRODUCTS_PATH).set(products)
     print("已寫回 Firebase,完成!")
+
+    # 2026-08-14 起前端首頁改成先抓這份精簡索引,不再整包抓
+    # daigou-products-v1(見 sync_stock.py 開頭關於 daigou-products-index-v1
+    # 的說明)。這裡也要跟著更新,不然新匯入的商品在索引重建前,首頁的
+    # 品牌導覽/搜尋會看不到——之後新的一次性匯入腳本都比照這裡加這兩行。
+    db.reference(PRODUCTS_INDEX_PATH).set(build_products_index(products))
+    print("索引已更新,完成!")
 
 
 if __name__ == "__main__":

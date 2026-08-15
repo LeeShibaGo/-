@@ -182,6 +182,74 @@ def save_products(items):
     print("Firebase 已更新(Admin SDK)")
 
 
+# ---------- 精簡版商品索引(daigou-products-index-v1,2026-08-14 加入)----------
+# 前端首頁一開,不再整包抓 daigou-products-v1(17,897 件商品、12.5MB,實測
+# 光這個請求就要 1.4 秒以上,手機用 LINE 內建瀏覽器+行動網路只會更久,
+# 很可能是訪客還沒看到畫面就先關掉的原因)。改抓這份小很多的索引——
+# 只留品牌導覽、篩選、分頁、排行榜用得到的欄位,拿掉最重的
+# colors(顏色/尺寸/庫存明細/圖片)。真正要畫商品卡(顏色選擇、庫存、
+# 圖片)的時候,前端才照品牌或 id 另外查完整資料,見 index.html 的
+# fetchProductsByBrand()/fetchProductsByIds()。
+#
+# tier(精品/運動品牌/潮流品牌/生活選物)、subtypeGroup(上身/褲子/鞋子/
+# 包包/配件...)這兩個前端本來就是用 brand/subtype 現查對照表算出來的,
+# 不是存在資料庫裡的欄位,索引不用重複存。
+
+PRODUCTS_INDEX_PATH = "daigou-products-index-v1"
+
+
+def _is_fully_sold_out(p):
+    """跟 index.html 的 isFullySoldOut() 邏輯逐行對照,兩邊要保持一致。"""
+    sale_type = p.get("saleType") or "instock"
+    if sale_type == "preorder":
+        return False
+    if sale_type == "soldout":
+        return True
+    colors = p.get("colors")
+    if colors:
+        for c in colors:
+            stock = c.get("stock")
+            if not stock:
+                return False
+            sizes = c.get("sizes") or list(stock.keys())
+            if not sizes:
+                return False
+            if any((stock.get(s) or 0) > 0 for s in sizes):
+                return False
+        return True
+    return False
+
+
+def build_products_index(items):
+    index = []
+    for p in items:
+        if not p.get("id"):
+            continue
+        index.append({
+            "id": p["id"],
+            "name": p.get("name") or "",
+            "brand": p.get("brand"),
+            "category": p.get("category"),
+            "subtype": p.get("subtype"),
+            "series": p.get("series"),
+            "jpy": p.get("jpy") or 0,
+            "weight": p.get("weight"),
+            "country": p.get("country") or "JP",
+            "saleType": p.get("saleType") or "instock",
+            "hidden": bool(p.get("hidden")),
+            "addedAt": p.get("addedAt"),
+            "extraSoldQty": p.get("extraSoldQty"),
+            "soldOut": _is_fully_sold_out(p),
+        })
+    return index
+
+
+def save_products_index(items):
+    firebase_app()
+    db.reference(PRODUCTS_INDEX_PATH).set(build_products_index(items))
+    print(f"索引已更新(Admin SDK,共 {len(items)} 件商品)")
+
+
 def merge_and_save(updated_cards):
     """
     這幾個同步(尤其是 On,單一次要逐頁抓上千個顏色頁面,常常跑超過 40 分鐘)
@@ -209,6 +277,10 @@ def merge_and_save(updated_cards):
     # 但保險起見,萬一真的發生就把它補進去,不要憑空遺失資料。
     merged.extend(c for c in updated_cards if c.get("id") not in seen_ids)
     save_products(merged)
+    # 每次同步完都用同一份剛合併好的最新清單重建精簡索引,不用再多讀一次
+    # Firebase——daily sync 本來就會經過這裡,索引每天自動保持最新,不用
+    # 另外寫排程。
+    save_products_index(merged)
 
 
 # ---------- Salomon ----------
