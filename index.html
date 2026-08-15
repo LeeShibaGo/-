@@ -2395,7 +2395,24 @@ function buildCardHTML(p){
 
   let chosenColor = null, sizesForChoice = [], stockForColor = null, colorImage = null;
   if(hasColors){
-    chosenColor = selectedColor[p.id] || p.colors[0].name;
+    if(selectedColor[p.id]){
+      chosenColor = selectedColor[p.id];
+    } else {
+      // 2026-08-16 抓到:客人還沒手動選過顏色時,以前無條件挑陣列第一個
+      // 顏色當預設,如果那個顏色剛好賣完、但其他顏色還有貨,卡片一開始
+      // 就會顯示「已售完」——「已售完自動隱藏」判斷的是整張商品卡有沒有
+      // 任何庫存,不是這裡顯示的這一個顏色,兩者本來就可能不一致,但
+      // 對客人來說看起來會很像「明明賣完了怎麼還在熱銷商品」。改成
+      // 預設優先挑「還有庫存」的顏色,沒有庫存資料的顏色一律當作有貨
+      // (跟 isFullySoldOut() 判斷邏輯一致),真的全部顏色都沒貨的話才
+      // 退回選第一個。
+      const inStockColor = p.colors.find(c => {
+        const stock = c.stock;
+        if(!stock) return true;
+        return Object.values(stock).some(v => (v || 0) > 0);
+      });
+      chosenColor = (inStockColor || p.colors[0]).name;
+    }
     const colorObj = p.colors.find(c => c.name === chosenColor) || p.colors[0];
     chosenColor = colorObj.name;
     sizesForChoice = colorObj.sizes || [];
@@ -2406,7 +2423,20 @@ function buildCardHTML(p){
   }
   const hasSizes = sizesForChoice.length > 0;
   const sizeStateKey = p.id + '::' + (chosenColor || '-');
-  const chosenSize = hasSizes ? (selectedSize[sizeStateKey] || sizesForChoice[0]) : null;
+  let chosenSize = null;
+  if(hasSizes){
+    if(selectedSize[sizeStateKey]){
+      chosenSize = selectedSize[sizeStateKey];
+    } else {
+      // 同樣道理:預設優先挑選到的顏色底下「還有庫存」的尺寸,而不是
+      // 無條件挑第一個尺寸。saleType 是 preorder 的話尺寸本來就可能
+      // 全部還沒有庫存(還沒發售),不用特別挑,維持原本挑第一個的做法。
+      const inStockSize = (saleType !== 'preorder' && stockForColor)
+        ? sizesForChoice.find(s => (stockForColor[s] || 0) > 0)
+        : null;
+      chosenSize = inStockSize || sizesForChoice[0];
+    }
+  }
   const key = cartKey(p.id, chosenColor, chosenSize);
   const qty = (cart[key] && cart[key].qty) || 0;
   // saleType === 'soldout' 是給沒有 colors/尺寸庫存可以追蹤的簡單商品用的
