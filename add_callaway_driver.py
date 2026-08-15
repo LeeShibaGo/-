@@ -46,7 +46,7 @@ NEW_PRODUCT = {
     "link": "https://callaway.com.tw/products/quantum-max-d-dr",
     "colors": [
         {
-            "name": "",
+            "name": "標準款",
             "sizes": ["右手／9°／Stiff", "右手／9°／S-R", "右手／10-5°／Stiff", "右手／10-5°／S-R"],
             "stock": {
                 "右手／9°／Stiff": 1,
