@@ -177,6 +177,53 @@ def load_products():
     return [p for p in items if p]
 
 
+def load_products_by_brand(brand):
+    """2026-08-16 抓到:main() 一開始的 load_products() 整包讀走全站
+    daigou-products-v1(現在 13MB+),但現在 GitHub Actions 是每個品牌
+    各自獨立一個 job(見 check-prices.yml 的 matrix),每次呼叫其實只
+    需要那一個品牌的資料——加上 merge_and_save() 寫回之前自己還會再
+    整包重讀一次(那次是必要的,見它的說明),等於每個品牌的 job 一天
+    要整包讀兩次資料庫。17 個品牌 x 2 次 x 13MB,一個月加起來快 14GB,
+    比免費方案 10GB 的下載額度還多,幾乎是自己同步自己就把額度用完,
+    這是資料庫額度爆掉的主因之一,不是只有客人流量的問題。
+
+    改成用 Firebase 的條件查詢(orderBy=brand&equalTo=X,Admin SDK 是
+    order_by_child().equal_to(),跟前端 fetchProductsByBrand() 用的是
+    同一個 .indexOn:["brand"] 索引)只抓「這個品牌自己」的資料,把
+    main() 這一次讀取從整包 13MB 降到那個品牌的份量,一天的同步用量
+    直接砍半。merge_and_save() 寫回前的整包重讀不動它,那個是為了避免
+    平行跑的品牌互相覆蓋寫入,是必要的安全機制,不能拿掉。
+    """
+    firebase_app()
+    data = db.reference(PRODUCTS_PATH).order_by_child("brand").equal_to(brand).get()
+    items = list(data.values()) if isinstance(data, dict) else (data or [])
+    return [p for p in items if p]
+
+
+# CLI 參數(python sync_stock.py <這個>)對應到商品資料裡 brand 欄位的
+# 精確字串,main() 用這份對照表在「只跑單一品牌」時改用
+# load_products_by_brand() 只抓那個品牌,不用整包抓。
+ONLY_ARG_TO_BRAND = {
+    "salomon": "Salomon",
+    "on": "On",
+    "gu": "GU",
+    "uniqlo": "UNIQLO",
+    "3coins": "3COINS",
+    "polene": "POLENE",
+    "uha": "UHA",
+    "dhc": "DHC",
+    "onitsuka": "Onitsuka Tiger",
+    "honma": "HONMA",
+    "bape": "BAPE",
+    "stussy": "STUSSY",
+    "celine": "CELINE",
+    "aape": "AAPE",
+    "lacoste": "Lacoste",
+    "jlindeberg": "J.Lindeberg",
+    "descente": "DESCENTE",
+}
+
+
 def save_products(items):
     firebase_app()
     db.reference(PRODUCTS_PATH).set(items)
@@ -1665,7 +1712,14 @@ def sync_3coins(items):
 
 def main():
     only = sys.argv[1].lower() if len(sys.argv) > 1 else None
-    items = load_products()
+    # 只跑單一品牌(GitHub Actions 現在每個品牌各自一個 job,實際上永遠是
+    # 這個分支)的話,用條件查詢只抓那個品牌,不整包抓全站商品,見
+    # load_products_by_brand() 的說明。只有本機手動整批跑全部品牌
+    # (only 是 None)才需要真的整包讀一次。
+    if only and only in ONLY_ARG_TO_BRAND:
+        items = load_products_by_brand(ONLY_ARG_TO_BRAND[only])
+    else:
+        items = load_products()
     # 每支 sync_xxx() 現在會在自己做完事之後,各自重新抓最新資料、合併、
     # 寫回(見 merge_and_save 的說明),不再共用這份 items 到最後才整包寫回,
     # 所以這裡不需要(也不應該)在三支都跑完後再存一次舊快照。
