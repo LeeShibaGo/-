@@ -1,0 +1,35 @@
+{
+  "RUSNCU": {
+    "code": "RUSNCU",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 14453.05,
+    "device": "電腦",
+    "email": "journeylee321@gmail.com",
+    "id": "ord_1786794570411",
+    "items": [
+      {
+        "color": "ブラック スムース",
+        "country": "JP",
+        "jpy": 104000,
+        "name": "Numéro Dix - ブラック スムース",
+        "productId": "p_polene_1786793505208_406",
+        "purchased": false,
+        "qty": 1,
+        "size": "FREE",
+        "weight": 0.6
+      }
+    ],
+    "name": "李哲寧",
+    "note": "",
+    "phone": "0975484457",
+    "shipping": 90,
+    "status": "待確認訂金",
+    "statusTimestamps": {
+      "待確認訂金": 1786794570411
+    },
+    "subtotal": 28778.1,
+    "time": 1786794570411,
+    "total": 28906.1
+  }
+}
