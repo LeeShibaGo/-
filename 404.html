@@ -399,10 +399,23 @@
     .hero-cta-inner{ padding:22px 20px; }
     .hero-cta-title{ font-size:26px; }
   }
-  /* 首頁促銷 banner,點了直接跳轉、捲動到指定商品(用跟分享連結一樣的 ?p= 機制) */
-  .promo-banner{ display:block; max-width:1080px; margin:0 auto 18px; padding:0 20px; }
-  .promo-banner img{ width:100%; display:block; border-radius:var(--radius); box-shadow:var(--shadow); transition:opacity 0.2s; }
-  .promo-banner:hover img{ opacity:0.92; }
+  /* 首頁促銷橫幅,點了直接跳轉、捲動到指定商品(用跟分享連結一樣的 ?p= 機制)。
+     HOME_BANNER_SLIDES 只有一張圖時,自動只顯示一張、不出現輪播圓點,
+     之後老闆想放第二張促銷圖,直接在那個陣列多加一筆就會自動變成
+     會輪播的橫幅,不用改這裡的 CSS/HTML。 */
+  .promo-carousel{ position:relative; max-width:1080px; margin:0 auto 18px; padding:0 20px; }
+  .promo-carousel .carousel-slide{ display:none; }
+  .promo-carousel .carousel-slide.active{ display:block; animation: carouselFade .4s ease; }
+  .promo-carousel img{ width:100%; display:block; border-radius:var(--radius); box-shadow:var(--shadow); transition:opacity 0.2s; }
+  .promo-carousel .carousel-slide:hover img{ opacity:0.92; }
+  @keyframes carouselFade{ from{ opacity:0; } to{ opacity:1; } }
+  .carousel-dots{ display:flex; justify-content:center; gap:6px; margin-top:10px; }
+  .promo-carousel .carousel-dots{ position:static; }
+  .carousel-dot{
+    width:7px; height:7px; border-radius:50%; border:none; padding:0; cursor:pointer;
+    background:rgba(0,0,0,0.2);
+  }
+  .carousel-dot.active{ background:var(--gold-dim); width:18px; border-radius:4px; }
   /* 首頁品牌方塊區,點一個品牌直接跳轉到該品牌的商品列表,
      「所有品牌」按鈕重用上方分類選單本來就有的「所有品牌」下拉選單。 */
   .brand-showcase{ margin: 28px auto; }
@@ -535,6 +548,17 @@
   .link-btn:hover{ color:var(--stamp-dim); border-color:var(--stamp-dim); }
 
   .prod-image{ width:100%; aspect-ratio: 1 / 1; height:auto; object-fit:cover; object-position:center; border-radius:10px; display:block; background:#E7E0CC; }
+  /* 商品卡片內的顏色圖輪播:同一件商品不同顏色各自的照片,左右滑動/自動
+     輪播預覽用——純預覽,點圓點只換「現在顯示哪張照片」,不會連動改變
+     下面選色按鈕真正選中的顏色(不然自動輪播轉到一半,客人以為要買的
+     顏色被偷換掉)。只有 ≥2 張不同的顏色照片時才會出現,單一顏色/單一
+     照片的商品卡跟以前一樣就只是一張圖,見 buildCardImageHTML()。 */
+  .prod-carousel{ position:relative; }
+  .prod-carousel .carousel-dots{
+    position:absolute; left:0; right:0; bottom:8px; margin-top:0;
+  }
+  .prod-carousel .carousel-dot{ background:rgba(255,255,255,0.6); box-shadow:0 0 0 1px rgba(0,0,0,0.15); }
+  .prod-carousel .carousel-dot.active{ background:#fff; }
 
   input[type=file]{
     width:100%; padding:9px 10px; border:1px dashed #C7BFA8; border-radius:9px;
@@ -750,9 +774,7 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
     </div>
   </div>
 
-  <a class="promo-banner" href="https://leeshibago.github.io/-/?p=p_salomon_1784396678297_44">
-    <img src="https://leeshibago.github.io/-/images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
-  </a>
+  <div class="promo-carousel" id="promoCarousel"></div>
 
   <div class="wrap brand-showcase">
     <h2 class="brand-showcase-title">BRAND</h2>
@@ -1949,6 +1971,47 @@ function updateCountdownDisplay(){
 }
 setInterval(updateCountdownDisplay, 1000);
 
+// 輪播共用的邏輯(首頁促銷橫幅 .promo-carousel + 商品卡片顏色圖預覽
+// .prod-carousel 都共用同一套)。
+// 自動輪播統一用「一顆全域計時器,每次都重新查詢畫面上目前有哪些輪播」,
+// 不是幫每個輪播各自開一個 setInterval——商品卡片會因為篩選/翻頁/選色
+// 不斷整批重畫(見 renderProducts()),舊卡片被換掉時,各自的計時器要
+// 記得手動清掉,很容易漏清而越堆越多;全域計時器每次都直接查活著的 DOM,
+// 卡片被換掉了就查不到、自然不會再動它,沒有這個問題。
+function setCarouselIndex(wrap, index){
+  wrap.querySelectorAll(':scope > .carousel-slide').forEach((s, i) => s.classList.toggle('active', i === index));
+  wrap.querySelectorAll(':scope > .carousel-dots > .carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
+}
+function advanceCarousel(wrap){
+  if(wrap.dataset.paused === '1') return;
+  const slides = wrap.querySelectorAll(':scope > .carousel-slide');
+  if(slides.length < 2) return;
+  const cur = Array.from(slides).findIndex(s => s.classList.contains('active'));
+  setCarouselIndex(wrap, (cur + 1) % slides.length);
+}
+// 手機上用滑的切換(左右滑動),桌機用滑鼠停在圖片上暫停自動輪播、
+// 點圓點手動切換——兩種輪播(promo-carousel/prod-carousel)共用這支。
+function wireCarouselSwipe(wrap){
+  let startX = null;
+  wrap.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; wrap.dataset.paused = '1'; }, { passive: true });
+  wrap.addEventListener('touchend', (e) => {
+    if(startX === null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    startX = null;
+    if(Math.abs(dx) < 30) return;
+    const slides = wrap.querySelectorAll(':scope > .carousel-slide');
+    const cur = Array.from(slides).findIndex(s => s.classList.contains('active'));
+    setCarouselIndex(wrap, dx < 0 ? (cur + 1) % slides.length : (cur - 1 + slides.length) % slides.length);
+  }, { passive: true });
+}
+// 尊重「減少動態效果」的系統設定,不自動輪播(圓點/滑動手動切換還是照常可用)。
+const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!prefersReducedMotion){
+  setInterval(() => {
+    document.querySelectorAll('.prod-carousel, .promo-carousel').forEach(advanceCarousel);
+  }, 4000);
+}
+
 // 「首頁行銷區塊(hero/BRAND 展示/信任感)」該不該顯示的判斷:客人主動按了
 // 「所有商品」,或是已經選了特定品牌/大分類/種類/系列(不管是點選單、點
 // BRAND 縮圖、還是從分享連結直接進站),都算是在「逛商品」而不是「剛進站
@@ -1998,6 +2061,7 @@ function render(){
   soldMaps = computeSoldMaps();
   renderSocialLinks();
   renderTrustSection();
+  renderPromoCarousel();
   renderBrandShowcase();
   renderProducts();
   renderNewArrivals();
@@ -2241,6 +2305,7 @@ function renderSubtypeTabs(){
       currentSeries = 'all'; // 換種類時,系列篩選重設
       currentPage = 1;
       renderProducts();
+      triggerPageTransition();
     });
   });
 }
@@ -2267,6 +2332,7 @@ function renderSeriesTabs(){
       currentSeries = btn.dataset.series;
       currentPage = 1;
       renderProducts();
+      triggerPageTransition();
     });
   });
 }
@@ -2386,6 +2452,26 @@ function buildSkeletonCardHTML(id){
     </div>`;
 }
 
+// 商品卡片最上面的圖片區塊:同一件商品如果有 2 種以上顏色、而且各自的
+// 照片不一樣,就用這些顏色照片做成可以左右滑動/自動輪播預覽的小輪播圖
+// (用 Map 依圖片網址去重,同一張圖片被兩個顏色共用的話只算一張,避免
+// 輪播出現兩張看起來一模一樣的圖)。純預覽用途,點圓點/滑動只是換
+// 「現在顯示哪一張照片」,不會連動改變卡片下面選色按鈕真正選中的顏色,
+// 購買時的顏色/庫存邏輯完全不受影響——自動輪播才不會不小心把客人以為
+// 要買的顏色偷換掉。只有 1 張圖(單一顏色、或多顏色共用同一張圖)的話
+// 就是以前的樣子,單純一張圖,不會多出圓點。
+function buildCardImageHTML(p, hasColors, displayImage){
+  const gallery = hasColors ? Array.from(new Map(p.colors.filter(c => c.image).map(c => [c.image, c.name])).entries()) : [];
+  if(gallery.length < 2){
+    return displayImage ? `<img class="prod-image" id="prodImg-${p.id}" src="${escapeHtml(displayImage)}" alt="${escapeHtml(p.name)}">` : '';
+  }
+  return `
+    <div class="prod-carousel">
+      ${gallery.map(([img, name], i) => `<img class="prod-image carousel-slide ${i === 0 ? 'active' : ''}" src="${escapeHtml(img)}" alt="${escapeHtml(p.name + ' - ' + name)}">`).join('')}
+      <div class="carousel-dots">${gallery.map((_, i) => `<button type="button" class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="顏色照片 第 ${i + 1} 張"></button>`).join('')}</div>
+    </div>`;
+}
+
 // 單張商品卡片的 HTML,商品清單跟「本週新品」都共用這份樣板
 function buildCardHTML(p){
   const country = p.country || 'JP';
@@ -2449,7 +2535,7 @@ function buildCardHTML(p){
 
   return `
     <div class="card" data-pid="${escapeHtml(p.id)}">
-      ${displayImage ? `<img class="prod-image" id="prodImg-${p.id}" src="${escapeHtml(displayImage)}" alt="${escapeHtml(p.name)}">` : ''}
+      ${buildCardImageHTML(p, hasColors, displayImage)}
       <div class="stamp">${p.weight}<small>KG</small></div>
       <div class="cat-badge">${badgeParts.map(escapeHtml).join(' · ')}</div>
       <span class="sale-badge ${saleType}">${saleType === 'preorder' ? '預購' : (saleType === 'soldout' ? '缺貨' : '現貨')}</span>
@@ -2495,6 +2581,14 @@ function buildCardHTML(p){
 
 // 幫一個商品格子(grid)裡的顏色/尺寸/數量/加入清單按鈕綁事件,onChange 是狀態改變後要重新畫哪些畫面
 function wireCardEvents(grid, onChange){
+  grid.querySelectorAll('.prod-carousel').forEach(wrap => {
+    wrap.querySelectorAll('.carousel-dot').forEach(dot => {
+      dot.addEventListener('click', () => setCarouselIndex(wrap, parseInt(dot.dataset.index, 10)));
+    });
+    wrap.addEventListener('mouseenter', () => { wrap.dataset.paused = '1'; });
+    wrap.addEventListener('mouseleave', () => { delete wrap.dataset.paused; });
+    wireCarouselSwipe(wrap);
+  });
   grid.querySelectorAll('.size-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       if(btn.disabled) return;
@@ -3026,8 +3120,35 @@ function renderSocialLinks(){
     : '老闆還沒設定 LINE 官方帳號';
 }
 
+// 首頁促銷橫幅的每一張圖,想加第二張促銷圖時,把新圖片檔案放進 images/
+// 資料夾、commit 上去之後,在這個陣列多加一筆 {img, link, alt} 就好——
+// 有 2 張以上會自動變成會輪播的橫幅(自動輪播+下面圓點+左右滑動都有),
+// 只有 1 張的話維持原本單張橫幅的樣子,不會多出圓點。
+const HOME_BANNER_SLIDES = [
+  { img: 'https://leeshibago.github.io/-/images/salomon-nami-xt6-banner.jpg', link: 'https://leeshibago.github.io/-/?p=p_salomon_1784396678297_44', alt: 'Salomon NAMI PACK XT-6 GORE-TEX' },
+];
+
+function renderPromoCarousel(){
+  const el = document.getElementById('promoCarousel');
+  if(!el) return;
+  if(HOME_BANNER_SLIDES.length === 0){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = '';
+  const multi = HOME_BANNER_SLIDES.length > 1;
+  el.innerHTML = HOME_BANNER_SLIDES.map((s, i) => `
+    <a class="carousel-slide ${i === 0 ? 'active' : ''}" href="${escapeHtml(s.link)}">
+      <img src="${escapeHtml(s.img)}" alt="${escapeHtml(s.alt)}" loading="lazy">
+    </a>`).join('') + (multi ? `<div class="carousel-dots">${HOME_BANNER_SLIDES.map((_, i) => `<button type="button" class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="促銷圖 第 ${i + 1} 張"></button>`).join('')}</div>` : '');
+  if(!multi) return;
+  el.querySelectorAll('.carousel-dot').forEach(dot => {
+    dot.addEventListener('click', (e) => { e.preventDefault(); setCarouselIndex(el, parseInt(dot.dataset.index, 10)); });
+  });
+  el.addEventListener('mouseenter', () => { el.dataset.paused = '1'; });
+  el.addEventListener('mouseleave', () => { delete el.dataset.paused; });
+  wireCarouselSwipe(el);
+}
+
 // 客戶真實回饋截圖(LINE 對話截圖,證明不是編出來的評價)
-const TESTIMONIAL_IMAGES = ['testimonials/1.jpg','testimonials/2.jpg','testimonials/3.jpg','testimonials/4.jpg','testimonials/5.jpg','testimonials/6.jpg','testimonials/7.jpg','testimonials/8.jpg','testimonials/9.jpg','testimonials/10.jpg'];
+const TESTIMONIAL_IMAGES =['testimonials/1.jpg','testimonials/2.jpg','testimonials/3.jpg','testimonials/4.jpg','testimonials/5.jpg','testimonials/6.jpg','testimonials/7.jpg','testimonials/8.jpg','testimonials/9.jpg','testimonials/10.jpg'];
 
 // 2026-08-10 老闆提供的海外採購實拍照片(老闆本人去日本挑貨/實際購入
 // 的商品現場照,跟上面客人回饋截圖不同,壓縮到跟 testimonials 同等級,
