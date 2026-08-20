@@ -45,6 +45,7 @@ jobs:
           - descente
           - 3coins
           - polene
+          - merries
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,12 +68,12 @@ jobs:
           EOF
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
-      # HONMA(售價)、DESCENTE(現貨/缺貨)都是頁面載入後才用 JS 算出來/
-      # 套版,一般的 HTTP 請求抓不到,需要用真的瀏覽器(Playwright)把 JS
-      # 跑完再讀畫面上的資料,所以只有這兩個品牌的 job 需要多裝這個,其他
-      # 品牌不用等這個安裝步驟。
-      - name: Install Playwright browser (for HONMA and DESCENTE)
-        if: matrix.brand == 'honma' || matrix.brand == 'descente'
+      # HONMA(售價)、DESCENTE(現貨/缺貨)、Merries(售價+現貨/缺貨)都是
+      # 頁面載入後才用 JS 算出來/套版,一般的 HTTP 請求抓不到,需要用真的
+      # 瀏覽器(Playwright)把 JS 跑完再讀畫面上的資料,所以只有這三個品牌
+      # 的 job 需要多裝這個,其他品牌不用等這個安裝步驟。
+      - name: Install Playwright browser (for HONMA, DESCENTE, Merries)
+        if: matrix.brand == 'honma' || matrix.brand == 'descente' || matrix.brand == 'merries'
         run: python -m playwright install --with-deps chromium
 
       # merge_and_save() 已經處理過中途被其他寫入蓋掉的風險,15 個品牌

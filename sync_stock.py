@@ -221,6 +221,7 @@ ONLY_ARG_TO_BRAND = {
     "lacoste": "Lacoste",
     "jlindeberg": "J.Lindeberg",
     "descente": "DESCENTE",
+    "merries": "Merries",
 }
 
 
@@ -1247,6 +1248,72 @@ def sync_descente(items):
     merge_and_save(cards)
 
 
+# ---------- Merries(メリーズ,2026-08-20 新增。跟 HONMA/DESCENTE 同一個
+# 原因需要 Playwright:kao-kirei.com 的價格/庫存是頁面載入後才用 JS 打 API
+# 填進去,plain requests 抓到的是 disabled 的 loading 骨架。這個品牌沒有
+# 顏色/尺寸選項(每個包裝規格在資料庫裡各自是獨立一筆商品),所以跟
+# DESCENTE 一樣只需要同步整體 saleType(instock/soldout),不用像
+# AAPE/Salomon 那樣追蹤逐尺寸庫存。抓取邏輯共用 scrape_merries.py 的
+# extract_price_stock(),兩邊(這裡的每日同步 + import_merries.py 的
+# 一次性匯入)讀同一份 ld+json 結構化資料,不用維護兩套解析邏輯。) ----------
+
+def sync_merries(items):
+    print("=== Merries 同步開始(使用瀏覽器渲染 JS)===")
+    from playwright.sync_api import sync_playwright
+
+    from scrape_merries import HEADERS as MERRIES_HEADERS, extract_price_stock
+
+    cards = [p for p in items if p.get("brand") == "Merries"]
+    changed = stock_changed = errors = delisted = 0
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page = browser.new_page(user_agent=MERRIES_HEADERS["User-Agent"])
+        for idx, card in enumerate(cards):
+            link = card.get("link")
+            if not link:
+                continue
+            try:
+                # 2026-08-20 抓到:這個站背景會一直打 /ja/ex/sprocket 這種
+                # 分析/個人化追蹤請求,幾乎不會停,"networkidle" 永遠等不到
+                # (本機實測 20 秒直接逾時)。改用 domcontentloaded,真正需要
+                # 等 JS 灌完資料的部份,由 extract_price_stock() 自己用
+                # wait_for_selector(state="attached") 精準等 ld+json 出現。
+                res = page.goto(link, timeout=30000, wait_until="domcontentloaded")
+                if res is not None and res.status == 404:
+                    if card.get("saleType") != "soldout":
+                        card["saleType"] = "soldout"
+                        delisted += 1
+                        print(f"  官網已下架(404):{card.get('name')},已標記缺貨")
+                        delisted_lines.append(f"[Merries] {card.get('name')}")
+                    continue
+                new_jpy, in_stock = extract_price_stock(page)
+            except Exception as e:
+                print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
+                errors += 1
+                continue
+
+            if new_jpy and new_jpy != card.get("jpy"):
+                print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+                price_change_lines.append(f"[Merries] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+                card["jpy"] = new_jpy
+                changed += 1
+
+            # in_stock 是 None 代表這次抓取沒拿到明確的庫存狀態(例如頁面
+            # 結構暫時跑掉),沿用舊的 saleType,不要誤判成缺貨。
+            if in_stock is not None:
+                new_sale_type = "instock" if in_stock else "soldout"
+                if new_sale_type != card.get("saleType", "instock"):
+                    card["saleType"] = new_sale_type
+                    stock_changed += 1
+
+            time.sleep(0.3)
+            if (idx + 1) % 20 == 0:
+                print(f"  進度 {idx+1}/{len(cards)}(價格變動 {changed},缺貨異動 {stock_changed},下架 {delisted},錯誤 {errors})")
+        browser.close()
+    print(f"Merries 完成:{len(cards)} 張卡,價格變動 {changed} 件,缺貨異動 {stock_changed} 件,下架 {delisted} 件,錯誤 {errors} 件")
+    merge_and_save(cards)
+
+
 # ---------- CELINE(2026-08-08 新增,celine.com/ja-jp,Salesforce
 # Commerce Cloud 靜態輸出,沒有機器人偵測。跟其他品牌不一樣的地方:
 # 每個顏色是獨立網址(不是一頁涵蓋全部顏色),商品卡存的 link 只會是
@@ -1776,6 +1843,8 @@ def main():
         sync_price_only(items, "J.Lindeberg", extract_ldjson_price)
     if only in (None, "descente"):
         sync_descente(items)
+    if only in (None, "merries"):
+        sync_merries(items)
     if price_change_lines:
         # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
         head = f"📋 今日價格同步:共 {len(price_change_lines)} 件官網改價,網站售價已自動更新\n\n"
