@@ -404,8 +404,13 @@
      之後老闆想放第二張促銷圖,直接在那個陣列多加一筆就會自動變成
      會輪播的橫幅,不用改這裡的 CSS/HTML。 */
   .promo-carousel{ position:relative; max-width:1080px; margin:0 auto 18px; padding:0 20px; }
-  .promo-carousel .carousel-slide{ display:none; }
-  .promo-carousel .carousel-slide.active{ display:block; animation: carouselFade .4s ease; }
+  /* 用兩層 class(.promo-carousel/.prod-carousel + .carousel-slide)算出來的
+     優先權故意選得比單一 class 的 .prod-image{display:block} 高,不然
+     不管這條規則寫在檔案裡的哪個位置,只要 .prod-image 那條剛好排在
+     後面就會蓋掉這裡的 display:none,3 張顏色照片會整疊顯示出來
+     (2026-08-20 老闆截圖回報的正是這個問題)。 */
+  .promo-carousel .carousel-slide, .prod-carousel .carousel-slide{ display:none; }
+  .promo-carousel .carousel-slide.active, .prod-carousel .carousel-slide.active{ display:block; animation: carouselFade .4s ease; }
   .promo-carousel img{ width:100%; display:block; border-radius:var(--radius); box-shadow:var(--shadow); transition:opacity 0.2s; }
   .promo-carousel .carousel-slide:hover img{ opacity:0.92; }
   @keyframes carouselFade{ from{ opacity:0; } to{ opacity:1; } }
