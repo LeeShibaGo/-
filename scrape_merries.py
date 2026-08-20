@@ -113,6 +113,15 @@ def fetch_catalog():
         image = (p.get("images") or {}).get("src")
         if image and image.startswith("//"):
             image = "https:" + image
+        # 2026-08-21 老闆回報上架商品沒圖片,查出來是這裡:清單 JSON 裡
+        # images.src 本身帶著 "?hide=1&fmt=png8-alpha" 這種花王網站自己
+        # 前端專用的 Scene7 動態圖片參數,單獨拿掉 query string 直接連
+        # 這個 Adobe 圖片伺服器,回傳的是一張空白圖(實測確認:帶參數
+        # 空白、拿掉參數是正常的尿布包裝照片)。這組參數顯然是設計給
+        # 官網自己某個特定版位用的,不是通用的縮圖網址,直接切掉
+        # query string,只留乾淨的圖片路徑最保險。
+        if image and "?" in image:
+            image = image.split("?", 1)[0]
 
         items.append({
             "name": name.strip(),
