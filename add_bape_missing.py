@@ -92,7 +92,10 @@ SHORTS_RE = re.compile(r"\bSHORTS\b", re.I)
 GOODS_SUBTYPE_RULES = [
     (r"KEY\s*(CHAIN|RING|HOLDER)|キーホルダー|キーリング", "鑰匙圈吊飾"),
     (r"\bWALLET\b|財布", "皮夾"),
-    (r"\bBELT\b", "皮帶"),
+    # 排除「BELT BAG(腰包)」——那是包款不是皮帶,BELT 後面緊接 BAG 的話
+    # 不算(2026-08-21 抓到"ABC MILO CAMO LUGGAGE BELT BAG"這種名稱,
+    # 沒排除的話會被誤分類成皮帶)。
+    (r"\bBELT\b(?!\s*BAG)", "皮帶"),
     (r"TOWEL|タオル", "毛巾"),
     (r"STICKER|PATCH|BADGE|ステッカー", "徽章貼紙"),
     (r"I ?PHONE|PHONE\s*CASE|スマホ", "手機周邊"),
@@ -106,6 +109,17 @@ GOODS_SUBTYPE_RULES = [
 
 
 def guess_subtype(product_type, name):
+    # 2026-08-21 老闆回報有個錢包(1ST CAMO MINI WALLET)沒歸類到「皮夾」
+    # ——查出來是官網自己把它的 product_type 標成「バッグ(包)」,不是
+    # 預期中的「グッズ」,原本 GOODS_SUBTYPE_RULES 只在 product_type ==
+    # "グッズ" 時才會套用,這件就直接落到「バッグ→包款」,沒機會被關鍵字
+    # 規則接住。這些關鍵字(WALLET/BELT/KEYCHAIN...)本身辨識度已經很高,
+    # 改成不管 product_type 是什麼都先檢查一次,比信任官網自己的分類欄位
+    # 更準——act T恤/褲裝/外套那幾類的商品名稱不會意外命中這些關鍵字,
+    # 不用擔心誤傷。
+    for pattern, subtype in GOODS_SUBTYPE_RULES:
+        if re.search(pattern, name, re.IGNORECASE):
+            return subtype
     if product_type in ("Tシャツ", "カットソー"):
         if LONGSLEEVE_RE.search(name):
             return "長袖上衣"
@@ -119,9 +133,8 @@ def guess_subtype(product_type, name):
             return "短褲"
         return "長褲"
     if product_type == "グッズ":
-        for pattern, subtype in GOODS_SUBTYPE_RULES:
-            if re.search(pattern, name, re.IGNORECASE):
-                return subtype
+        # 走到這裡代表上面那輪 GOODS_SUBTYPE_RULES 已經沒有命中任何關鍵字,
+        # 落回萬用桶,不用再檢查第二次。
         return "服飾配件"
     return PRODUCT_TYPE_MAP.get(product_type, "服飾配件")
 
