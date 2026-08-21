@@ -79,6 +79,8 @@ BRAND_SLUGS = {
     "3COINS": "3coins",
     "POLENE": "polene",
     "Callaway": "callaway",
+    "MUJI": "muji",
+    "Merries": "merries",
 }
 
 
@@ -284,8 +286,20 @@ def main():
         generated.append((brand, slug, len(items)))
         print(f"  已產生 {out_path}({brand},{len(items)} 件商品,intro={'有' if brand in intros else '未填寫'})")
 
-    # sitemap.xml:讓 Google 知道有這些頁面存在,不用完全靠自己爬到
-    urls = [f"{SITE_BASE}/"] + [f"{SITE_BASE}/brand/{slug}/" for _, slug, _ in generated]
+    # sitemap.xml:讓 Google 知道有這些頁面存在,不用完全靠自己爬到。
+    # 商品頁(product/{id}/)是 generate_product_pages.py 產生的,那支會
+    # 把自己的網址清單寫到 PRODUCT_SITEMAP_TMP 這個暫存檔——GitHub
+    # Actions 裡那支要排在這支之前執行,這裡讀到就併進來;本機單獨只跑
+    # 這支(沒先跑 generate_product_pages.py)的話讀不到檔案,就只寫
+    # 品牌頁,不會噴錯,方便單獨測試品牌頁。
+    product_urls = []
+    product_sitemap_tmp = "_product_sitemap_urls.txt"
+    if os.path.exists(product_sitemap_tmp):
+        with open(product_sitemap_tmp, encoding="utf-8") as f:
+            product_urls = [line.strip() for line in f if line.strip()]
+        print(f"併入 {len(product_urls)} 個商品頁網址到 sitemap.xml")
+
+    urls = [f"{SITE_BASE}/"] + [f"{SITE_BASE}/brand/{slug}/" for _, slug, _ in generated] + product_urls
     sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     for u in urls:
         sitemap += f"  <url><loc>{esc(u)}</loc></url>\n"

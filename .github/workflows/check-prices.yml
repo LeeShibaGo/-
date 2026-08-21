@@ -105,5 +105,25 @@ jobs:
           EOF
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
+      # 2026-08-21 抓到:這個 job 一直以來只有「產生檔案」,從來沒有
+      # commit+push 過——GitHub Actions runner 是每次全新、跑完就砍掉的
+      # 環境,產生的 brand/*/index.html、sitemap.xml 從來沒有真的存回
+      # repo,live 網站上看到的 brand 頁面其實是很久以前手動 commit 的
+      # 那份舊快照,每天「重新產生」都是白做工、資料從沒更新過。這次
+      # 一併補上 product/*/index.html(見 generate_product_pages.py)
+      # 跟 commit+push,兩個問題一起修。
+      - name: Regenerate static product pages for SEO
+        run: python generate_product_pages.py
+
       - name: Regenerate static brand pages for SEO
         run: python generate_brand_pages.py
+
+      - name: Commit regenerated pages
+        run: |
+          rm -f _product_sitemap_urls.txt
+          git config user.name "pages-bot"
+          git config user.email "actions@github.com"
+          git add brand/ product/ sitemap.xml
+          git diff --cached --quiet || git commit -m "Regenerate static brand/product SEO pages [skip ci]"
+          git pull --rebase origin master || true
+          git push
