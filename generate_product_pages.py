@@ -109,6 +109,10 @@ def render_page(p, brand, slug, shop_name):
     # 資料是自己爬來的、不是使用者輸入),會提早關掉這個 <script> 標籤、
     # 把後面的 HTML 弄壞,轉義掉 "</" 保險一點。
     ld_json = json.dumps(ld_data, ensure_ascii=False).replace("</", "<\\/")
+    # json.dumps 而不是 esc()——esc() 是給 HTML 屬性/文字用的跳脫,這裡是
+    # 塞進 <script> 裡的 JS 字串字面值,兩種跳脫規則不一樣,商品 id 目前
+    # 雖然都是英數底線、剛好兩邊都安全,但用對的跳脫方式比較保險。
+    shop_link_js = json.dumps(shop_link)
 
     return f"""<!doctype html>
 <html lang="zh-Hant">
@@ -123,6 +127,15 @@ def render_page(p, brand, slug, shop_name):
 <meta property="og:type" content="product">
 <link rel="canonical" href="{page_url}">
 <script type="application/ld+json">{ld_json}</script>
+<script>
+  // 真人瀏覽器有能力執行 JS,直接跳轉進主站看完整互動詳情(顏色/尺寸/
+  // 加入購物車),不用停在這個純靜態頁面自己找連結點——2026-08-21 老闆
+  // 確認要這樣做。LINE/FB 的分享預覽爬蟲、Google 索引用的爬蟲通常不會
+  // 執行 JS,看到的還是上面 <head> 裡那些 meta/JSON-LD 靜態內容,不受
+  // 這裡影響。用 location.replace 不是 location.href,不會在瀏覽紀錄
+  // 多留一筆這個中繼頁,客人在主站按「上一頁」不會卡在這裡。
+  location.replace({shop_link_js});
+</script>
 <style>
   body{{font-family:'Noto Sans TC',sans-serif; max-width:640px; margin:0 auto; padding:24px 20px 80px; color:#141F2B; background:#F4EFE2;}}
   a{{color:inherit;}}

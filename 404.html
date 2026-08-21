@@ -2398,6 +2398,12 @@ function renderProducts(){
         el.classList.add('deep-linked');
         setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
       }
+      // 2026-08-21 起:從 product/{id}/ 那個靜態分享頁自動跳轉進來的 ?p=
+      // 連結,不是只捲動定位給客人自己找,直接把詳情彈窗打開——這樣客人
+      // 點分享連結體驗才像「直接進到那件商品」,不是還要自己再點一次
+      // 圖片。商品這時已經在 productsFull 裡(上面 fullPageList 就是從
+      // 這裡取的),openProductDetail() 不會重複再抓一次。
+      openProductDetail(pendingProductId);
       pendingProductId = null;
     }
     updateUrl();
