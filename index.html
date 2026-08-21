@@ -534,7 +534,14 @@
   }
   .link-btn:hover{ color:var(--stamp-dim); border-color:var(--stamp-dim); }
 
-  .prod-image{ width:100%; aspect-ratio: 1 / 1; height:auto; object-fit:cover; object-position:center; border-radius:10px; display:block; background:#E7E0CC; }
+  .prod-image{ width:100%; aspect-ratio: 1 / 1; height:auto; object-fit:cover; object-position:center; border-radius:10px; display:block; background:#E7E0CC; cursor:pointer; transition:opacity .15s ease; }
+  .prod-image:hover{ opacity:0.92; }
+  /* 商品詳情彈窗:直接塞進去同一份 .card HTML,這裡把卡片本身的外框/
+     陰影拿掉(彈窗 .sheet 自己已經有一層底色跟邊界了,兩層疊在一起會很
+     奇怪),圖片點了沒有效果(已經在彈窗裡了,不用再點開一次自己)。 */
+  #productDetailContent .card{ padding:0; box-shadow:none; border:none; background:transparent; }
+  #productDetailContent .prod-image{ cursor:default; }
+  #productDetailContent .prod-image:hover{ opacity:1; }
 
   input[type=file]{
     width:100%; padding:9px 10px; border:1px dashed #C7BFA8; border-radius:9px;
@@ -946,6 +953,20 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <button class="close-x" id="closeFaq">✕</button>
     </div>
     <div id="faqContent"></div>
+  </div>
+</div>
+
+<!-- 商品詳情彈窗:點商品圖片放大看。內容直接重用 buildCardHTML() 畫的
+     同一份卡片 HTML(顏色/尺寸/加入清單邏輯完全共用,不重寫一份、避免
+     兩邊分開維護跑出不一致的選色/庫存狀態),只是包在比較寬的彈窗裡,
+     圖片自然跟著容器變大。見 openProductDetail()。 -->
+<div class="overlay" id="productDetailOverlay">
+  <div class="sheet" style="max-width:480px;">
+    <div class="sheet-head">
+      <h2>商品詳情</h2>
+      <button class="close-x" id="closeProductDetail">✕</button>
+    </div>
+    <div id="productDetailContent"></div>
   </div>
 </div>
 
@@ -2495,6 +2516,17 @@ function buildCardHTML(p){
 
 // 幫一個商品格子(grid)裡的顏色/尺寸/數量/加入清單按鈕綁事件,onChange 是狀態改變後要重新畫哪些畫面
 function wireCardEvents(grid, onChange){
+  // 點商品圖片放大看詳情——彈窗本身裡面也是重用同一份卡片 HTML,裡面
+  // 不需要再點一次圖片打開自己,所以詳情彈窗的內容容器(#productDetailContent)
+  // 不綁這個(CSS 那邊也把圖片游標改回預設,兩邊要一致)。
+  if(grid.id !== 'productDetailContent'){
+    grid.querySelectorAll('.card .prod-image').forEach(img => {
+      img.addEventListener('click', () => {
+        const pid = img.closest('.card')?.dataset.pid;
+        if(pid) openProductDetail(pid);
+      });
+    });
+  }
   grid.querySelectorAll('.size-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       if(btn.disabled) return;
@@ -2535,6 +2567,32 @@ function wireCardEvents(grid, onChange){
     });
   });
 }
+
+// 商品詳情彈窗:點商品圖片打開,內容是同一份 buildCardHTML(p) 畫出來的
+// 卡片(顏色/尺寸選擇、加入清單都是同一套邏輯,不會跟卡片版本各自跑出
+// 不一致的狀態)。p 這個商品物件本身(名稱/顏色/庫存)不會因為選色而
+// 變,buildCardHTML() 每次呼叫都是從 selectedColor/selectedSize 這些
+// 全域狀態現算「現在選到哪個顏色/尺寸」,所以 renderProductDetail()
+// 重複呼叫、沿用同一個 p 閉包沒問題。
+async function openProductDetail(pid){
+  let p = productsFull.get(pid);
+  if(!p){
+    await fetchProductsByIds([pid]);
+    p = productsFull.get(pid);
+  }
+  if(!p) return;
+  renderProductDetail(p);
+  document.getElementById('productDetailOverlay').classList.add('open');
+}
+function renderProductDetail(p){
+  const box = document.getElementById('productDetailContent');
+  box.innerHTML = buildCardHTML(p);
+  wireCardEvents(box, () => {
+    renderProductDetail(p); // 選色/選尺寸/改數量後,彈窗自己要重新畫一次
+    renderProducts(); renderNewArrivals(); renderBestSellers(); // 底下清單的卡片也要跟著同步,不然關閉彈窗後會看到舊狀態
+  });
+}
+document.getElementById('closeProductDetail').onclick = () => document.getElementById('productDetailOverlay').classList.remove('open');
 
 // 本週新品:只看最近 7 天內上架的商品,沒有的話整塊隱藏,不留一個空區塊。
 // 客人已經在逛「所有商品」或特定品牌時也整塊隱藏(見 isBrowsingProducts),
