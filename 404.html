@@ -964,7 +964,10 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
   <div class="sheet" style="max-width:480px;">
     <div class="sheet-head">
       <h2>商品詳情</h2>
-      <button class="close-x" id="closeProductDetail">✕</button>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <button class="close-x" id="shareProductBtn" title="複製連結分享給客人" style="font-size:16px;">🔗</button>
+        <button class="close-x" id="closeProductDetail">✕</button>
+      </div>
     </div>
     <div id="productDetailContent"></div>
   </div>
@@ -1879,6 +1882,11 @@ async function loadAll(){
 // 網址列還是保留原本打的路徑,這支程式一樣讀得到、正常運作。
 // SITE_BASE_PATH 是這個網站部署的固定路徑,本機測試(non-github.io網域)就當作根目錄。
 const SITE_BASE_PATH = location.hostname.includes('github.io') ? '/-/' : '/';
+// 分享商品連結用的完整網址(給 product/{id}/ 那個靜態 SEO 頁面,不是
+// ?p= 那種——靜態頁貼到 LINE/FB 才會顯示那件商品自己的照片/名稱/價格,
+// 見 generate_product_pages.py)。跟 SITE_BASE_PATH 用同一個判斷式,
+// 本機/GitHub Pages 都會抓對。
+const SITE_URL = location.hostname.includes('github.io') ? 'https://leeshibago.github.io/-' : location.origin;
 
 // 分享用的直達連結,支援兩種格式:
 // 1. 新的路徑式:/brand/On/subtype/subtype名稱/series/系列名稱
@@ -2574,6 +2582,8 @@ function wireCardEvents(grid, onChange){
 // 變,buildCardHTML() 每次呼叫都是從 selectedColor/selectedSize 這些
 // 全域狀態現算「現在選到哪個顏色/尺寸」,所以 renderProductDetail()
 // 重複呼叫、沿用同一個 p 閉包沒問題。
+let currentDetailProductId = null; // 分享按鈕要知道「現在彈窗開著的是哪件商品」
+
 async function openProductDetail(pid){
   let p = productsFull.get(pid);
   if(!p){
@@ -2581,9 +2591,41 @@ async function openProductDetail(pid){
     p = productsFull.get(pid);
   }
   if(!p) return;
+  currentDetailProductId = pid;
   renderProductDetail(p);
   document.getElementById('productDetailOverlay').classList.add('open');
 }
+
+// 複製這件商品的靜態分享頁連結(product/{id}/,不是 ?p=——那個是給網站
+// 內部深連結捲動定位用的,分享出去貼在 LINE/FB 不會有預覽圖;靜態頁
+// 才有那件商品自己的照片/名稱/價格,見 generate_product_pages.py)。
+// navigator.clipboard 在部份較舊的 LINE 內建瀏覽器/非 HTTPS 情境可能
+// 不能用,失敗的話退而求其次用隱藏 textarea + execCommand('copy')。
+async function copyProductShareLink(){
+  if(!currentDetailProductId) return;
+  const url = `${SITE_URL}/product/${currentDetailProductId}/`;
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('已複製商品連結,可以貼給客人了');
+    return;
+  } catch(e){
+    // fall through to legacy 做法
+  }
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('已複製商品連結,可以貼給客人了');
+  } catch(e){
+    toast('複製失敗,請手動長按網址複製:' + url);
+  }
+}
+document.getElementById('shareProductBtn').addEventListener('click', copyProductShareLink);
 function renderProductDetail(p){
   const box = document.getElementById('productDetailContent');
   box.innerHTML = buildCardHTML(p);
@@ -2592,7 +2634,10 @@ function renderProductDetail(p){
     renderProducts(); renderNewArrivals(); renderBestSellers(); // 底下清單的卡片也要跟著同步,不然關閉彈窗後會看到舊狀態
   });
 }
-document.getElementById('closeProductDetail').onclick = () => document.getElementById('productDetailOverlay').classList.remove('open');
+document.getElementById('closeProductDetail').onclick = () => {
+  document.getElementById('productDetailOverlay').classList.remove('open');
+  currentDetailProductId = null;
+};
 
 // 本週新品:只看最近 7 天內上架的商品,沒有的話整塊隱藏,不留一個空區塊。
 // 客人已經在逛「所有商品」或特定品牌時也整塊隱藏(見 isBrowsingProducts),
