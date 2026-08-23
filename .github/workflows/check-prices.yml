@@ -85,8 +85,15 @@ jobs:
 
   # 全部品牌都同步完之後才重新產生 SEO 用的靜態品牌頁面(brand/*/index.html)
   # 跟 sitemap.xml,不然會拿還沒同步完的舊資料生頁面。
+  # 2026-08-23 抓到:CELINE 最近連續好幾天單獨跑超過 6 小時被 GitHub 強制
+  # 中止(見 sync_celine 那邊,另外要查),needs: sync-brand 預設是「全部
+  # 品牌都要成功」才會執行這步,只要有一個品牌逾時失敗,這步就直接被跳過
+  # ——連續 5 天,任何品牌補貨/新上架的商品都沒有重新產生分享頁,不是只
+  # 影響 CELINE 自己。改成 if: always() 讓這步不管有沒有品牌失敗都照跑,
+  # 用「當下資料庫最新狀態」生頁面,不用等每一個品牌都完美成功。
   regenerate-pages:
     needs: sync-brand
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
