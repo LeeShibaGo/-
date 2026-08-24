@@ -405,6 +405,42 @@
   .promo-banner:hover img{ opacity:0.92; }
   /* 首頁品牌方塊區,點一個品牌直接跳轉到該品牌的商品列表,
      「所有品牌」按鈕重用上方分類選單本來就有的「所有品牌」下拉選單。 */
+  /* 購買流程 4 步驟,放在 Hero 下方、品牌牆上方(2026-08-23 老闆看到別的
+     代購帳號社群貼文的「編號步驟+圖示」版式,喜歡這個概念,但不直接照抄
+     那張圖——這裡是完全重畫的、用自己品牌配色跟實際購買流程做的原創版)。
+     步驟文字對應代購須知/FAQ 裡實際寫的流程(50% 訂金、每周固定寄送、
+     抵台通知取貨付尾款),不是憑空編的。桌機一排四步中間穿插箭頭,
+     手機版排不下就自動換行、箭頭跟著文字自然斷行,不特別處理。 */
+  .purchase-flow{ margin: 28px auto; max-width:1080px; padding:0 20px; }
+  .purchase-flow-title{
+    text-align:center; font-family:'Noto Serif TC',serif; font-size:28px;
+    font-weight:900; letter-spacing:4px; color:var(--ink); margin-bottom:20px;
+  }
+  .purchase-flow-grid{
+    display:flex; align-items:flex-start; justify-content:center; gap:6px; flex-wrap:wrap;
+  }
+  .purchase-flow-step{
+    background:#FFFFFF; border:1px solid var(--line-onlight); border-radius:var(--radius);
+    padding:20px 14px; text-align:center; width:150px; box-shadow:var(--shadow);
+  }
+  .purchase-flow-icon{ font-size:30px; margin-bottom:8px; }
+  .purchase-flow-num{
+    display:inline-block; background:var(--ink); color:#fff; font-family:'JetBrains Mono',monospace;
+    font-weight:700; font-size:12px; width:20px; height:20px; line-height:20px; border-radius:50%;
+    margin-bottom:8px;
+  }
+  .purchase-flow-label{ font-weight:700; font-size:14px; color:var(--ink); margin-bottom:4px; }
+  .purchase-flow-desc{ font-size:12px; color:var(--muted-onlight); line-height:1.5; }
+  .purchase-flow-arrow{
+    align-self:center; font-size:20px; color:var(--gold-dim); font-weight:700;
+    padding:0 2px;
+  }
+  @media (max-width:640px){
+    .purchase-flow-title{ font-size:22px; letter-spacing:2px; }
+    .purchase-flow-step{ width:132px; padding:16px 10px; }
+    .purchase-flow-arrow{ transform:rotate(90deg); }
+  }
+
   .brand-showcase{ margin: 28px auto; }
   .brand-showcase-title{
     text-align:center; font-family:'Noto Serif TC',serif; font-size:34px;
@@ -754,6 +790,39 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <div class="hero-cta-sub">每周固定寄送,每月親飛日本</div>
       <div class="hero-cta-arrow">↓</div>
       <a class="hero-cta-btn" id="heroCtaLineBtn" href="#" target="_blank" rel="noopener noreferrer">立即加入 LINE</a>
+    </div>
+  </div>
+
+  <div class="purchase-flow">
+    <h2 class="purchase-flow-title">購買流程</h2>
+    <div class="purchase-flow-grid">
+      <div class="purchase-flow-step">
+        <div class="purchase-flow-icon">🛒</div>
+        <div class="purchase-flow-num">1</div>
+        <div class="purchase-flow-label">網站選購</div>
+        <div class="purchase-flow-desc">瀏覽商品,加入清單</div>
+      </div>
+      <div class="purchase-flow-arrow">→</div>
+      <div class="purchase-flow-step">
+        <div class="purchase-flow-icon">💰</div>
+        <div class="purchase-flow-num">2</div>
+        <div class="purchase-flow-label">付訂金</div>
+        <div class="purchase-flow-desc">LINE 確認訂單<br>先付 50% 訂金</div>
+      </div>
+      <div class="purchase-flow-arrow">→</div>
+      <div class="purchase-flow-step">
+        <div class="purchase-flow-icon">✈️</div>
+        <div class="purchase-flow-num">3</div>
+        <div class="purchase-flow-label">日本代購中</div>
+        <div class="purchase-flow-desc">每周固定寄送<br>每月親飛日本</div>
+      </div>
+      <div class="purchase-flow-arrow">→</div>
+      <div class="purchase-flow-step">
+        <div class="purchase-flow-icon">📦</div>
+        <div class="purchase-flow-num">4</div>
+        <div class="purchase-flow-label">抵台取貨</div>
+        <div class="purchase-flow-desc">通知取貨<br>付清尾款</div>
+      </div>
     </div>
   </div>
 
