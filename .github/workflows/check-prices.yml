@@ -27,6 +27,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # 2026-08-25 拿掉 celine:官網掛了 Akamai Bot Manager,每次同步
+        # 每個請求都要耗盡重試才放棄,跑到快 20 小時,遠超過下面 6 小時
+        # 的硬上限——不打算硬解(跟 TaylorMade/Dior/LV 那幾家同一種決定,
+        # 見 sync_stock.py 開頭說明),商品已經用 hide_celine.py 整批
+        # 隱藏,繼續排進每日同步只是白跑,sync_celine() 函式本身留著沒刪,
+        # 之後如果官網解除防護、或想恢復上架,把這行加回來就好。
         brand:
           - salomon
           - "on"
@@ -38,7 +44,6 @@ jobs:
           - honma
           - bape
           - stussy
-          - celine
           - aape
           - lacoste
           - jlindeberg
