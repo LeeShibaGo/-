@@ -222,6 +222,7 @@ ONLY_ARG_TO_BRAND = {
     "jlindeberg": "J.Lindeberg",
     "descente": "DESCENTE",
     "merries": "Merries",
+    "9090": ["9090", "9090 girl"],
 }
 
 
@@ -772,6 +773,82 @@ def sync_stussy(items):
             card["jpy"] = new_jpy
             price_changed += 1
     print(f"STUSSY 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
+          f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
+    merge_and_save(cards)
+
+
+# ---------- 9090 / 9090 girl(2026-08-27 加入,yz-store.com,做法跟
+# STUSSY 幾乎一樣(option1 顏色英文、option2 尺寸),差別是這個 Shopify
+# 商城本身混著 27 個不同 vendor 的商品(選物店),同一次 products.json
+# 抓回來的清單裡,只挑 vendor 是 "9090" 或 "9090 girl" 的兩個品牌,
+# 一次抓、分兩個品牌各自比對,不用打兩次站。見 scrape_9090.py 開頭
+# 說明,包含「頁面顯示的 $ 其實是日圓自動換算成台幣」這個容易搞混
+# 的地方。) ----------
+
+def sync_9090(items):
+    print("=== 9090 / 9090 girl 同步開始 ===")
+    from scrape_stussy import translate_color
+
+    shop_products = []
+    page = 1
+    while True:
+        ps = fetch("https://yz-store.com/products.json?limit=250&page=" + str(page)).json().get("products", [])
+        shop_products.extend(ps)
+        if len(ps) < 250:
+            break
+        page += 1
+        time.sleep(0.5)
+    print(f"官網商品共 {len(shop_products)} 件(所有 vendor)")
+    by_handle = {p["handle"]: p for p in shop_products}
+
+    cards = [p for p in items if p.get("brand") in ("9090", "9090 girl")]
+    stock_changed = price_changed = colors_gone = 0
+    for card in cards:
+        sp = by_handle.get(stussy_handle_from_link(card.get("link")))
+        if not sp or not sp.get("variants") or sp.get("vendor") != card.get("brand"):
+            for color in card.get("colors", []):
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
+                    colors_gone += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+            continue
+
+        by_raw_color = {}
+        for v in sp["variants"]:
+            raw = (v.get("option1") or "").strip()
+            by_raw_color.setdefault(raw, []).append(v)
+        by_translated_name = {}
+        for raw in by_raw_color:
+            by_translated_name.setdefault(translate_color(raw), raw)
+
+        for color in card.get("colors", []):
+            raw = by_translated_name.get(color.get("name"))
+            variants = by_raw_color.get(raw) if raw else None
+            if not variants:
+                if any(v > 0 for v in _stock_values(color.get("stock"))):
+                    colors_gone += 1
+                color["stock"] = {s: 0 for s in color.get("sizes", [])}
+                continue
+            sizes, stock = [], {}
+            for v in variants:
+                s = fix_size_key((v.get("option2") or "F").strip())
+                if not s or s in stock:
+                    continue
+                sizes.append(s)
+                stock[s] = 5 if v.get("available") else 0
+            if stock != (color.get("stock") or {}):
+                stock_changed += 1
+            color["sizes"], color["stock"] = sizes, stock
+
+        try:
+            new_jpy = int(float(sp["variants"][0]["price"]))
+        except (KeyError, ValueError, TypeError, IndexError):
+            new_jpy = None
+        if new_jpy and new_jpy != card.get("jpy"):
+            print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
+            price_change_lines.append(f"[{card.get('brand')}] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
+            card["jpy"] = new_jpy
+            price_changed += 1
+    print(f"9090/9090 girl 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
           f"價格變動 {price_changed} 件,配色已下架 {colors_gone} 個")
     merge_and_save(cards)
 
@@ -1803,7 +1880,15 @@ def main():
     # load_products_by_brand() 的說明。只有本機手動整批跑全部品牌
     # (only 是 None)才需要真的整包讀一次。
     if only and only in ONLY_ARG_TO_BRAND:
-        items = load_products_by_brand(ONLY_ARG_TO_BRAND[only])
+        target = ONLY_ARG_TO_BRAND[only]
+        # "9090" 這個 arg 底下其實是兩個 brand("9090"/"9090 girl",見
+        # sync_9090 的說明),ONLY_ARG_TO_BRAND 那筆存的是 list 不是單一
+        # 字串,這裡要各自查一次再合併,Firebase 的 equalTo 一次只能比對
+        # 一個值,沒辦法一次查兩個 brand。
+        if isinstance(target, list):
+            items = [p for brand in target for p in load_products_by_brand(brand)]
+        else:
+            items = load_products_by_brand(target)
     else:
         items = load_products()
     # 每支 sync_xxx() 現在會在自己做完事之後,各自重新抓最新資料、合併、
@@ -1845,6 +1930,8 @@ def main():
         sync_descente(items)
     if only in (None, "merries"):
         sync_merries(items)
+    if only in (None, "9090"):
+        sync_9090(items)
     if price_change_lines:
         # 官網改價後網站售價已自動跟著更新,這則通知讓老闆知道動了哪些
         head = f"📋 今日價格同步:共 {len(price_change_lines)} 件官網改價,網站售價已自動更新\n\n"

@@ -81,6 +81,8 @@ BRAND_SLUGS = {
     "Callaway": "callaway",
     "MUJI": "muji",
     "Merries": "merries",
+    "9090": "9090",
+    "9090 girl": "9090-girl",
 }
 
 
