@@ -437,8 +437,19 @@
   }
   @media (max-width:640px){
     .purchase-flow-title{ font-size:22px; letter-spacing:2px; }
-    .purchase-flow-step{ width:132px; padding:16px 10px; }
-    .purchase-flow-arrow{ transform:rotate(90deg); }
+    /* 2026-08-27 老闆反應手機版擠成 2x2 太佔畫面,改成單行:步驟卡縮小、
+       不換行(nowrap),說明文字(purchase-flow-desc)這個寬度塞不下,
+       手機版直接不顯示,只留圖示+編號+一句話標籤,箭頭改回水平方向
+       (桌機版本來就是水平箭頭,只有這個斷點原本另外轉成垂直,現在
+       單行了不需要轉)。萬一遇到比 iPhone SE 還窄的螢幕四步還是擠不下,
+       overflow-x 保底讓它可以橫向滑動,不會直接爆版。 */
+    .purchase-flow-grid{ flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto; gap:4px; padding-bottom:4px; }
+    .purchase-flow-step{ width:auto; flex:1 1 0; min-width:64px; padding:10px 4px; }
+    .purchase-flow-icon{ font-size:18px; margin-bottom:4px; }
+    .purchase-flow-num{ width:15px; height:15px; line-height:15px; font-size:9px; margin-bottom:4px; }
+    .purchase-flow-label{ font-size:11px; margin-bottom:0; }
+    .purchase-flow-desc{ display:none; }
+    .purchase-flow-arrow{ font-size:14px; padding:0; }
   }
 
   .brand-showcase{ margin: 28px auto; }
