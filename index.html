@@ -420,8 +420,15 @@
     display:flex; align-items:flex-start; justify-content:center; gap:6px; flex-wrap:wrap;
   }
   .purchase-flow-step{
+    /* 2026-09-01 老闆反映卡片下方陰影看起來像格子——原本用全站共用的
+       --shadow(0 18px 40px rgba(0,0,0,.35))對這種小卡片來說太重、
+       模糊範圍又大,四張卡片間距只有 6px,陰影彼此重疊,瀏覽器算大範圍
+       模糊+高透明度黑色時容易出現色階量化的格紋/波紋(banding),不是
+       真的貼了格子圖。改成同色系(ink)、透明度低很多、範圍小很多的
+       柔和陰影,不會再有那個瑕疵,也比較貼近小卡片該有的輕量陰影感。 */
     background:#FFFFFF; border:1px solid var(--line-onlight); border-radius:var(--radius);
-    padding:20px 14px; text-align:center; width:150px; box-shadow:var(--shadow);
+    padding:20px 14px; text-align:center; width:150px;
+    box-shadow: 0 4px 14px rgba(20,31,43,0.10);
   }
   .purchase-flow-icon{ font-size:30px; margin-bottom:8px; }
   .purchase-flow-num{

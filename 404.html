@@ -420,8 +420,11 @@
     display:flex; align-items:flex-start; justify-content:center; gap:6px; flex-wrap:wrap;
   }
   .purchase-flow-step{
+    /* 2026-09-01:跟 index.html 保持同步,理由見該檔案同一段註解
+       (原本的 --shadow 對小卡片來說太重,重疊起來會出現格紋瑕疵)。 */
     background:#FFFFFF; border:1px solid var(--line-onlight); border-radius:var(--radius);
-    padding:20px 14px; text-align:center; width:150px; box-shadow:var(--shadow);
+    padding:20px 14px; text-align:center; width:150px;
+    box-shadow: 0 4px 14px rgba(20,31,43,0.10);
   }
   .purchase-flow-icon{ font-size:30px; margin-bottom:8px; }
   .purchase-flow-num{
