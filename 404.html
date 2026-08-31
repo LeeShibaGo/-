@@ -1426,28 +1426,6 @@ const customerAuthReady = new Promise(resolve => {
 });
 </script>
 
-<!-- 站內客服訊息的「有新訊息就 email 通知老闆」用 EmailJS(純前端、不用
-架後端)。這三個值要老闆自己到 emailjs.com 申請免費帳號、連上 Gmail
-才拿得到,目前先放預留位置——沒填之前 notifyOwnerNewMessage() 會直接
-跳過寄信,不會噴錯誤、不影響聊天功能本身。 -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-const EMAILJS_PUBLIC_KEY = ''; // TODO(老闆填):emailjs.com → Account → General → Public Key
-const EMAILJS_SERVICE_ID = ''; // TODO(老闆填):emailjs.com → Email Services → 你連的那組 Gmail 的 Service ID
-const EMAILJS_TEMPLATE_ID = ''; // TODO(老闆填):emailjs.com → Email Templates → 新增一個範本後的 Template ID
-if(EMAILJS_PUBLIC_KEY) emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-async function notifyOwnerNewMessage(customerName, customerEmail, text){
-  if(!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) return; // 還沒設定,先跳過
-  try{
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      customer_name: customerName || '(未填稱呼)',
-      customer_email: customerEmail || '',
-      message: text,
-    });
-  }catch(e){ console.error('EmailJS 通知寄送失敗', e); } // 通知寄不出去不該擋住聊天本身,只記錄錯誤
-}
-</script>
-
 <script>
 const SETTINGS_KEY = 'daigou-settings-v1';
 const PRODUCTS_KEY = 'daigou-products-v1';
@@ -1706,7 +1684,7 @@ document.getElementById('chatSendBtn').onclick = async () => {
     });
   }
   await openChatOverlay(); // 重新載入整串,順便把剛剛送出的這則畫出來
-  notifyOwnerNewMessage(meta && meta.name, meta && meta.email, text);
+  notifyChatMessageInstant(meta && meta.name, meta && meta.email, text);
 };
 
 // ===== 老闆後台:客服訊息分頁 =====
@@ -3407,6 +3385,22 @@ function notifyOrderInstant(order){
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(order),
+    }).catch(() => {});
+  }catch(e){}
+}
+
+// 2026-09-01:站內客服訊息也走同一支 Apps Script 中繼(不用另外申請
+// EmailJS——老闆說想跟訂單通知一樣直接進柴代購 LINE,不要 email)。
+// 用 type:'chat' 讓中繼那邊分辨這是客服留言,不是訂單(見
+// apps_script_order_notify.gs 的 doPost() 分流邏輯,那份程式碼要
+// 老闆自己貼到既有的 Apps Script 專案、部署新版本才會生效)。
+function notifyChatMessageInstant(customerName, customerEmail, text){
+  try{
+    fetch(ORDER_NOTIFY_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'chat', name: customerName || '(未填稱呼)', email: customerEmail || '', text }),
     }).catch(() => {});
   }catch(e){}
 }
