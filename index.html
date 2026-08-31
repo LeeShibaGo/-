@@ -726,6 +726,34 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .confirm-box{ text-align:center; padding: 10px 4px; }
   .confirm-box .big{ font-family:'JetBrains Mono',monospace; font-size:30px; color:var(--stamp); font-weight:700; margin:10px 0; }
+
+  /* ===== 站內客服訊息(2026-09-01 新增,給沒有 LINE 的客人多一個聯絡管道,
+     見 plan:cryptic-baking-axolotl)=====
+     客人帳號用獨立的 customerAuth(見下方 script),跟老闆的 fbAuth 完全
+     分開,不會互相干擾——這裡的樣式全部沿用既有 .overlay/.sheet/.primary-btn
+     /.ghost-btn,只新增聊天泡泡本身跟客服列表需要的樣式。 */
+  #chatEntryBadge{
+    position:absolute; top:-6px; right:-6px; background:var(--stamp); color:#fff;
+    font-size:10px; font-family:'JetBrains Mono',monospace; font-weight:700;
+    min-width:16px; height:16px; border-radius:8px; display:none; align-items:center;
+    justify-content:center; padding:0 3px; border:2px solid #fff;
+  }
+  .auth-switch{ text-align:center; font-size:12px; color:#6B7686; margin-top:12px; }
+  .auth-switch a{ color:var(--gold-dim); cursor:pointer; text-decoration:underline; }
+  .chat-thread{ display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding:4px 2px 8px; }
+  .chat-msg{ max-width:80%; padding:8px 12px; border-radius:12px; font-size:13px; line-height:1.5; white-space:pre-wrap; }
+  .chat-msg.mine{ align-self:flex-end; background:var(--ink); color:var(--paper); border-bottom-right-radius:3px; }
+  .chat-msg.theirs{ align-self:flex-start; background:#EAE3D1; color:var(--ink); border-bottom-left-radius:3px; }
+  .chat-msg-time{ font-size:10px; color:#6B7686; margin-top:3px; }
+  .chat-msg.mine .chat-msg-time{ text-align:right; color:#C7BFA8; }
+  .chat-input-row{ display:flex; gap:8px; margin-top:12px; }
+  .chat-input-row textarea{ flex:1; min-height:44px; max-height:120px; resize:vertical; }
+  .chat-input-row button{ align-self:flex-end; }
+  .customer-thread-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px dashed #D8D2C3; cursor:pointer; }
+  .customer-thread-row:hover{ background:rgba(0,0,0,0.02); }
+  .customer-thread-name{ font-size:14px; font-weight:700; }
+  .customer-thread-preview{ font-size:12px; color:#6B7686; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .customer-thread-unread{ width:9px; height:9px; border-radius:50%; background:var(--stamp); flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -761,6 +789,10 @@
       <a class="ghost-btn" id="customRequestLink" href="#" target="_blank" rel="noopener noreferrer" style="border-color:var(--line-strong-onlight); color:var(--text-page); text-decoration:none; display:none;">客製化代購</a>
       <button class="ghost-btn" id="orderLookupBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">查詢訂單</button>
       <button class="ghost-btn" id="loginBtn" style="border-color:var(--line-strong-onlight); color:var(--text-page);">LINE 登入</button>
+      <!-- 2026-09-01 站內客服訊息入口:給沒有 LINE 的客人用的聯絡管道,
+      跟上面的 LINE 登入是兩組完全獨立的帳號系統(見 customerAuth 說明)。
+      未讀訊息用右上角小紅點提醒(見 refreshChatUnreadBadge())。 -->
+      <button class="ghost-btn" id="chatEntryBtn" style="position:relative; border-color:var(--line-strong-onlight); color:var(--text-page);">💬 站內客服<span id="chatEntryBadge"></span></button>
       <div id="userBadge" style="display:none; align-items:center; gap:6px;">
         <img id="userAvatar" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">
         <span id="userName" style="font-size:13px; font-weight:600; color:var(--text-page);"></span>
@@ -1116,6 +1148,48 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
   </div>
 </div>
 
+<!-- 站內客服訊息:客人登入/註冊(獨立於 LINE 登入跟老闆登入,見 customerAuth) -->
+<div class="overlay" id="customerAuthOverlay">
+  <div class="sheet" style="max-width:340px;">
+    <div class="sheet-head">
+      <h2 id="customerAuthTitle">站內客服登入</h2>
+      <button class="close-x" id="closeCustomerAuth">✕</button>
+    </div>
+    <div class="notice-box">沒有 LINE 也沒關係,註冊一組帳號就能在這裡直接留言給我們,我們會盡快回覆。</div>
+    <label id="customerNameLabel" style="display:none;">你的稱呼</label>
+    <input type="text" id="customerNameInput" placeholder="怎麼稱呼您" style="display:none;">
+    <label>Email</label>
+    <input type="email" id="customerEmailInput" placeholder="you@example.com" autocomplete="username">
+    <label>密碼</label>
+    <input type="password" id="customerPasswordInput" placeholder="至少 6 碼" autocomplete="current-password">
+    <button class="primary-btn" id="customerAuthSubmit">登入</button>
+    <div class="notice-box" id="customerAuthErrorBox" style="display:none; color:var(--stamp); border-color:var(--stamp);"></div>
+    <div class="auth-switch">
+      <span id="customerAuthSwitchText">還沒有帳號?</span>
+      <a id="customerAuthSwitchLink">註冊一組</a>
+    </div>
+  </div>
+</div>
+
+<!-- 站內客服訊息:聊天視窗(已登入站內帳號後顯示) -->
+<div class="overlay" id="chatOverlay">
+  <div class="sheet" style="max-width:480px;">
+    <div class="sheet-head">
+      <h2>客服訊息</h2>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button type="button" id="customerLogoutBtn" style="background:none; border:none; color:#6B7686; cursor:pointer; font-size:13px; text-decoration:underline;">登出</button>
+        <button class="close-x" id="closeChat">✕</button>
+      </div>
+    </div>
+    <div class="chat-thread" id="chatThread"></div>
+    <div class="empty-note" id="chatEmpty" style="display:none;">還沒有訊息,在下面留言給我們吧!</div>
+    <div class="chat-input-row">
+      <textarea id="chatMessageInput" placeholder="輸入訊息..."></textarea>
+      <button class="primary-btn" id="chatSendBtn" style="margin-top:0;">送出</button>
+    </div>
+  </div>
+</div>
+
 <!-- Owner admin overlay -->
 <div class="overlay" id="adminOverlay">
   <div class="sheet" style="max-width:620px;">
@@ -1130,6 +1204,7 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <button class="tab-btn active" data-tab="rate">匯率 / 運費</button>
       <button class="tab-btn" data-tab="products">商品管理</button>
       <button class="tab-btn" data-tab="orders">訂單列表</button>
+      <button class="tab-btn" data-tab="chat">客服訊息<span id="adminChatBadge" class="cart-bar-badge" style="display:none; position:static; margin-left:4px;"></span></button>
       <button class="tab-btn" data-tab="shop">店家資訊</button>
     </div>
 
@@ -1241,6 +1316,25 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <div class="empty-note" id="ordersEmpty" style="display:none;">目前還沒有訂單。</div>
     </div>
 
+    <div class="tab-panel" id="tab-chat" style="display:none;">
+      <!-- 2026-09-01:客服訊息列表(左)+ 選中的那串對話(右下)兩層,手機版
+      直接上下堆疊就好,不用另外做 responsive——都是簡單的 block 元素。 -->
+      <div id="adminCustomerList"></div>
+      <div class="empty-note" id="adminCustomerEmpty" style="display:none;">目前還沒有客人透過站內客服留言。</div>
+      <div id="adminChatThreadWrap" style="display:none; margin-top:16px;">
+        <hr class="divider">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <b id="adminChatThreadName" style="font-size:14px;"></b>
+          <button type="button" class="ghost-btn" id="adminChatBackBtn" style="padding:4px 10px; font-size:12px;">← 回列表</button>
+        </div>
+        <div class="chat-thread" id="adminChatThread"></div>
+        <div class="chat-input-row">
+          <textarea id="adminChatReplyInput" placeholder="輸入回覆..."></textarea>
+          <button class="primary-btn" id="adminChatReplyBtn" style="margin-top:0;">送出回覆</button>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-panel" id="tab-shop" style="display:none;">
       <label>店家名稱</label>
       <input type="text" id="shopNameInput">
@@ -1314,6 +1408,48 @@ const authReady = new Promise(resolve => {
     resolve();
   });
 });
+
+// ===== 站內客服訊息用的客人帳號(2026-09-01 新增)=====
+// 刻意用「第二個 Firebase app 實例」(firebase.initializeApp 的第二個參數
+// 給一個名字)裝客人自己的登入狀態,跟上面老闆用的 fbAuth(預設 app)
+// 完全分開、各自有各自的 currentUser。原因:老闆後台的判斷式
+// (openPinOverlay() 那邊)只看「fbAuth.currentUser 存不存在」就直接當
+// 老闆,如果客人註冊帳號也共用同一個 fbAuth,客人登入後只要網址加
+// ?owner=1 就會被誤判成老闆、看到完整後台——這是真正會發生的安全漏洞,
+// 不是理論上的。分開兩個 app 實例之後,customerAuth.currentUser 永遠
+// 不會影響 fbAuth.currentUser,老闆那邊的程式碼完全不用改。
+const customerFbApp = firebase.initializeApp(firebaseConfig, 'customerAuth');
+const customerAuth = customerFbApp.auth();
+let customerUser = null; // Firebase Auth user object 或 null(訪客/沒登入站內帳號)
+const customerAuthReady = new Promise(resolve => {
+  const unsubscribe = customerAuth.onAuthStateChanged(u => {
+    unsubscribe();
+    customerUser = u;
+    resolve();
+  });
+});
+</script>
+
+<!-- 站內客服訊息的「有新訊息就 email 通知老闆」用 EmailJS(純前端、不用
+架後端)。這三個值要老闆自己到 emailjs.com 申請免費帳號、連上 Gmail
+才拿得到,目前先放預留位置——沒填之前 notifyOwnerNewMessage() 會直接
+跳過寄信,不會噴錯誤、不影響聊天功能本身。 -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+const EMAILJS_PUBLIC_KEY = ''; // TODO(老闆填):emailjs.com → Account → General → Public Key
+const EMAILJS_SERVICE_ID = ''; // TODO(老闆填):emailjs.com → Email Services → 你連的那組 Gmail 的 Service ID
+const EMAILJS_TEMPLATE_ID = ''; // TODO(老闆填):emailjs.com → Email Templates → 新增一個範本後的 Template ID
+if(EMAILJS_PUBLIC_KEY) emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+async function notifyOwnerNewMessage(customerName, customerEmail, text){
+  if(!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) return; // 還沒設定,先跳過
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      customer_name: customerName || '(未填稱呼)',
+      customer_email: customerEmail || '',
+      message: text,
+    });
+  }catch(e){ console.error('EmailJS 通知寄送失敗', e); } // 通知寄不出去不該擋住聊天本身,只記錄錯誤
+}
 </script>
 
 <script>
@@ -1323,6 +1459,8 @@ const PRODUCTS_INDEX_KEY = 'daigou-products-index-v1'; // 精簡版商品索引,
 const ORDERS_KEY = 'daigou-orders-v1';
 const CART_KEY = 'daigou-cart-v1'; // 只存本機瀏覽器,換裝置/清瀏覽器資料還是會不見(見 loadCart 說明)
 const USER_KEY = 'daigou-user-v1'; // 登入後記住身分用,只是「這台裝置記得你登入過」,不是安全機制
+const MESSAGES_KEY = 'daigou-messages-v1'; // 站內客服訊息,路徑是 {key}/{customerUid}/{messageId}
+const CUSTOMERS_KEY = 'daigou-customers-v1'; // 站內客服帳號的顯示資訊(稱呼/email/最後留言時間),路徑是 {key}/{customerUid}
 
 // ===== LINE Login(會員登入,讓購物車能跨裝置同步)=====
 // Channel ID 不是密鑰,LINE Login 的規格本來就要放在前端網址上,可以放心寫在這裡。
@@ -1405,6 +1543,241 @@ async function handleLineLoginCallback(){
     toast('登入成功,歡迎 ' + (currentUser.displayName || ''));
   }catch(e){ toast('登入時發生連線錯誤,請稍後再試'); }
 }
+
+// ===== 站內客服訊息(2026-09-01 新增)=====
+// 給沒有 LINE、不方便用 LINE 官方帳號的客人多一組聯絡管道。身分系統是
+// customerAuth(獨立於老闆用的 fbAuth,見上面 script 區塊的說明),資料
+// 存兩個地方:daigou-customers-v1/{uid} 放這位客人的稱呼/email/最後
+// 留言時間/雙方各自讀到哪裡(給未讀提醒用),daigou-messages-v1/{uid}
+// 放這串對話的每一則訊息。
+
+// 跟 storageGet/storageSet(帶的是老闆 fbAuth 的 token)平行的一組,
+// 差別只在帶的 token 是 customerAuth 的——客人不是老闆,不能共用那組。
+async function customerStorageGet(key){
+  try{
+    let url = `${FIREBASE_DB_URL}/${key}.json`;
+    if(customerAuth.currentUser){
+      const token = await customerAuth.currentUser.getIdToken();
+      url += `?auth=${encodeURIComponent(token)}`;
+    }
+    const res = await fetch(url);
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(e){ console.error('customer storage get failed', e); return null; }
+}
+async function customerStorageSet(key, value){
+  try{
+    let url = `${FIREBASE_DB_URL}/${key}.json`;
+    if(customerAuth.currentUser){
+      const token = await customerAuth.currentUser.getIdToken();
+      url += `?auth=${encodeURIComponent(token)}`;
+    }
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+    return res.ok;
+  }catch(e){ console.error('customer storage set failed', e); return false; }
+}
+
+let customerAuthMode = 'login'; // 'login' 或 'register',決定 #customerAuthOverlay 表單長怎樣
+function renderCustomerAuthMode(){
+  const isRegister = customerAuthMode === 'register';
+  document.getElementById('customerAuthTitle').textContent = isRegister ? '註冊站內客服帳號' : '站內客服登入';
+  document.getElementById('customerNameLabel').style.display = isRegister ? '' : 'none';
+  document.getElementById('customerNameInput').style.display = isRegister ? '' : 'none';
+  document.getElementById('customerAuthSubmit').textContent = isRegister ? '註冊' : '登入';
+  document.getElementById('customerAuthSwitchText').textContent = isRegister ? '已經有帳號了?' : '還沒有帳號?';
+  document.getElementById('customerAuthSwitchLink').textContent = isRegister ? '登入' : '註冊一組';
+  document.getElementById('customerAuthErrorBox').style.display = 'none';
+}
+function openCustomerAuthOverlay(){
+  document.getElementById('customerNameInput').value = '';
+  document.getElementById('customerEmailInput').value = '';
+  document.getElementById('customerPasswordInput').value = '';
+  customerAuthMode = 'login';
+  renderCustomerAuthMode();
+  document.getElementById('customerAuthOverlay').classList.add('open');
+}
+document.getElementById('closeCustomerAuth').onclick = () => document.getElementById('customerAuthOverlay').classList.remove('open');
+document.getElementById('customerAuthSwitchLink').onclick = () => {
+  customerAuthMode = customerAuthMode === 'login' ? 'register' : 'login';
+  renderCustomerAuthMode();
+};
+document.getElementById('customerAuthSubmit').onclick = async () => {
+  const name = document.getElementById('customerNameInput').value.trim();
+  const email = document.getElementById('customerEmailInput').value.trim();
+  const password = document.getElementById('customerPasswordInput').value;
+  const errorBox = document.getElementById('customerAuthErrorBox');
+  const submitBtn = document.getElementById('customerAuthSubmit');
+  errorBox.style.display = 'none';
+  if(!email || !password){ toast('請輸入 Email 與密碼'); return; }
+  if(submitBtn.disabled) return; // 防手機上手殘連點兩下,送出兩次註冊/登入請求
+  submitBtn.disabled = true;
+  try{
+    if(customerAuthMode === 'register'){
+      const cred = await customerAuth.createUserWithEmailAndPassword(email, password);
+      customerUser = cred.user;
+      await customerStorageSet(`${CUSTOMERS_KEY}/${customerUser.uid}`, {
+        name: name || '(未填稱呼)', email, lastMessageAt: 0, lastMessageFrom: '', customerReadAt: Date.now(), ownerReadAt: 0,
+      });
+    }else{
+      const cred = await customerAuth.signInWithEmailAndPassword(email, password);
+      customerUser = cred.user;
+    }
+    document.getElementById('customerAuthOverlay').classList.remove('open');
+    openChatOverlay();
+  }catch(e){
+    errorBox.textContent = customerAuthMode === 'register'
+      ? '註冊失敗,請確認 Email 格式正確、密碼至少 6 碼,且這個 Email 沒註冊過。'
+      : '登入失敗,請確認 Email 與密碼是否正確,或改成「註冊一組」。';
+    errorBox.style.display = '';
+  }finally{
+    submitBtn.disabled = false;
+  }
+};
+
+document.getElementById('chatEntryBtn').onclick = () => {
+  if(customerUser) openChatOverlay(); else openCustomerAuthOverlay();
+};
+document.getElementById('closeChat').onclick = () => document.getElementById('chatOverlay').classList.remove('open');
+document.getElementById('customerLogoutBtn').onclick = async () => {
+  await customerAuth.signOut();
+  customerUser = null;
+  document.getElementById('chatOverlay').classList.remove('open');
+  toast('已登出站內客服帳號');
+};
+
+function renderChatMessages(container, messagesObj, mineFrom){
+  const list = messagesObj ? Object.values(messagesObj).sort((a, b) => a.ts - b.ts) : [];
+  if(list.length === 0){
+    container.innerHTML = '';
+    return list.length;
+  }
+  container.innerHTML = list.map(m => `
+    <div class="chat-msg ${m.from === mineFrom ? 'mine' : 'theirs'}">
+      <div>${escapeHtml(m.text)}</div>
+      <div class="chat-msg-time">${new Date(m.ts).toLocaleString('zh-TW')}</div>
+    </div>
+  `).join('');
+  container.scrollTop = container.scrollHeight;
+  return list.length;
+}
+
+async function openChatOverlay(){
+  document.getElementById('chatOverlay').classList.add('open');
+  document.getElementById('chatThread').innerHTML = '<div class="empty-note">訊息載入中...</div>';
+  const messages = await customerStorageGet(`${MESSAGES_KEY}/${customerUser.uid}`);
+  const thread = document.getElementById('chatThread');
+  const count = renderChatMessages(thread, messages, 'customer');
+  document.getElementById('chatEmpty').style.display = count === 0 ? 'block' : 'none';
+  // 客人打開視窗代表已讀到目前為止的訊息,更新 customerReadAt 讓未讀紅點消失。
+  // 這裡刻意只在真的讀到 meta(不是 null)才寫回——meta 是 null 有可能是
+  // 這次讀取剛好失敗(網路問題),不是真的沒有資料,直接拿 {} 蓋回去會把
+  // 已經存在的 name/email/lastMessageAt 洗掉(跟 sync_stock.py 那個
+  // 整包覆寫的坑同樣道理,寧可這次不更新已讀狀態,也不要蓋掉舊資料)。
+  const meta = await customerStorageGet(`${CUSTOMERS_KEY}/${customerUser.uid}`);
+  if(meta) await customerStorageSet(`${CUSTOMERS_KEY}/${customerUser.uid}`, { ...meta, customerReadAt: Date.now() });
+  refreshChatUnreadBadge();
+}
+async function refreshChatUnreadBadge(){
+  if(!customerUser) return;
+  const meta = await customerStorageGet(`${CUSTOMERS_KEY}/${customerUser.uid}`);
+  const badge = document.getElementById('chatEntryBadge');
+  const hasUnread = meta && meta.lastMessageFrom === 'owner' && meta.lastMessageAt > (meta.customerReadAt || 0);
+  badge.style.display = hasUnread ? 'flex' : 'none';
+}
+document.getElementById('chatSendBtn').onclick = async () => {
+  const input = document.getElementById('chatMessageInput');
+  const btn = document.getElementById('chatSendBtn');
+  const text = input.value.trim();
+  if(!text || btn.disabled) return;
+  btn.disabled = true;
+  const msgId = `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const ts = Date.now();
+  const ok = await customerStorageSet(`${MESSAGES_KEY}/${customerUser.uid}/${msgId}`, { text, from: 'customer', ts });
+  btn.disabled = false;
+  if(!ok){ toast('訊息送出失敗,請稍後再試'); return; }
+  input.value = '';
+  // 同樣避免用 {} 蓋掉既有 meta(見 openChatOverlay() 裡的說明);訊息本身
+  // 已經成功寫進 daigou-messages-v1 了,就算這裡的 meta 更新失敗,頂多是
+  // 老闆後台的「最後留言時間」排序這次沒更新到,不影響訊息本身送達。
+  const meta = await customerStorageGet(`${CUSTOMERS_KEY}/${customerUser.uid}`);
+  if(meta){
+    await customerStorageSet(`${CUSTOMERS_KEY}/${customerUser.uid}`, {
+      ...meta, lastMessageAt: ts, lastMessageFrom: 'customer', customerReadAt: ts,
+    });
+  }
+  await openChatOverlay(); // 重新載入整串,順便把剛剛送出的這則畫出來
+  notifyOwnerNewMessage(meta && meta.name, meta && meta.email, text);
+};
+
+// ===== 老闆後台:客服訊息分頁 =====
+let adminCustomers = [];
+let adminActiveCustomerUid = null;
+async function renderAdminCustomerList(){
+  const raw = await storageGet(CUSTOMERS_KEY); // 用老闆的 fbAuth token,規則見 plan 說明
+  adminCustomers = raw ? Object.entries(raw).map(([uid, v]) => ({ uid, ...v })) : [];
+  adminCustomers.sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
+  const box = document.getElementById('adminCustomerList');
+  const empty = document.getElementById('adminCustomerEmpty');
+  const totalUnread = adminCustomers.filter(c => c.lastMessageFrom === 'customer' && c.lastMessageAt > (c.ownerReadAt || 0)).length;
+  const chatBadge = document.getElementById('adminChatBadge');
+  chatBadge.textContent = totalUnread;
+  chatBadge.style.display = totalUnread > 0 ? 'inline-flex' : 'none';
+  if(adminCustomers.length === 0){
+    box.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  box.innerHTML = adminCustomers.map(c => {
+    const unread = c.lastMessageFrom === 'customer' && c.lastMessageAt > (c.ownerReadAt || 0);
+    return `
+    <div class="customer-thread-row" onclick="openAdminCustomerThread('${c.uid}')">
+      <div>
+        <div class="customer-thread-name">${escapeHtml(c.name || '(未填稱呼)')}</div>
+        <div class="customer-thread-preview">${escapeHtml(c.email || '')}${c.lastMessageAt ? '　' + new Date(c.lastMessageAt).toLocaleString('zh-TW') : ''}</div>
+      </div>
+      ${unread ? '<div class="customer-thread-unread"></div>' : ''}
+    </div>`;
+  }).join('');
+}
+window.openAdminCustomerThread = async function(uid){
+  adminActiveCustomerUid = uid;
+  const c = adminCustomers.find(x => x.uid === uid);
+  document.getElementById('adminChatThreadWrap').style.display = 'block';
+  document.getElementById('adminChatThreadName').textContent = `${c ? (c.name || '(未填稱呼)') : ''}${c && c.email ? '　' + c.email : ''}`;
+  const thread = document.getElementById('adminChatThread');
+  thread.innerHTML = '<div class="empty-note">訊息載入中...</div>';
+  const messages = await storageGet(`${MESSAGES_KEY}/${uid}`);
+  renderChatMessages(thread, messages, 'owner');
+  // 老闆點開這串代表已讀,更新 ownerReadAt 讓列表上的未讀點消失。
+  await storageSet(`${CUSTOMERS_KEY}/${uid}`, { ...c, ownerReadAt: Date.now() });
+  renderAdminCustomerList();
+};
+document.getElementById('adminChatBackBtn').onclick = () => {
+  document.getElementById('adminChatThreadWrap').style.display = 'none';
+  adminActiveCustomerUid = null;
+};
+document.getElementById('adminChatReplyBtn').onclick = async () => {
+  if(!adminActiveCustomerUid) return;
+  const input = document.getElementById('adminChatReplyInput');
+  const btn = document.getElementById('adminChatReplyBtn');
+  const text = input.value.trim();
+  if(!text || btn.disabled) return;
+  btn.disabled = true;
+  const msgId = `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const ts = Date.now();
+  const ok = await storageSet(`${MESSAGES_KEY}/${adminActiveCustomerUid}/${msgId}`, { text, from: 'owner', ts });
+  btn.disabled = false;
+  if(!ok){ toast('回覆送出失敗,請稍後再試'); return; }
+  input.value = '';
+  const c = adminCustomers.find(x => x.uid === adminActiveCustomerUid) || {};
+  await storageSet(`${CUSTOMERS_KEY}/${adminActiveCustomerUid}`, { ...c, lastMessageAt: ts, lastMessageFrom: 'owner', ownerReadAt: ts });
+  openAdminCustomerThread(adminActiveCustomerUid);
+};
 
 // ===== 購物車雲端同步(登入後,用 LINE userId 當 key 存進 Firebase)=====
 function cartCloudPath(){ return `daigou-carts-v1/${currentUser.userId}`; }
@@ -1957,6 +2330,8 @@ async function loadAll(){
   loadCart();
   await handleLineLoginCallback(); // 如果是剛從 LINE 登入導回來的,這裡會設定好 currentUser
   if(currentUser) await mergeCartWithCloud(); // 不管是剛登入還是本來就記得已登入,都跟雲端合併一次
+  await customerAuthReady; // 等站內客服帳號的登入狀態(跟 LINE 登入無關)確定恢復完成
+  if(customerUser) refreshChatUnreadBadge();
   applyUrlParams();
   render();
   renderUserBadge();
@@ -3472,6 +3847,9 @@ async function openAdmin(){
   document.getElementById('adminOverlay').classList.add('open');
   document.getElementById('productList').innerHTML = '<div class="empty-note">商品資料載入中...</div>';
   renderOrdersAdminList();
+  document.getElementById('adminChatThreadWrap').style.display = 'none';
+  adminActiveCustomerUid = null;
+  renderAdminCustomerList();
   await ensureAdminProductsLoaded();
   renderProductAdminList();
 }
