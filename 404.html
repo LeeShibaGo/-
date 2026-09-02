@@ -1158,6 +1158,8 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
     <input type="email" id="customerEmailInput" placeholder="you@example.com" autocomplete="username">
     <label>密碼</label>
     <input type="password" id="customerPasswordInput" placeholder="至少 6 碼" autocomplete="current-password">
+    <label id="customerPasswordConfirmLabel" style="display:none;">確認密碼</label>
+    <input type="password" id="customerPasswordConfirmInput" placeholder="再輸入一次密碼" autocomplete="new-password" style="display:none;">
     <button class="primary-btn" id="customerAuthSubmit">登入</button>
     <div class="notice-box" id="customerAuthErrorBox" style="display:none; color:var(--stamp); border-color:var(--stamp);"></div>
     <div class="auth-switch">
@@ -1561,6 +1563,8 @@ function renderCustomerAuthMode(){
   document.getElementById('customerAuthTitle').textContent = isRegister ? '註冊站內客服帳號' : '站內客服登入';
   document.getElementById('customerNameLabel').style.display = isRegister ? '' : 'none';
   document.getElementById('customerNameInput').style.display = isRegister ? '' : 'none';
+  document.getElementById('customerPasswordConfirmLabel').style.display = isRegister ? '' : 'none';
+  document.getElementById('customerPasswordConfirmInput').style.display = isRegister ? '' : 'none';
   document.getElementById('customerAuthSubmit').textContent = isRegister ? '註冊' : '登入';
   document.getElementById('customerAuthSwitchText').textContent = isRegister ? '已經有帳號了?' : '還沒有帳號?';
   document.getElementById('customerAuthSwitchLink').textContent = isRegister ? '登入' : '註冊一組';
@@ -1570,6 +1574,7 @@ function openCustomerAuthOverlay(){
   document.getElementById('customerNameInput').value = '';
   document.getElementById('customerEmailInput').value = '';
   document.getElementById('customerPasswordInput').value = '';
+  document.getElementById('customerPasswordConfirmInput').value = '';
   customerAuthMode = 'login';
   renderCustomerAuthMode();
   document.getElementById('customerAuthOverlay').classList.add('open');
@@ -1583,10 +1588,16 @@ document.getElementById('customerAuthSubmit').onclick = async () => {
   const name = document.getElementById('customerNameInput').value.trim();
   const email = document.getElementById('customerEmailInput').value.trim();
   const password = document.getElementById('customerPasswordInput').value;
+  const passwordConfirm = document.getElementById('customerPasswordConfirmInput').value;
   const errorBox = document.getElementById('customerAuthErrorBox');
   const submitBtn = document.getElementById('customerAuthSubmit');
   errorBox.style.display = 'none';
   if(!email || !password){ toast('請輸入 Email 與密碼'); return; }
+  if(customerAuthMode === 'register' && password !== passwordConfirm){
+    errorBox.textContent = '兩次輸入的密碼不一樣,請確認後再試一次。';
+    errorBox.style.display = '';
+    return;
+  }
   if(submitBtn.disabled) return; // 防手機上手殘連點兩下,送出兩次註冊/登入請求
   submitBtn.disabled = true;
   try{
