@@ -899,7 +899,7 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
     剛進站根本找不到搜尋在哪。這裡加一個一進站就看得到的搜尋框,輸入時
     順便把值同步進那個真正驅動搜尋的 #searchInput、觸發同一套邏輯,
     沒有另外自己重寫一份搜尋規則。 -->
-    <input type="text" id="homeSearchInput" class="brand-showcase-search-input" placeholder="🔍 搜尋商品名稱,例如:UNIQLO 刷毛外套">
+    <input type="search" id="homeSearchInput" class="brand-showcase-search-input" placeholder="🔍 搜尋商品名稱,例如:UNIQLO 刷毛外套" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="shibago-product-search">
   </div>
 
   <div class="wrap">
@@ -934,7 +934,7 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <div class="cat-tabs subcat" id="seriesTabs"></div>
     </aside>
     <div class="shop-main">
-      <input type="text" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;">
+      <input type="search" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="shibago-product-search-2">
       <div class="grid" id="productGrid"></div>
       <div class="pagination" id="paginationBar"></div>
     </div>
