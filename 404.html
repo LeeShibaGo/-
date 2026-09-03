@@ -1529,6 +1529,10 @@ async function handleLineLoginCallback(){
 
 // 跟 storageGet/storageSet(帶的是老闆 fbAuth 的 token)平行的一組,
 // 差別只在帶的 token 是 customerAuth 的——客人不是老闆,不能共用那組。
+// 回傳值刻意分兩種「沒有東西」:fetch 真的失敗(網路問題/被規則擋下)回傳
+// undefined,Firebase 確實查過、只是這個路徑本來就沒有資料則回傳 null
+// (Firebase 對空路徑的回應就是這樣)。呼叫端可以用這個分辨「這次讀取
+// 不可信,先別動舊資料」vs「真的是空的,可以放心建立預設值」。
 async function customerStorageGet(key){
   try{
     let url = `${FIREBASE_DB_URL}/${key}.json`;
@@ -1537,9 +1541,9 @@ async function customerStorageGet(key){
       url += `?auth=${encodeURIComponent(token)}`;
     }
     const res = await fetch(url);
-    if(!res.ok) return null;
+    if(!res.ok) return undefined;
     return await res.json();
-  }catch(e){ console.error('customer storage get failed', e); return null; }
+  }catch(e){ console.error('customer storage get failed', e); return undefined; }
 }
 async function customerStorageSet(key, value){
   try{
@@ -1658,12 +1662,17 @@ async function openChatOverlay(){
   const count = renderChatMessages(thread, messages, 'customer');
   document.getElementById('chatEmpty').style.display = count === 0 ? 'block' : 'none';
   // 客人打開視窗代表已讀到目前為止的訊息,更新 customerReadAt 讓未讀紅點消失。
-  // 這裡刻意只在真的讀到 meta(不是 null)才寫回——meta 是 null 有可能是
-  // 這次讀取剛好失敗(網路問題),不是真的沒有資料,直接拿 {} 蓋回去會把
-  // 已經存在的 name/email/lastMessageAt 洗掉(跟 sync_stock.py 那個
-  // 整包覆寫的坑同樣道理,寧可這次不更新已讀狀態,也不要蓋掉舊資料)。
+  // meta === undefined 代表這次讀取真的失敗(網路問題/被規則擋下),不可信,
+  // 跳過這次更新,不要拿空物件蓋掉舊資料(跟 sync_stock.py 那個整包覆寫的坑
+  // 同樣道理)。meta === null 才是「Firebase 確實查過、這個客人真的還沒有
+  // 個人資料」(例如註冊那一刻剛好規則還沒生效導致沒建立成功),這時候要
+  // 補建一筆預設值,不然這個客人會永遠卡在後台客服列表看不到、未讀狀態
+  // 也永遠對不起來。
   const meta = await customerStorageGet(`${CUSTOMERS_KEY}/${customerUser.uid}`);
-  if(meta) await customerStorageSet(`${CUSTOMERS_KEY}/${customerUser.uid}`, { ...meta, customerReadAt: Date.now() });
+  if(meta !== undefined){
+    const base = meta || { name: '(未填稱呼)', email: customerUser.email || '', lastMessageAt: 0, lastMessageFrom: '' };
+    await customerStorageSet(`${CUSTOMERS_KEY}/${customerUser.uid}`, { ...base, customerReadAt: Date.now() });
+  }
   refreshChatUnreadBadge();
 }
 async function refreshChatUnreadBadge(){
@@ -1685,13 +1694,15 @@ document.getElementById('chatSendBtn').onclick = async () => {
   btn.disabled = false;
   if(!ok){ toast('訊息送出失敗,請稍後再試'); return; }
   input.value = '';
-  // 同樣避免用 {} 蓋掉既有 meta(見 openChatOverlay() 裡的說明);訊息本身
-  // 已經成功寫進 daigou-messages-v1 了,就算這裡的 meta 更新失敗,頂多是
-  // 老闆後台的「最後留言時間」排序這次沒更新到,不影響訊息本身送達。
+  // undefined(讀取失敗)就跳過,不拿空物件蓋掉舊資料;null(真的還沒有
+  // 個人資料,見 openChatOverlay() 裡的說明)則補一筆預設值——訊息本身
+  // 已經成功寫進 daigou-messages-v1 了,這裡就算沒補上,頂多是老闆後台的
+  // 「最後留言時間」排序/客人列表這次沒更新到,不影響訊息本身送達。
   const meta = await customerStorageGet(`${CUSTOMERS_KEY}/${customerUser.uid}`);
-  if(meta){
+  if(meta !== undefined){
+    const base = meta || { name: '(未填稱呼)', email: customerUser.email || '' };
     await customerStorageSet(`${CUSTOMERS_KEY}/${customerUser.uid}`, {
-      ...meta, lastMessageAt: ts, lastMessageFrom: 'customer', customerReadAt: ts,
+      ...base, lastMessageAt: ts, lastMessageFrom: 'customer', customerReadAt: ts,
     });
   }
   await openChatOverlay(); // 重新載入整串,順便把剛剛送出的這則畫出來
