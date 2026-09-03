@@ -484,6 +484,13 @@
     font-family:'Noto Sans TC',sans-serif;
   }
   .brand-showcase-all-btn:hover{ background:var(--gold-dim); }
+  .brand-showcase-search-input{
+    display:block; width:100%; margin-top:14px; padding:13px 16px;
+    border:1px solid var(--line-strong-onlight); border-radius:999px;
+    background:#FFFFFF; color:var(--text-page); font-family:'Noto Sans TC',sans-serif; font-size:15px;
+  }
+  .brand-showcase-search-input::placeholder{ color:var(--muted-onlight); }
+  .brand-showcase-search-input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
   @media (max-width:640px){
     .brand-showcase-item{ flex-basis:92px; }
     .brand-showcase-title{ font-size:26px; letter-spacing:4px; }
@@ -883,6 +890,12 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <button type="button" class="brand-showcase-all-btn" id="brandShowcaseAllBtn">所有品牌 ▶</button>
       <button type="button" class="brand-showcase-all-btn" id="brandShowcaseAllProductsBtn">所有商品 ▶</button>
     </div>
+    <!-- 2026-09-02:首頁剛進站看得到的搜尋入口——本來搜尋框(#searchInput)
+    只在客人已經點進「逛商品」畫面(shopLayoutSection)之後才看得到,首頁
+    剛進站根本找不到搜尋在哪。這裡加一個一進站就看得到的搜尋框,輸入時
+    順便把值同步進那個真正驅動搜尋的 #searchInput、觸發同一套邏輯,
+    沒有另外自己重寫一份搜尋規則。 -->
+    <input type="text" id="homeSearchInput" class="brand-showcase-search-input" placeholder="🔍 搜尋商品名稱,例如:UNIQLO 刷毛外套">
   </div>
 
   <div class="wrap">
@@ -4520,6 +4533,37 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     searchQuery = value;
     currentPage = 1;
     renderProducts();
+  }, 200);
+});
+
+// 首頁的搜尋框(#homeSearchInput)是給「剛進站、還沒點過任何品牌/分類」
+// 的客人用的捷徑——這個階段 shopLayoutSection 是隱藏的,真正的商品清單
+// 跟下面那個 #searchInput 都還沒出現。輸入時把值同步進 #searchInput、
+// 沿用同一套 searchQuery/renderProducts() 邏輯,不重寫規則;第一次輸入
+// 時額外把畫面切成「逛商品」狀態(跟按「所有商品」按鈕做的事一樣),
+// 之後同一次瀏覽只需要重新整理商品清單,不用每個字都重新觸發整頁切換。
+let homeSearchDebounceTimer = null;
+document.getElementById('homeSearchInput').addEventListener('input', (e) => {
+  clearTimeout(homeSearchDebounceTimer);
+  const value = e.target.value;
+  homeSearchDebounceTimer = setTimeout(() => {
+    document.getElementById('searchInput').value = value;
+    searchQuery = value;
+    currentPage = 1;
+    const wasBrowsing = isBrowsingProducts();
+    if(!wasBrowsing){
+      currentTier = 'all'; currentBrand = 'all'; currentGroup = 'all';
+      currentSubtype = 'all'; currentSeries = 'all';
+      browseAllProductsMode = true;
+      updateHomeSectionsVisibility();
+    }
+    renderProducts();
+    renderNewArrivals();
+    renderBestSellers();
+    if(!wasBrowsing){
+      triggerPageTransition();
+      scrollToProductGrid();
+    }
   }, 200);
 });
 
