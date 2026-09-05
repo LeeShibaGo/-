@@ -1978,6 +1978,7 @@ const TIER_BY_BRAND = {
   'Carhartt WIP': '潮流品牌',
   '9090': '潮流品牌',
   '9090 girl': '潮流品牌',
+  'HUMAN MADE': '潮流品牌',
   'GU': '生活選物',
 };
 const TIER_ORDER = ['精品', '運動品牌', '潮流品牌', '生活選物'];
@@ -3677,7 +3678,11 @@ function renderTrustSection(){
 // 文字版頂著,顏色用官方的桃紅色。2026-08-15 新增 POLÈNE(法國包包
 // 品牌,jp.polene-paris.com,Shopify 商城,見 scrape_polene.py),
 // 官網首頁同樣抓不到專屬 logotype(只有第三方外掛的預設圖),先用
-// 黑底白字文字版頂著,風格比照 Dior/CELINE。
+// 黑底白字文字版頂著,風格比照 Dior/CELINE。2026-09-05 新增
+// HUMAN MADE(NIGO 創立的日系潮流品牌,humanmade.jp):官網導覽列的
+// logo.svg 是白字設計,套在這裡白底的品牌方塊上文字會看不到,改用
+// 官網 favicon 那個紅心+白字「HUMAN MADE」的版本(favicon-196x196.png),
+// 紅色實心底自帶背景,白字在上面看得清楚。
 const BRAND_SHOWCASE_LIST = [
   { brand: 'GU', logo: 'images/brand-logos/gu.png' },
   { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
@@ -3705,6 +3710,7 @@ const BRAND_SHOWCASE_LIST = [
   { brand: 'Merries', logo: 'images/brand-logos/merries.svg' },
   { brand: '9090', logo: 'images/brand-logos/9090.svg' },
   { brand: '9090 girl', logo: 'images/brand-logos/9090girl.svg' },
+  { brand: 'HUMAN MADE', logo: 'images/brand-logos/humanmade.png' },
 ];
 
 function renderBrandShowcase(){
