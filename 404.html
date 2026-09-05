@@ -895,7 +895,7 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
     剛進站根本找不到搜尋在哪。這裡加一個一進站就看得到的搜尋框,輸入時
     順便把值同步進那個真正驅動搜尋的 #searchInput、觸發同一套邏輯,
     沒有另外自己重寫一份搜尋規則。 -->
-    <input type="search" id="homeSearchInput" class="brand-showcase-search-input" placeholder="🔍 搜尋商品名稱,例如:UNIQLO 刷毛外套" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="shibago-product-search">
+    <input type="search" id="homeSearchInput" class="brand-showcase-search-input" placeholder="🔍 搜尋商品名稱,例如:UNIQLO 刷毛外套" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="shibago-product-search" readonly>
   </div>
 
   <div class="wrap">
@@ -930,7 +930,7 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
       <div class="cat-tabs subcat" id="seriesTabs"></div>
     </aside>
     <div class="shop-main">
-      <input type="search" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="shibago-product-search-2">
+      <input type="search" id="searchInput" placeholder="搜尋商品名稱..." style="margin-bottom:14px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="shibago-product-search-2" readonly>
       <div class="grid" id="productGrid"></div>
       <div class="pagination" id="paginationBar"></div>
     </div>
@@ -4534,6 +4534,20 @@ ${settings.shopName}`;
 }
 
 // ===== 搜尋商品 =====
+// 2026-09-06:光是 type="search" + autocomplete="off" 擋不住手機瀏覽器
+// (尤其 LINE 內建瀏覽器/手機版 Chrome)把之前存過的 Email 自動帶進這兩個
+// 搜尋框——autocomplete="off" 這個提示很多瀏覽器根本不理,是已知的老問題。
+// 比較有效的作法是一開始就設成 readonly(自動填寫機制看到 readonly 欄位
+// 通常會直接跳過,不會塞資料進去),等客人真的點/摸這個欄位準備打字時,
+// 才在 focus/touchstart 當下拿掉 readonly,讓輸入照常運作,客人完全不會
+// 感覺到差異。
+['homeSearchInput', 'searchInput'].forEach(id => {
+  const el = document.getElementById(id);
+  const unlock = () => el.removeAttribute('readonly');
+  el.addEventListener('focus', unlock);
+  el.addEventListener('touchstart', unlock);
+});
+
 let searchDebounceTimer = null;
 document.getElementById('searchInput').addEventListener('input', (e) => {
   clearTimeout(searchDebounceTimer);
