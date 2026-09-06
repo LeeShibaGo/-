@@ -3074,6 +3074,7 @@ function wireCardEvents(grid, onChange){
   grid.querySelectorAll('.add-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if(btn.disabled) return;
+      flyToCart(btn.closest('.card')?.querySelector('.prod-image'));
       addToCart(btn.dataset.id, btn.dataset.color || null, btn.dataset.size || null);
       onChange();
     });
@@ -3227,6 +3228,53 @@ function changeQty(id, color, delta, size){
   saveCart();
   renderProducts();
   renderCartBar();
+}
+// 2026-09-06:加進購物車時,商品縮圖飛向底部購物車圖示的動畫——純粹是
+// 視覺回饋,複製一張縮圖飄過去,不影響 addToCart() 本來的邏輯,找不到
+// 縮圖或找不到底部購物車按鈕(理論上不會發生,防呆用)就直接跳過、
+// 什麼事都不做。用跟 flipMorphOpen() 一樣的手法:先讓複製出來的圖片
+// 停在起點(商品縮圖的位置/大小),下一個 frame 再把它移動、縮小到
+// 終點(底部購物車按鈕),中間瀏覽器自動補完的過程就是飛過去的動畫。
+function flyToCart(sourceImg){
+  if(!sourceImg) return;
+  const cartTarget = document.getElementById('cartBarAddBtn');
+  if(!cartTarget) return;
+  const startRect = sourceImg.getBoundingClientRect();
+  const endRect = cartTarget.getBoundingClientRect();
+  if(startRect.width === 0 || endRect.width === 0) return;
+
+  const flyer = document.createElement('img');
+  flyer.src = sourceImg.src;
+  flyer.style.cssText = `
+    position:fixed; left:${startRect.left}px; top:${startRect.top}px;
+    width:${startRect.width}px; height:${startRect.height}px;
+    object-fit:cover; border-radius:10px; z-index:200; pointer-events:none;
+    box-shadow:0 8px 20px rgba(20,31,43,0.3);
+    transition: transform .55s cubic-bezier(.35,.02,.6,1), opacity .55s ease .15s;
+    transform: translate(0,0) scale(1); opacity:1;
+  `;
+  document.body.appendChild(flyer);
+  const dx = (endRect.left + endRect.width / 2) - (startRect.left + startRect.width / 2);
+  const dy = (endRect.top + endRect.height / 2) - (startRect.top + startRect.height / 2);
+  requestAnimationFrame(() => {
+    flyer.style.transform = `translate(${dx}px, ${dy}px) scale(0.15) rotate(20deg)`;
+    flyer.style.opacity = '0.2';
+  });
+  flyer.addEventListener('transitionend', function done(){
+    flyer.removeEventListener('transitionend', done);
+    flyer.remove();
+    bumpCartBadge();
+  }, { once: true });
+  // 保底:萬一 transitionend 沒觸發(例如圖片中途被瀏覽器丟棄),飛行
+  // 動畫最長 .55s+.15s 延遲,700ms 後這張複製圖還在的話就強制清掉,
+  // 不要留一張卡住畫面中間的殘影。
+  setTimeout(() => { if(flyer.isConnected) flyer.remove(); }, 900);
+}
+function bumpCartBadge(){
+  const badge = document.getElementById('cartBarBadge');
+  if(!badge) return;
+  badge.style.transform = 'scale(1.6)';
+  setTimeout(() => { badge.style.transform = ''; }, 220);
 }
 function addToCart(id, color, size){
   const key = cartKey(id, color, size);
