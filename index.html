@@ -613,21 +613,33 @@
   .admin-thumb{ width:40px; height:40px; object-fit:cover; border-radius:7px; flex-shrink:0; border:1px solid #D8D2C3; }
 
   /* ===== Floating action bar:一直固定在畫面最下面,不用等購物車有東西、
-     也不用滑到頁面上面才找得到 ===== */
+     也不用滑到頁面上面才找得到 =====
+     2026-09-06:老闆看到別的帳號一個「浮動圓角膠囊+按下去有彈性動畫」的
+     導覽列短片,想要同樣的質感。這三顆按鈕不是分頁籤(不是「選中哪個
+     就長期停在哪個」那種邏輯),是三個各自獨立的動作(問LINE/開購物車/
+     結帳),所以沒有照抄影片裡「選取指示物在按鈕之間滑動」那段——那個
+     設計是給「導覽用的分頁籤」的,硬套在「動作按鈕」上語意不對,按了
+     「立即購買」不會變成之後一直亮著的分頁。改成套用同一種視覺質感:
+     整條列浮起來、四邊都離開螢幕邊緣、膠囊圓角、按下去有彈性回彈的
+     縮放動畫——原本三顆按鈕各自的顏色(LINE綠/購物車中性/立即購買金)
+     維持不變,那是在幫客人分辨三個動作的輕重,不是純裝飾,拿掉反而
+     變不好用。 */
   .cart-bar{
-    position:fixed; left:0; right:0; bottom:0;
-    background: #FFFFFF; border-top:1px solid var(--line-onlight);
-    padding: 10px 14px; display:flex; align-items:center; justify-content:center;
-    z-index:40; box-shadow: 0 -10px 30px rgba(20,31,43,0.12);
+    position:fixed; left:14px; right:14px; bottom:14px; max-width:520px; margin:0 auto;
+    background: #FFFFFF; border:none; border-radius:999px;
+    padding: 7px; display:flex; align-items:center; justify-content:center;
+    z-index:40; box-shadow: 0 14px 36px rgba(20,31,43,0.24), 0 2px 10px rgba(20,31,43,0.10);
   }
-  .cart-bar-inner{ max-width:1080px; margin:0 auto; width:100%; display:flex; align-items:stretch; gap:8px; }
+  .cart-bar-inner{ width:100%; display:flex; align-items:stretch; gap:6px; }
   .cart-bar-btn{
     flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
-    padding:12px 6px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer;
+    padding:13px 6px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer;
     border:none; text-decoration:none; position:relative; white-space:nowrap;
-    font-family:'Noto Sans TC', sans-serif; transition: transform .15s ease;
+    font-family:'Noto Sans TC', sans-serif;
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1), background-color .2s ease, box-shadow .2s ease;
   }
-  .cart-bar-btn:hover{ transform: translateY(-1px); }
+  .cart-bar-btn:hover{ transform: translateY(-2px); }
+  .cart-bar-btn:active{ transform: scale(.92); transition-duration: .08s; }
   .cart-bar-btn.line{ background:#EAF7EA; color:#2E7D4F; border:1px solid #BFE6C4; }
   .cart-bar-btn.add{ background:transparent; color:var(--ink); border:1px solid var(--line-strong-onlight); }
   .cart-bar-btn.buy{ background:var(--gold); color:var(--ink); }
@@ -637,8 +649,10 @@
     font-size:10px; font-family:'JetBrains Mono',monospace; font-weight:700;
     min-width:17px; height:17px; border-radius:9px; display:flex; align-items:center; justify-content:center;
     padding:0 3px; border:2px solid #fff;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
   }
   @media (max-width: 480px){
+    .cart-bar{ left:8px; right:8px; bottom:8px; padding:6px; }
     .cart-bar-btn{ font-size:12px; padding:11px 4px; }
   }
 
@@ -658,6 +672,11 @@
     .sheet{ border-radius:18px; }
   }
   @keyframes rise{ from{ transform: translateY(30px); opacity:0;} to{ transform:translateY(0); opacity:1; } }
+  /* 2026-09-06:購物車面板改成從底部那條浮動列「長大」展開的膠囊變形動畫
+     (見 flipMorphOpen()/flipMorphClose() 的說明)。這個 class 只在那段
+     動畫進行中暫時加上,用來蓋掉預設的 rise 這個進場動畫——這裡改用 JS
+     直接控制 transform,兩個動畫同時跑會互相打架,必須先把 rise 關掉。 */
+  .sheet.sheet-morphing{ animation:none !important; }
   .sheet-head{
     display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
     position:sticky; top:-22px; background:var(--paper); padding-top:22px; margin-top:-22px; z-index:1;
@@ -3297,20 +3316,95 @@ function renderCartBar(){
 }
 
 // ===== Cart drawer =====
+// 2026-09-06:老闆看到一支短片,購物車面板不是憑空從螢幕下方彈出來,是
+// 底部那顆浮動列本身「長大」展開變成整張面板,關閉時再縮回去變回那顆
+// 浮動列。這裡用經典的 FLIP 動畫手法(First-Last-Invert-Play)做:
+//   1. 面板內容先照平常渲染好、整個顯示出來,量出它「最終」該有的位置
+//      跟大小(這是 Last)。
+//   2. 再量出底部浮動列(#cartBar,LINE詢問/購物車/立即購買那一整條)
+//      現在的位置大小(這是 First)。
+//   3. 算出從 First 變到 Last 需要的縮放/位移倍率,用這組倍率直接把
+//      面板「反著」擺回 First 看起來的樣子(Invert)——這一瞬間畫面上
+//      看起來面板其實還是那顆小小的浮動列,只是底下真正的 DOM 已經是
+//      展開後的完整面板了。
+//   4. 下一個 frame 把這組倍率轉回「不縮放、不位移」(Play),瀏覽器的
+//      CSS transition 會自動補完中間過程,視覺上就是那顆浮動列真的長大
+//      變成了整張面板。關閉時整個反過來做一次,面板會縮回浮動列的位置。
+// 不管是點「購物車」還是「立即購買」都用同一顆 #cartBar(整條浮動列,
+// 不是單一按鈕)當基準,兩顆按鈕位置差不多,统一用整條列比較穩定,
+// 也比較貼近短片裡「一整顆膠囊長大」的效果。
+function flipMorphOpen(){
+  const overlay = document.getElementById('cartOverlay');
+  const sheet = overlay.querySelector('.sheet');
+  const bar = document.getElementById('cartBar');
+  sheet.classList.add('sheet-morphing'); // 先蓋掉預設的 rise 進場動畫,兩個動畫不能同時跑
+  overlay.classList.add('open');
+  const originRect = bar.getBoundingClientRect();
+  const finalRect = sheet.getBoundingClientRect();
+  if(originRect.width === 0 || finalRect.width === 0){
+    // 量不到(例如 #cartBar 本身被隱藏)就別硬做動畫,退回普通開啟就好。
+    sheet.classList.remove('sheet-morphing');
+    return;
+  }
+  const scaleX = originRect.width / finalRect.width;
+  const scaleY = originRect.height / finalRect.height;
+  const dx = (originRect.left + originRect.width / 2) - (finalRect.left + finalRect.width / 2);
+  const dy = (originRect.top + originRect.height / 2) - (finalRect.top + finalRect.height / 2);
+  sheet.style.transition = 'none';
+  sheet.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+  sheet.style.borderRadius = '999px';
+  sheet.style.opacity = '0.5';
+  void sheet.offsetHeight; // 強制瀏覽器套用上面這組「起點」樣式,下一行的 transition 才抓得到變化
+  sheet.style.transition = 'transform .38s cubic-bezier(.34,1.2,.4,1), border-radius .38s ease, opacity .22s ease';
+  sheet.style.transform = 'translate(0,0) scale(1,1)';
+  sheet.style.borderRadius = '';
+  sheet.style.opacity = '1';
+  sheet.addEventListener('transitionend', function done(){
+    sheet.removeEventListener('transitionend', done);
+    sheet.classList.remove('sheet-morphing');
+    sheet.style.transition = ''; sheet.style.transform = ''; sheet.style.borderRadius = ''; sheet.style.opacity = '';
+  }, { once: true });
+}
+function flipMorphClose(){
+  const overlay = document.getElementById('cartOverlay');
+  const sheet = overlay.querySelector('.sheet');
+  const bar = document.getElementById('cartBar');
+  const originRect = bar.getBoundingClientRect();
+  const finalRect = sheet.getBoundingClientRect();
+  if(originRect.width === 0 || finalRect.width === 0){
+    overlay.classList.remove('open'); // 量不到就直接關,不做動畫
+    return;
+  }
+  const scaleX = originRect.width / finalRect.width;
+  const scaleY = originRect.height / finalRect.height;
+  const dx = (originRect.left + originRect.width / 2) - (finalRect.left + finalRect.width / 2);
+  const dy = (originRect.top + originRect.height / 2) - (finalRect.top + finalRect.height / 2);
+  sheet.classList.add('sheet-morphing');
+  sheet.style.transition = 'transform .3s ease, border-radius .3s ease, opacity .25s ease';
+  sheet.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+  sheet.style.borderRadius = '999px';
+  sheet.style.opacity = '0';
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    sheet.classList.remove('sheet-morphing');
+    sheet.style.transition = ''; sheet.style.transform = ''; sheet.style.borderRadius = ''; sheet.style.opacity = '';
+  }, 300);
+}
+
 // 底部固定列的「加入購物車」「立即購買」目前先做一樣的事,都打開購物車/結帳畫面
 // (兩者本來就合在同一個畫面裡,沒有分開兩步)。
-document.getElementById('openCartBtn').onclick = () => {
-  renderCartDrawer();
-  document.getElementById('cartOverlay').classList.add('open');
+document.getElementById('openCartBtn').onclick = async () => {
+  await renderCartDrawer();
+  flipMorphOpen();
 };
-document.getElementById('cartBarAddBtn').onclick = () => {
-  renderCartDrawer();
-  document.getElementById('cartOverlay').classList.add('open');
+document.getElementById('cartBarAddBtn').onclick = async () => {
+  await renderCartDrawer();
+  flipMorphOpen();
 };
 document.getElementById('cartBarLineBtn').onclick = () => {
   window.open(lineOfficialUrl(settings.lineOfficialId), '_blank', 'noopener');
 };
-document.getElementById('closeCart').onclick = () => document.getElementById('cartOverlay').classList.remove('open');
+document.getElementById('closeCart').onclick = () => flipMorphClose();
 
 async function renderCartDrawer(){
   await ensureCartProductsLoaded();
