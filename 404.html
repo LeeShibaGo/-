@@ -4,6 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>柴代購 ShibaGo - 日本代購,正版保證,每周固定寄送</title>
+
+<!-- 2026-09-07:Google Analytics 4——老闆想看整體流量/裝置/來源這類報表,
+用 Google 現成的介面看,不用另外做後台畫面。GA4_MEASUREMENT_ID 先留空,
+老闆自己到 analytics.google.com 開一個 GA4 資源、把 Measurement ID
+(G- 開頭那一串)填進下面這行就會自動開始送資料,不用改其他地方,也
+不用重新部署以外的動作。留空的話這段完全不會執行,不影響網站原本的
+任何行為。真正回答「客人在哪個節點離開」這類購買流程細節的,是後台
+「轉換分析」分頁(自建的,見 index.html 內 FUNNEL_STEPS 那段)——GA4
+主要拿來看大盤流量趨勢,兩者互補,不是重複。 -->
+<script>
+const GA4_MEASUREMENT_ID = ''; // 老闆填入自己的 G-XXXXXXX 之後存檔、部署,重新整理網站就會開始有資料
+if (GA4_MEASUREMENT_ID) {
+  const gaScript = document.createElement('script');
+  gaScript.async = true;
+  gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;
+  document.head.appendChild(gaScript);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  window.gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', GA4_MEASUREMENT_ID);
+}
+</script>
 <meta name="description" content="柴代購 ShibaGo,日本潮流服飾代購,正版保證,每周固定寄送、每月親飛日本挑貨。AAPE、BAPE、Salomon、Carhartt WIP、DESCENTE 等品牌即時更新現貨與價格。">
 <meta property="og:type" content="website">
 <meta property="og:title" content="柴代購 ShibaGo - 日本代購,正版保證,每周固定寄送">
@@ -721,6 +744,15 @@
 
   .notice-box{ background:#EFE7D0; border:1px solid #DCCFA6; border-radius:10px; padding:10px 12px; font-size:12px; color:#6B5B3E; margin-top:10px; }
 
+  /* 後台「轉換分析」分頁的漏斗列——名稱/人數一行,底下配一條進度條表示
+     相對於第一關(進站)的比例,一眼看出是哪一關掉最多人。 */
+  .funnel-row{ margin-top:14px; }
+  .funnel-row-head{ display:flex; justify-content:space-between; align-items:baseline; font-size:13px; }
+  .funnel-row-count{ font-family:'JetBrains Mono',monospace; font-weight:700; }
+  .funnel-row-drop{ font-size:11.5px; color:var(--stamp); margin-top:2px; }
+  .funnel-bar-track{ background:#EFE7D0; border:1px solid #DCCFA6; border-radius:6px; height:10px; overflow:hidden; margin-top:5px; }
+  .funnel-bar-fill{ background:var(--stamp); height:100%; border-radius:6px 0 0 6px; }
+
   .faq-item{ border-bottom:1px dashed #D8D2C3; padding:12px 0; }
   .faq-item:last-child{ border-bottom:none; }
   .faq-q{ font-weight:700; font-size:14px; margin-bottom:6px; }
@@ -1270,6 +1302,7 @@ flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量�
       <button class="tab-btn" data-tab="products">商品管理</button>
       <button class="tab-btn" data-tab="orders">訂單列表</button>
       <button class="tab-btn" data-tab="chat">客服訊息<span id="adminChatBadge" class="cart-bar-badge" style="display:none; position:static; margin-left:4px;"></span></button>
+      <button class="tab-btn" data-tab="funnel">轉換分析</button>
       <button class="tab-btn" data-tab="shop">店家資訊</button>
     </div>
 
@@ -1398,6 +1431,29 @@ flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量�
           <button class="primary-btn" id="adminChatReplyBtn" style="margin-top:0;">送出回覆</button>
         </div>
       </div>
+    </div>
+
+    <!-- 2026-09-07:轉換漏斗分析——看客人在「逛商品→加入購物車→打開購物車
+    →進到結帳→送出訂單」這條路徑上,大多在哪一關流失。資料來源是
+    trackFunnelStep() 寫進 daigou-funnel-v1 的每日統計,見 index.html
+    裡 FUNNEL_STEPS 那段註解。 -->
+    <div class="tab-panel" id="tab-funnel" style="display:none;">
+      <div class="notice-box">
+        算的是「不同瀏覽次數」,不是「動作次數」——同一個人同一次瀏覽加了
+        好幾件商品到購物車,也只算一次「加入購物車」,這樣才能正確算出
+        每一關實際的流失率。點「查詢」重新抓最新資料。
+      </div>
+      <div class="field-row" style="align-items:flex-end;">
+        <div><label>開始日期</label><input type="date" id="funnelStartDate"></div>
+        <div><label>結束日期</label><input type="date" id="funnelEndDate"></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button type="button" class="ghost-btn" id="funnelToday">今天</button>
+        <button type="button" class="ghost-btn" id="funnelLast7">近 7 天</button>
+        <button type="button" class="ghost-btn" id="funnelLast30">近 30 天</button>
+        <button type="button" class="primary-btn" id="funnelQueryBtn" style="margin-top:0;">查詢</button>
+      </div>
+      <div id="funnelResultBox" style="margin-top:16px;"></div>
     </div>
 
     <div class="tab-panel" id="tab-shop" style="display:none;">
@@ -1841,6 +1897,68 @@ document.getElementById('adminChatReplyBtn').onclick = async () => {
   await storageSet(`${CUSTOMERS_KEY}/${adminActiveCustomerUid}`, { ...c, lastMessageAt: ts, lastMessageFrom: 'owner', ownerReadAt: ts });
   openAdminCustomerThread(adminActiveCustomerUid);
 };
+
+// ===== 老闆後台:轉換分析分頁 =====
+// 讀 trackFunnelStep() 寫進 daigou-funnel-v1 的每日統計,算出選定日期
+// 範圍內,每個節點各有幾次不同的瀏覽走到那一步,以及跟前一關比起來
+// 掉了幾成——這樣才回答得出「客人大多在哪個節點離開」。
+function funnelDefaultRange(days){
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  document.getElementById('funnelStartDate').value = localDateKey(start);
+  document.getElementById('funnelEndDate').value = localDateKey(end);
+}
+async function renderFunnelStats(){
+  const box = document.getElementById('funnelResultBox');
+  const startStr = document.getElementById('funnelStartDate').value;
+  const endStr = document.getElementById('funnelEndDate').value;
+  if(!startStr || !endStr || startStr > endStr){
+    box.innerHTML = '<div class="empty-note">請選擇正確的日期範圍(開始日期不能晚於結束日期)。</div>';
+    return;
+  }
+  box.innerHTML = '<div class="empty-note">查詢中...</div>';
+  const raw = await storageGet(FUNNEL_KEY); // 用老闆的 fbAuth token,規則限定只有老闆帳號能讀
+  const allDates = raw ? Object.keys(raw).filter(d => d >= startStr && d <= endStr) : [];
+  // 同一節點在範圍內每一天的次數直接加總——一個瀏覽分頁理論上只會落在
+  // 同一天(sessionStorage 存活期間跨過午夜的極少數情況才會被算兩次,
+  // 對一個小型代購網站的統計用途影響可忽略,不特別處理)。
+  const counts = {};
+  FUNNEL_STEPS.forEach(s => counts[s] = 0);
+  allDates.forEach(d => {
+    FUNNEL_STEPS.forEach(s => {
+      counts[s] += (raw[d] && raw[d][s]) ? Object.keys(raw[d][s]).length : 0;
+    });
+  });
+  const landingCount = counts['landing'] || 0;
+  if(landingCount === 0){
+    box.innerHTML = '<div class="empty-note">這段期間沒有任何瀏覽紀錄。</div>';
+    return;
+  }
+  let prevCount = null;
+  box.innerHTML = FUNNEL_STEPS.map(step => {
+    const count = counts[step];
+    const pct = landingCount ? Math.round((count / landingCount) * 1000) / 10 : 0;
+    let dropLine = '';
+    if(prevCount !== null && prevCount > 0){
+      const dropped = prevCount - count;
+      const dropPct = Math.round((dropped / prevCount) * 1000) / 10;
+      if(dropped > 0){
+        dropLine = `<div class="funnel-row-drop">比上一關少了 ${dropped} 次(流失 ${dropPct}%)</div>`;
+      }
+    }
+    prevCount = count;
+    return `
+    <div class="funnel-row">
+      <div class="funnel-row-head">
+        <span>${FUNNEL_STEP_LABELS[step]}</span>
+        <span class="funnel-row-count">${count.toLocaleString('en-US')}<span style="font-weight:400; color:#6B7686;">(${pct}%)</span></span>
+      </div>
+      <div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:${pct}%;"></div></div>
+      ${dropLine}
+    </div>`;
+  }).join('');
+}
 
 // ===== 購物車雲端同步(登入後,用 LINE userId 當 key 存進 Firebase)=====
 function cartCloudPath(){ return `daigou-carts-v1/${currentUser.userId}`; }
@@ -2649,6 +2767,67 @@ function isFullySoldOut(p){
 // 直接把品牌名從這個陣列拿掉就好,結帳畫面就不會再顯示這句提醒。
 const UNSYNCED_STOCK_BRANDS = ['J.Lindeberg'];
 
+// ===== 站內購買流程漏斗追蹤(2026-09-07)=====
+// 老闆想知道客人大多在哪個節點離開(逛商品/加入購物車/進購物車/進結帳/
+// 送出訂單),這裡用一個簡單的計數方式:每個瀏覽分頁(不是每個人)進站
+// 時產生一組隨機 ID 存在 sessionStorage,走到下面某個關鍵節點就往
+// Firebase 的 daigou-funnel-v1/{日期}/{節點}/{這組 ID} 寫入 true。
+// 同一個分頁同一個節點不管觸發幾次(例如客人加了 5 件商品到購物車)
+// 都只佔一個 key,後台算的是「今天有幾個不同的瀏覽走到這一步」,不是
+// 「總共發生幾次動作」——這樣才能算出漏斗每一關的流失率,不會被同一個
+// 人重複操作灌水。
+//
+// 這是公開寫入(逛網站的客人大多沒有登入任何帳號,不能要求登入才能被
+// 統計),Firebase 規則只放行新增布林值 true、不能覆寫/刪除既有紀錄,
+// 讀取則要限定老闆自己的帳號(不能只寫 auth != null——客人登入用的
+// customerAuth 跟老闆用的 fbAuth 是同一個 Firebase 專案,auth != null
+// 對客人一樣成立,會讓客人也讀得到全站流量資料),規則範本見對話裡
+// 附的說明。
+//
+// 節點名稱刻意跟現有程式碼的動作對齊,不是憑空定義:
+//   landing        进站(loadAll() 開始跑的當下)
+//   view_product   點開任一件商品的詳情(openProductDetail()）
+//   add_to_cart    加入購物車(addToCart()）
+//   view_cart      打開購物車「清單」步驟(showCartStep('items')）
+//   reach_checkout 進到「結帳」步驟(showCartStep('checkout')，含「立即
+//                  購買」直接跳過來的情況)
+//   submit_order   訂單成功寫進 Firebase(submitOrderBtn 流程,orderSaved
+//                  確認成功之後才算,失敗重試的不算)
+function localDateKey(d){
+  d = d || new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+const FUNNEL_KEY = 'daigou-funnel-v1';
+const FUNNEL_STEPS = ['landing', 'view_product', 'add_to_cart', 'view_cart', 'reach_checkout', 'submit_order'];
+const FUNNEL_STEP_LABELS = {
+  landing: '進站', view_product: '點開商品詳情', add_to_cart: '加入購物車',
+  view_cart: '打開購物車', reach_checkout: '進到結帳畫面', submit_order: '送出訂單',
+};
+function funnelSessionId(){
+  try{
+    let id = sessionStorage.getItem('daigou-funnel-sid');
+    if(!id){
+      id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+      sessionStorage.setItem('daigou-funnel-sid', id);
+    }
+    return id;
+  }catch(e){ return null; } // 無痕模式等封鎖 sessionStorage 的情況,乾脆不追蹤,不影響瀏覽
+}
+const funnelStepsSentThisTab = new Set(); // 同一個分頁生命週期內,同一步驟只送一次網路請求
+function trackFunnelStep(step){
+  try{
+    if(funnelStepsSentThisTab.has(step)) return;
+    const sid = funnelSessionId();
+    if(!sid) return;
+    funnelStepsSentThisTab.add(step);
+    const today = localDateKey();
+    fetch(`${FIREBASE_DB_URL}/${FUNNEL_KEY}/${today}/${step}/${sid}.json`, { method: 'PUT', body: 'true' })
+      .catch(() => {}); // 追蹤失敗不影響購物流程,安靜失敗就好,不跳任何提示給客人
+  }catch(e){ /* 同上,安靜失敗 */ }
+}
+
 // 鞋類的尺寸選項通常比服飾多很多(例如跑鞋一款可能有 14 個尺寸),
 // 選項一多用小按鈕全部攤開會很亂,鞋子尺寸選項才需要收進下拉選單。
 // 服飾尺寸(XS/S/M/L/XL 這種)選項數量少,維持原本的按鈕列就好。
@@ -3147,6 +3326,7 @@ async function openProductDetail(pid){
   currentDetailProductId = pid;
   renderProductDetail(p);
   document.getElementById('productDetailOverlay').classList.add('open');
+  trackFunnelStep('view_product');
 }
 
 // 複製這件商品的靜態分享頁連結(product/{id}/,不是 ?p=——那個是給網站
@@ -3332,6 +3512,7 @@ function addToCart(id, color, size){
   renderProducts();
   renderCartBar();
   toast('已加入清單');
+  trackFunnelStep('add_to_cart');
 }
 
 // 2026-08-14 起完整商品資料改成按需載入,購物車裡的商品不保證都已經在
@@ -3498,6 +3679,7 @@ function showCartStep(step){
   document.getElementById('cartStepCheckout').style.display = isCheckout ? '' : 'none';
   document.getElementById('cartSheetTitle').textContent = isCheckout ? '結帳' : '購物車';
   document.getElementById('backToCartBtn').style.display = isCheckout ? '' : 'none';
+  trackFunnelStep(isCheckout ? 'reach_checkout' : 'view_cart');
 }
 document.getElementById('goToCheckoutBtn').onclick = () => showCartStep('checkout');
 document.getElementById('backToCartBtn').onclick = () => showCartStep('items');
@@ -3751,6 +3933,7 @@ document.getElementById('lineFriendConfirmSubmitBtn').onclick = async () => {
   }
   orders = [order, ...orders];
   notifyOrderInstant(order);
+  trackFunnelStep('submit_order');
   cart = {};
   saveCart();
   renderProducts();
@@ -4146,8 +4329,19 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
     document.getElementById('tab-' + btn.dataset.tab).style.display = 'block';
+    // 「轉換分析」資料跟日期範圍有關,不像其他分頁在 openAdmin() 開一次
+    // 就好——第一次點進來(日期欄位還是空的)先帶入近 7 天當預設值再查,
+    // 之後老闆自己改日期用「查詢」按鈕重抓就好,不用每次切分頁都重打。
+    if(btn.dataset.tab === 'funnel' && !document.getElementById('funnelStartDate').value){
+      funnelDefaultRange(7);
+      renderFunnelStats();
+    }
   };
 });
+document.getElementById('funnelToday').onclick = () => { funnelDefaultRange(1); renderFunnelStats(); };
+document.getElementById('funnelLast7').onclick = () => { funnelDefaultRange(7); renderFunnelStats(); };
+document.getElementById('funnelLast30').onclick = () => { funnelDefaultRange(30); renderFunnelStats(); };
+document.getElementById('funnelQueryBtn').onclick = () => renderFunnelStats();
 
 document.getElementById('fetchRateBtn').onclick = async () => {
   const btn = document.getElementById('fetchRateBtn');
@@ -4846,6 +5040,7 @@ document.getElementById('adminProductSearch').addEventListener('input', (e) => {
   }, 200);
 });
 
+trackFunnelStep('landing');
 loadAll();
 </script>
 </body>
