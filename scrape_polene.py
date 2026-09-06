@@ -33,6 +33,7 @@ POLÈNE 日本官網(jp.polene-paris.com)全站商品爬蟲
 """
 
 import json
+import re
 import sys
 import time
 
@@ -76,12 +77,19 @@ def guess_weight(subtype):
     return WEIGHT_BY_SUBTYPE.get(subtype, 0.2)
 
 
+COLOR_SEP_RE = re.compile(r"\s*-\s*")
+
+
 def guess_color_name(title):
-    """商品標題慣例是「款式 - 顏色描述」,切出後半段當顏色名稱,
-    切不出來(沒有「 - 」)就留空字串,不影響庫存/尺寸判斷,只是
-    畫面上顏色標籤會是空的。"""
-    if " - " in title:
-        return title.split(" - ", 1)[1].strip()
+    """商品標題慣例是「款式 - 顏色描述」,切出後半段當顏色名稱。
+    2026-09-06 抓到:原本用字面上的「 - 」(左右都要有空格)去切,
+    但官網有些標題是「Un -トリオ キャメル」這種連字號後面沒空格,
+    切不出來,顏色名稱就會是空字串,畫面上的顏色選單因此顯示錯位
+    (跑去顯示尺寸「FREE」,不是空白)。改用正規表示式,連字號前後
+    的空格都當作選填,只要有連字號就切得出來;真的連連字號都沒有
+    才留空字串,不影響庫存/尺寸判斷,只是畫面上顏色標籤會是空的。"""
+    if "-" in title:
+        return COLOR_SEP_RE.split(title, 1)[1].strip()
     return ""
 
 
