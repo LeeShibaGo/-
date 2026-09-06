@@ -1033,6 +1033,10 @@ flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量�
 
     <!-- 步驟二:結帳——取貨方式、完整金額明細(含運費/訂金)、收件資訊 -->
     <div id="cartStepCheckout" style="display:none;">
+      <!-- 2026-09-06:J.LINDEBERG 等品牌沒辦法自動同步庫存(見 UNSYNCED_STOCK_BRANDS
+      註解),商品卡仍顯示「現貨」,改在結帳畫面提醒客人下單前知情——只有
+      購物車裡有這些品牌的商品時才會顯示,平常隱藏。 -->
+      <div class="notice-box" id="stockNoticeBox" style="display:none;"></div>
       <label style="margin-top:0;">國內取貨方式</label>
       <div id="deliveryOptionsBox" class="delivery-options"></div>
       <div id="storeNameFieldWrap" style="display:none; margin-top:10px;">
@@ -2639,6 +2643,16 @@ function isFullySoldOut(p){
   return false;
 }
 
+// 2026-09-06:J.LINDEBERG 目前技術上沒辦法自動同步庫存(尺寸庫存要點了
+// 才用 AJAX 動態載入,靜態爬蟲抓不到,見 sync_stock.py 的 sync_price_only()
+// 開頭說明),sync_stock.py 只會更新價格,不會更新庫存,所以 isFullySoldOut()
+// 對這個品牌永遠回傳「沒賣完」——商品卡的「現貨」標示其實只代表「上架時
+// 有貨」,不是「即時確認有貨」。老闆決定不改標示文字,改在結帳畫面加一句
+// 提醒,讓客人下單前知情、賣完的話我們會盡快聯繫,而不是誤會成即時庫存。
+// 未來如果哪天這個品牌也升級成能同步庫存了(參考 AAPE/Lacoste 之前的做法),
+// 直接把品牌名從這個陣列拿掉就好,結帳畫面就不會再顯示這句提醒。
+const UNSYNCED_STOCK_BRANDS = ['J.Lindeberg'];
+
 // 鞋類的尺寸選項通常比服飾多很多(例如跑鞋一款可能有 14 個尺寸),
 // 選項一多用小按鈕全部攤開會很亂,鞋子尺寸選項才需要收進下拉選單。
 // 服飾尺寸(XS/S/M/L/XL 這種)選項數量少,維持原本的按鈕列就好。
@@ -3593,6 +3607,19 @@ async function renderCartDrawer(){
     <div class="totals-row"><span>商品小計</span><span>${fmtMoney(subtotal)}</span></div>
   `;
   document.getElementById('goToCheckoutBtn').disabled = lines.length === 0;
+
+  // 2026-09-06:購物車裡有 UNSYNCED_STOCK_BRANDS 品牌的商品時,結帳畫面
+  // 提醒客人這些品牌的「現貨」沒有即時同步庫存,列出實際的商品名稱
+  // (可能不只一件),不要只講品牌名讓客人自己猜是哪件。
+  const unsyncedLines = lines.filter(l => UNSYNCED_STOCK_BRANDS.includes(l.brand));
+  const stockNoticeBox = document.getElementById('stockNoticeBox');
+  if(unsyncedLines.length > 0){
+    const names = [...new Set(unsyncedLines.map(l => l.name))].join('、');
+    stockNoticeBox.textContent = `⚠️ 您選購的「${names}」所屬品牌因官網限制,庫存無法即時同步,顯示的「現貨」為上架時的狀態。下單後我們會盡快確認實際貨況,若已售完會主動與您聯繫。`;
+    stockNoticeBox.style.display = '';
+  } else {
+    stockNoticeBox.style.display = 'none';
+  }
 
   document.getElementById('storeNameFieldWrap').style.display = isStorePickup ? '' : 'none';
   document.getElementById('totalsBox').innerHTML = `
