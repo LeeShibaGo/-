@@ -1011,9 +1011,14 @@ flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量�
       <button class="close-x" id="closeCart">✕</button>
     </div>
 
-    <!-- 步驟一:購物車——只看商品清單+商品小計,不牽涉取貨方式/總金額 -->
+    <!-- 2026-09-06:商品清單移到兩個步驟共用的位置,不是只有步驟一才看得到——
+    老闆反映結帳畫面如果看不到自己加了什麼商品,客人會不知道自己在買什麼。
+    步驟一/二各自差別只在清單「下面」接什麼(步驟一接商品小計+前往結帳,
+    步驟二接取貨方式+完整金額+收件表單)。 -->
+    <div id="cartItemsList"></div>
+
+    <!-- 步驟一:商品小計+前往結帳,不牽涉取貨方式/總金額 -->
     <div id="cartStepItems">
-      <div id="cartItemsList"></div>
       <div class="totals" id="cartSubtotalBox"></div>
       <button class="primary-btn" id="goToCheckoutBtn">前往結帳</button>
     </div>
@@ -3511,7 +3516,7 @@ async function renderCartDrawer(){
           ${thumb ? `<img class="cart-item-thumb" src="${escapeHtml(thumb)}" alt="">` : ''}
           <div style="min-width:0;">
             <div class="cart-item-name">${escapeHtml(l.name)}${l.color ? ' ['+escapeHtml(l.color)+']' : ''}${l.size ? ' ('+escapeHtml(l.size)+')' : ''}</div>
-            <div class="cart-item-sub">${currencySymbol(l.country || 'JP')}${l.jpy.toLocaleString('en-US')}</div>
+            <div class="cart-item-sub">${currencySymbol(l.country || 'JP')}${l.jpy.toLocaleString('en-US')} · ${fmtMoney(sellPriceTwd(l))} × ${l.qty}</div>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
