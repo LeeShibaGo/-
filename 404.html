@@ -992,32 +992,53 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
 </div>
 
 <!-- Cart / Checkout overlay -->
+<!-- 2026-09-06:老闆要求把「購物車」跟「結帳」拆成兩個畫面——購物車只
+看已加入的商品+商品小計,結帳才顯示取貨方式跟總金額。這裡沒有拆成兩個
+獨立的 overlay,是同一個 #cartOverlay/.sheet 裡切兩個「步驟」區塊
+(#cartStepItems/#cartStepCheckout)用 display 切換,理由是 flipMorphOpen()/
+flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量測位置做的,
+拆成兩個 overlay 會變成要維護兩份變形動畫、兩邊状态還要互相同步,不值得;
+現在只要在切換步驟時重新量一次 .sheet 的高度(內容變了,面板高度也會跟著
+變),視覺上就像同一張面板換頁,不是跳出新視窗。 -->
 <div class="overlay" id="cartOverlay">
   <div class="sheet">
     <div class="sheet-head">
-      <h2>訂單明細</h2>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button type="button" id="backToCartBtn" style="display:none; background:none; border:none; font-size:20px; cursor:pointer; color:var(--ink); padding:4px 2px; margin:-4px 0 -4px -4px; line-height:1;">←</button>
+        <h2 id="cartSheetTitle">購物車</h2>
+      </div>
       <button class="close-x" id="closeCart">✕</button>
     </div>
-    <div id="cartItemsList"></div>
-    <label style="margin-top:14px;">國內取貨方式</label>
-    <div id="deliveryOptionsBox" class="delivery-options"></div>
-    <div id="storeNameFieldWrap" style="display:none; margin-top:10px;">
-      <label>取貨 7-11 門市(必填)</label>
-      <input type="text" id="custStoreName" placeholder="例如:台中中華門市">
-    </div>
-    <div class="totals" id="totalsBox"></div>
 
-    <div id="checkoutForm">
-      <label>收件人姓名</label>
-      <input type="text" id="custName" placeholder="王小姐">
-      <label>聯絡電話</label>
-      <input type="tel" id="custPhone" placeholder="09xx-xxx-xxx">
-      <label>Email(用來寄送訂單確認信)</label>
-      <input type="email" id="custEmail" placeholder="example@mail.com">
-      <label>備註(顏色/尺寸/其他需求)</label>
-      <textarea id="custNote" placeholder="選填"></textarea>
-      <div class="notice-box" id="noticeBox"></div>
-      <button class="primary-btn" id="submitOrderBtn">送出訂單,並依訂金金額轉帳</button>
+    <!-- 步驟一:購物車——只看商品清單+商品小計,不牽涉取貨方式/總金額 -->
+    <div id="cartStepItems">
+      <div id="cartItemsList"></div>
+      <div class="totals" id="cartSubtotalBox"></div>
+      <button class="primary-btn" id="goToCheckoutBtn">前往結帳</button>
+    </div>
+
+    <!-- 步驟二:結帳——取貨方式、完整金額明細(含運費/訂金)、收件資訊 -->
+    <div id="cartStepCheckout" style="display:none;">
+      <label style="margin-top:0;">國內取貨方式</label>
+      <div id="deliveryOptionsBox" class="delivery-options"></div>
+      <div id="storeNameFieldWrap" style="display:none; margin-top:10px;">
+        <label>取貨 7-11 門市(必填)</label>
+        <input type="text" id="custStoreName" placeholder="例如:台中中華門市">
+      </div>
+      <div class="totals" id="totalsBox"></div>
+
+      <div id="checkoutForm">
+        <label>收件人姓名</label>
+        <input type="text" id="custName" placeholder="王小姐">
+        <label>聯絡電話</label>
+        <input type="tel" id="custPhone" placeholder="09xx-xxx-xxx">
+        <label>Email(用來寄送訂單確認信)</label>
+        <input type="email" id="custEmail" placeholder="example@mail.com">
+        <label>備註(顏色/尺寸/其他需求)</label>
+        <textarea id="custNote" placeholder="選填"></textarea>
+        <div class="notice-box" id="noticeBox"></div>
+        <button class="primary-btn" id="submitOrderBtn">送出訂單,並依訂金金額轉帳</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3435,14 +3456,30 @@ function flipMorphClose(){
   }, 300);
 }
 
-// 底部固定列的「加入購物車」「立即購買」目前先做一樣的事,都打開購物車/結帳畫面
-// (兩者本來就合在同一個畫面裡,沒有分開兩步)。
+// 2026-09-06:購物車現在分兩個步驟畫面,這裡統一切換。「購物車」按鈕
+// 先看步驟一(商品清單),「立即購買」既然字面上就是要買了,直接跳到
+// 步驟二(結帳)省一次點擊——假設客人清單裡已經有東西才會按立即購買,
+// 清單真的是空的話步驟二自己也會因為 submitOrderBtn disabled 擋下來,
+// 不會讓空單被送出。
+function showCartStep(step){
+  const isCheckout = step === 'checkout';
+  document.getElementById('cartStepItems').style.display = isCheckout ? 'none' : '';
+  document.getElementById('cartStepCheckout').style.display = isCheckout ? '' : 'none';
+  document.getElementById('cartSheetTitle').textContent = isCheckout ? '結帳' : '購物車';
+  document.getElementById('backToCartBtn').style.display = isCheckout ? '' : 'none';
+}
+document.getElementById('goToCheckoutBtn').onclick = () => showCartStep('checkout');
+document.getElementById('backToCartBtn').onclick = () => showCartStep('items');
+
+// 底部固定列的「加入購物車」開步驟一,「立即購買」直接開步驟二。
 document.getElementById('openCartBtn').onclick = async () => {
   await renderCartDrawer();
+  showCartStep('checkout');
   flipMorphOpen();
 };
 document.getElementById('cartBarAddBtn').onclick = async () => {
   await renderCartDrawer();
+  showCartStep('items');
   flipMorphOpen();
 };
 document.getElementById('cartBarLineBtn').onclick = () => {
@@ -3517,6 +3554,13 @@ async function renderCartDrawer(){
       });
     });
   }
+
+  // 步驟一(購物車)只需要商品小計,不牽涉取貨方式,所以不放國際運費/
+  // 國內運費/總金額——那些要選了取貨方式才有意義,屬於步驟二(結帳)。
+  document.getElementById('cartSubtotalBox').innerHTML = `
+    <div class="totals-row"><span>商品小計</span><span>${fmtMoney(subtotal)}</span></div>
+  `;
+  document.getElementById('goToCheckoutBtn').disabled = lines.length === 0;
 
   document.getElementById('storeNameFieldWrap').style.display = isStorePickup ? '' : 'none';
   document.getElementById('totalsBox').innerHTML = `
