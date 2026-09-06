@@ -899,9 +899,13 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
     </div>
   </div>
 
+  <!-- 2026-09-06:老闆想先拿掉看看首頁效果,說要恢復再講——先註解掉,
+  不是刪掉,圖檔/連結都還在,要恢復的話把這段註解拿掉就好。 -->
+  <!--
   <a class="promo-banner" href="https://leeshibago.github.io/-/?p=p_salomon_1784396678297_44">
     <img src="https://leeshibago.github.io/-/images/salomon-nami-xt6-banner.jpg" alt="Salomon NAMI PACK XT-6 GORE-TEX" loading="lazy">
   </a>
+  -->
 
   <div class="wrap brand-showcase">
     <h2 class="brand-showcase-title">BRAND</h2>
@@ -2864,12 +2868,19 @@ function renderProducts(){
   if(currentSeries !== 'all'){
     list = list.filter(p => p.series === currentSeries);
   }
+  // 2026-09-06:老闆要求搜尋要「更多元」——原本只比對商品名稱/品牌,
+  // 客人如果打的是分類名稱(例如「連帽外套」「網球鞋」)或系列名稱
+  // (例如「THE ROGER」),明明有對應商品卻搜不到。這裡多加 subtype/
+  // series 兩個欄位一起比對,兩者都已經在精簡版索引(productsIndex)裡,
+  // 不需要額外載入完整商品資料就能查。
   const q = searchQuery.trim().toLowerCase();
   if(q){
     const aliasBrand = BRAND_SEARCH_ALIASES[q];
     list = list.filter(p =>
       p.name.toLowerCase().includes(q) ||
       (p.brand || '').toLowerCase().includes(q) ||
+      (p.subtype || '').toLowerCase().includes(q) ||
+      (p.series || '').toLowerCase().includes(q) ||
       (aliasBrand && p.brand === aliasBrand)
     );
   }
