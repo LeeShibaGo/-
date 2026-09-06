@@ -3881,15 +3881,18 @@ function renderTrustSection(){
 // merge_dior_japan_exclusive.py),這裡不用再重複列一次。2026-08-13
 // 新增 3COINS(掛在 PAL CLOSET 商城 palcloset.jp 底下,只抓時尚配件類,
 // 見 scrape_3coins.py),官網首頁 <head> 裡只有整個商城通用的
-// favicon,沒有 3COINS 自己專屬的 logotype 圖檔可以抓,暫時繼續用
-// 文字版頂著,顏色用官方的桃紅色。2026-08-15 新增 POLÈNE(法國包包
-// 品牌,jp.polene-paris.com,Shopify 商城,見 scrape_polene.py),
-// 官網首頁同樣抓不到專屬 logotype(只有第三方外掛的預設圖),先用
-// 黑底白字文字版頂著,風格比照 Dior/CELINE。2026-09-05 新增
-// HUMAN MADE(NIGO 創立的日系潮流品牌,humanmade.jp):官網導覽列的
-// logo.svg 是白字設計,套在這裡白底的品牌方塊上文字會看不到,改用
-// 官網 favicon 那個紅心+白字「HUMAN MADE」的版本(favicon-196x196.png),
-// 紅色實心底自帶背景,白字在上面看得清楚。
+// favicon,沒有 3COINS 自己專屬的 logotype 圖檔可以抓,曾經先用文字版
+// 頂著。2026-08-15 新增 POLÈNE(法國包包品牌,jp.polene-paris.com,
+// Shopify 商城,見 scrape_polene.py),官網首頁同樣抓不到專屬
+// logotype(只有第三方外掛的預設圖),曾經先用黑底白字文字版頂著,
+// 風格比照 Dior/CELINE。2026-09-05 新增 HUMAN MADE(NIGO 創立的日系
+// 潮流品牌,humanmade.jp):官網導覽列的 logo.svg 是白字設計,套在這裡
+// 白底的品牌方塊上文字會看不到,改用官網 favicon 那個紅心+白字
+// 「HUMAN MADE」的版本(favicon-196x196.png),紅色實心底自帶背景,
+// 白字在上面看得清楚。2026-09-06:Merries/POLÈNE/3COINS/9090/
+// 9090 girl 這 5 個原本用文字版/簡易 svg 頂著的,老闆直接傳了對應的官方
+// 圖檔要求換掉,用的就是老闆傳的這幾個檔案(merries.jpg/polene.png/
+// 3coins.png/9090.png/9090girl.jpg),不是另外去官網重找的。
 const BRAND_SHOWCASE_LIST = [
   { brand: 'GU', logo: 'images/brand-logos/gu.png' },
   { brand: 'UNIQLO', logo: 'images/brand-logos/uniqlo.png' },
@@ -3912,11 +3915,11 @@ const BRAND_SHOWCASE_LIST = [
   { brand: 'CELINE', logo: 'images/brand-logos/celine.png' },
   { brand: 'Dior', logo: 'images/brand-logos/dior.png' },
   { brand: 'Louis Vuitton', logo: 'images/brand-logos/lv.png' },
-  { brand: '3COINS', logo: 'images/brand-logos/3coins.svg' },
-  { brand: 'POLENE', logo: 'images/brand-logos/polene.svg' },
-  { brand: 'Merries', logo: 'images/brand-logos/merries.svg' },
-  { brand: '9090', logo: 'images/brand-logos/9090.svg' },
-  { brand: '9090 girl', logo: 'images/brand-logos/9090girl.svg' },
+  { brand: '3COINS', logo: 'images/brand-logos/3coins.png' },
+  { brand: 'POLENE', logo: 'images/brand-logos/polene.png' },
+  { brand: 'Merries', logo: 'images/brand-logos/merries.jpg' },
+  { brand: '9090', logo: 'images/brand-logos/9090.png' },
+  { brand: '9090 girl', logo: 'images/brand-logos/9090girl.jpg' },
   { brand: 'HUMAN MADE', logo: 'images/brand-logos/humanmade.png' },
 ];
 
