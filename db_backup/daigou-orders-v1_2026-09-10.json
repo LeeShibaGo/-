@@ -1,0 +1,46 @@
+{
+  "U7MW96": {
+    "code": "U7MW96",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 5102.696,
+    "device": "手機",
+    "email": "123@gmail.com",
+    "id": "ord_1788690467587",
+    "items": [
+      {
+        "color": "黑色",
+        "country": "JP",
+        "jpy": 30800,
+        "name": "HUMAN MADE CLASSIC ZIP-UP HOODIE",
+        "productId": "p_humanmade_1788605156033_0",
+        "purchased": false,
+        "qty": 1,
+        "size": "XS",
+        "weight": 0.65
+      },
+      {
+        "color": "灰色",
+        "country": "JP",
+        "jpy": 1990,
+        "name": "UNIQLO x NEEDLES 刷毛絨寬鬆開襟外套(蝴蝶LOGO)",
+        "productId": "p_uniqlo_needles_1785655033387_1",
+        "purchased": false,
+        "qty": 1,
+        "size": "L",
+        "weight": 0.5
+      }
+    ],
+    "name": "Sss",
+    "note": "Aa",
+    "phone": "0000000000",
+    "shipping": 172.5,
+    "status": "待確認訂金",
+    "statusTimestamps": {
+      "待確認訂金": 1788690467587
+    },
+    "subtotal": 9994.892,
+    "time": 1788690467587,
+    "total": 10205.392
+  }
+}
