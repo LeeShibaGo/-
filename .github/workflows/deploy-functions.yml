@@ -1,0 +1,47 @@
+name: "Deploy Cloud Functions (ECPay)"
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [master]
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - ".firebaserc"
+      - ".github/workflows/deploy-functions.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install functions dependencies
+        run: npm install
+        working-directory: functions
+
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          EOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      # 綠界金鑰只在部署當下寫進這個檔案,不會進 git、也不會留在 log 裡。
+      - name: Write ECPay secrets into functions/.env
+        run: |
+          cat > functions/.env <<EOF
+          ECPAY_MERCHANT_ID=${{ secrets.ECPAY_MERCHANT_ID }}
+          ECPAY_HASH_KEY=${{ secrets.ECPAY_HASH_KEY }}
+          ECPAY_HASH_IV=${{ secrets.ECPAY_HASH_IV }}
+          EOF
+
+      - name: Deploy to Firebase Functions
+        run: npx firebase-tools@13 deploy --only functions --project shibago-4dd3c --non-interactive

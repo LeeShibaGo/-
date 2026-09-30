@@ -1,0 +1,13 @@
+{
+  "name": "shibago-functions",
+  "description": "柴代購 ShibaGo 後台伺服器函式(目前只有綠界金流串接用)",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.1.0"
+  }
+}

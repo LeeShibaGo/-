@@ -1100,6 +1100,16 @@ flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量�
       <div>請依下方金額匯款「訂金」,老闆確認到款後將盡快回覆您</div>
       <div class="big" id="confirmDeposit">NT$0</div>
       <div class="notice-box" id="confirmPayment" style="text-align:left;"></div>
+      <!-- 2026-09-30:綠界線上付款——跟上面的手動轉帳並存,客人自己選,
+      不強迫改用線上付款。只有後台「店家資訊」分頁勾選開放才會顯示
+      (settings.ecpayEnabled),見 renderAll() 裡對應那段。 -->
+      <div id="ecpayButtonsWrap" style="display:none; margin-top:14px; text-align:left;">
+        <div style="font-size:12px; color:#6B7686; margin-bottom:6px;">或者,你也可以直接線上付款(綠界金流):</div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="ghost-btn" id="ecpayCreditBtn" style="flex:1;">💳 信用卡付款</button>
+          <button type="button" class="ghost-btn" id="ecpayAtmBtn" style="flex:1;">🏧 ATM 轉帳</button>
+        </div>
+      </div>
       <div style="margin-top:14px;">
         <div style="font-size:12px; color:#6B7686;">您的訂單編碼(請截圖保存,之後可用來查詢訂單狀態)</div>
         <div class="big" id="confirmOrderCode" style="font-size:22px; color:var(--ink);"></div>
@@ -1461,6 +1471,12 @@ flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量�
       <input type="text" id="shopNameInput">
       <label>訂金匯款資訊(會顯示給客人)</label>
       <textarea id="paymentInput" placeholder="例如:第一銀行(007) 123-456-789 户名 王小姐"></textarea>
+      <label style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+        <input type="checkbox" id="ecpayEnabledInput" style="width:auto;">
+        開放線上刷卡/ATM(綠界)——勾選後,客人在「訂單已送出」畫面除了原本的手動轉帳,
+        還會多看到「信用卡付款」「ATM 轉帳」兩個按鈕可以直接線上付款,兩種方式並存,
+        不影響手動轉帳流程。<b>後台的 Cloud Functions 還沒部署好之前先不要勾選</b>,不然客人點了會看到錯誤畫面。
+      </label>
       <label style="margin-top:16px;">LINE 社群邀請連結(客製化代購按鈕會顯示)</label>
       <input type="text" id="lineGroupUrlInput" placeholder="https://line.me/ti/g2/...">
       <label>LINE 官方帳號 ID</label>
@@ -2024,6 +2040,11 @@ const DEFAULT_SETTINGS = {
   // 就先留空白讓老闆之後補。
   brandIntros: '',
   payment: '第一銀行(007) 123-456-789　户名:王小姐\n轉帳後請截圖給老闆確認,謝謝您!',
+  // 2026-09-30 開通綠界金流——true 才會在「訂單已送出」畫面多顯示
+  // 「信用卡付款」「ATM 轉帳」兩個按鈕(跟手動轉帳並存,不取代)。
+  // Cloud Functions(functions/)還沒部署成功之前不要打開,見後台
+  // 「店家資訊」分頁該欄位旁邊的說明。
+  ecpayEnabled: false,
   lineGroupUrl: 'https://line.me/ti/g2/khKQ6_1RbId40z6zQpTLA37XQNXEa4tT9vPd5w?utm_source=invitation&utm_medium=link_copy&utm_campaign=default',
   lineOfficialId: '@wlw7925n',
   threadsUrl: 'https://www.threads.com/@shiba_worldwide_go?invite=0',
@@ -3943,6 +3964,8 @@ document.getElementById('lineFriendConfirmSubmitBtn').onclick = async () => {
   document.getElementById('confirmDeposit').textContent = fmtMoney(deposit);
   document.getElementById('confirmPayment').innerHTML = escapeHtml(settings.payment).replace(/\n/g,'<br>');
   document.getElementById('confirmOrderCode').textContent = order.code;
+  lastSubmittedOrderCode = order.code; // 給下面綠界按鈕用,知道要導去哪一筆訂單
+  document.getElementById('ecpayButtonsWrap').style.display = settings.ecpayEnabled ? '' : 'none';
   document.getElementById('confirmOverlay').classList.add('open');
   document.getElementById('custName').value = '';
   document.getElementById('custPhone').value = '';
@@ -3951,6 +3974,22 @@ document.getElementById('lineFriendConfirmSubmitBtn').onclick = async () => {
   document.getElementById('custStoreName').value = '';
 };
 document.getElementById('closeConfirm').onclick = () => document.getElementById('confirmOverlay').classList.remove('open');
+
+// ===== 綠界線上付款(2026-09-30)=====
+// 這兩個按鈕不是用 fetch 打 API,是直接整頁導到 Cloud Functions 的網址
+// (見 functions/index.js 的 ecpayCheckout),那支函式會讀訂單金額、算好
+// 檢查碼,回一個自動送出的表單把客人導去綠界付款頁——這裡完全不用碰
+// HashKey/HashIV,金鑰只存在 Cloud Functions 執行環境裡,網頁 JS 看不到。
+const ECPAY_CHECKOUT_FN_URL = 'https://asia-east1-shibago-4dd3c.cloudfunctions.net/ecpayCheckout';
+let lastSubmittedOrderCode = null;
+document.getElementById('ecpayCreditBtn').onclick = () => {
+  if(!lastSubmittedOrderCode) return;
+  window.location.href = `${ECPAY_CHECKOUT_FN_URL}?code=${encodeURIComponent(lastSubmittedOrderCode)}&method=credit`;
+};
+document.getElementById('ecpayAtmBtn').onclick = () => {
+  if(!lastSubmittedOrderCode) return;
+  window.location.href = `${ECPAY_CHECKOUT_FN_URL}?code=${encodeURIComponent(lastSubmittedOrderCode)}&method=atm`;
+};
 
 // ===== Order lookup (客人查詢訂單狀態) =====
 document.getElementById('orderLookupBtn').onclick = () => {
@@ -4289,6 +4328,7 @@ async function openAdmin(){
   document.getElementById('shipInput').value = settings.shippingPerKg;
   document.getElementById('shopNameInput').value = settings.shopName;
   document.getElementById('paymentInput').value = settings.payment;
+  document.getElementById('ecpayEnabledInput').checked = !!settings.ecpayEnabled;
   document.getElementById('lineGroupUrlInput').value = settings.lineGroupUrl || '';
   document.getElementById('lineOfficialIdInput').value = settings.lineOfficialId || '';
   document.getElementById('threadsUrlInput').value = settings.threadsUrl || '';
@@ -4405,6 +4445,7 @@ document.getElementById('saveRateBtn').onclick = async () => {
 document.getElementById('saveShopBtn').onclick = async () => {
   settings.shopName = document.getElementById('shopNameInput').value.trim() || settings.shopName;
   settings.payment = document.getElementById('paymentInput').value;
+  settings.ecpayEnabled = document.getElementById('ecpayEnabledInput').checked;
   settings.lineGroupUrl = document.getElementById('lineGroupUrlInput').value.trim();
   settings.lineOfficialId = document.getElementById('lineOfficialIdInput').value.trim();
   settings.threadsUrl = document.getElementById('threadsUrlInput').value.trim();
