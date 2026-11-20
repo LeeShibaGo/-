@@ -2209,6 +2209,15 @@ function productTier(p){ return TIER_BY_BRAND[productBrand(p)] || '生活選物'
 // 進搜尋結果。key 一律小寫(英文字母)或原文(中文本身沒有大小寫問題),
 // 搜尋時查詢字串也會先轉小寫再比對,兩邊才對得起來。GM/NB 目前還沒有
 // 上架對應品牌,先收在表裡不影響任何搜尋結果,以後真的上架直接就通。
+// 搜尋同義詞(見 renderProducts 的搜尋段落):客人用的說法跟商品名稱用字不一樣時,
+// 把說法對應到名稱裡真的會出現的字。key 一律小寫。
+const SEARCH_SYNONYMS = {
+  '發熱衣': ['heattech', 'ヒートテック', '極暖'],
+  '發熱': ['heattech', 'ヒートテック', '極暖'],
+  '發熱內衣': ['heattech', 'ヒートテック', '極暖'],
+  '保暖衣': ['heattech', 'ヒートテック', '極暖'],
+};
+const SEARCH_CAMPAIGN_WORDS = ['感謝祭', '感謝祭專區', 'kanshasai'];
 const BRAND_SEARCH_ALIASES = {
   'gm': 'Gentle Monster',
   'nb': 'New Balance',
@@ -3227,13 +3236,30 @@ function renderProducts(){
   const q = searchQuery.trim().toLowerCase();
   if(q){
     const aliasBrand = BRAND_SEARCH_ALIASES[q];
-    list = list.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      (p.brand || '').toLowerCase().includes(q) ||
-      (p.subtype || '').toLowerCase().includes(q) ||
-      (p.series || '').toLowerCase().includes(q) ||
-      (aliasBrand && p.brand === aliasBrand)
-    );
+    // 2026-11-20 上線前測試發現:搜尋框範例「UNIQLO 刷毛外套」(中間有空格)搜不到任何
+    // 東西——整串字當成一個字串去比對,空格也算進去,商品名稱裡沒有這個字串。
+    // 改成「空格分開的每個詞都要符合」,而且每個詞除了直接包含,還認:
+    //   1. 同義詞(發熱衣 -> HEATTECH/ヒートテック、感謝祭 -> 感謝祭專區商品)
+    //   2. 3 個字以上的中文詞,商品名稱裡按順序出現這幾個字也算(刷毛外套 -> 刷毛絨外套)
+    // 整串字直接包含的舊規則保留,所以原本搜得到的一定還搜得到。
+    const tokens = q.split(/\s+/).filter(Boolean);
+    const tokenHit = (p, hay, t) => {
+      if(hay.includes(t)) return true;
+      const syn = SEARCH_SYNONYMS[t];
+      if(syn && syn.some(s => hay.includes(s))) return true;
+      if(SEARCH_CAMPAIGN_WORDS.includes(t) && p.campaign) return true;
+      if(/^[一-鿿]{3,}$/.test(t)){
+        const nm = p.name.toLowerCase();
+        let from = 0;
+        for(const ch of t){ from = nm.indexOf(ch, from); if(from < 0) return false; from++; }
+        return true;
+      }
+      return false;
+    };
+    list = list.filter(p => {
+      const hay = `${p.name} ${p.brand || ''} ${p.subtype || ''} ${p.series || ''}`.toLowerCase();
+      return hay.includes(q) || (aliasBrand && p.brand === aliasBrand) || tokens.every(t => tokenHit(p, hay, t));
+    });
   }
   if(list.length === 0){
     grid.innerHTML = `<div class="empty-note">${q ? '找不到符合「' + escapeHtml(searchQuery.trim()) + '」的商品。' : '這個分類目前沒有商品。'}</div>`;
