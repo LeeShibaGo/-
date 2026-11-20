@@ -376,7 +376,7 @@
   {
    "id": "p_uniqlokss_1795141602918_0",
    "addedAt": 1795141602918,
-   "name": "ファーリーフリースフルジップジャケット(女款)",
+   "name": "ファーリーフリースフルジップジャケット 毛茸茸刷毛絨全拉鍊外套(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -589,12 +589,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ファーリーフリースフルジップジャケット"
   },
   {
    "id": "p_uniqlokss_1795141602918_1",
    "addedAt": 1795141602918,
-   "name": "カシミヤクルーネックセーター（長袖）(男款)",
+   "name": "カシミヤクルーネックセーター（長袖） 喀什米爾圓領毛衣（長袖）(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -657,12 +658,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "カシミヤクルーネックセーター（長袖）"
   },
   {
    "id": "p_uniqlokss_1795141602918_2",
    "addedAt": 1795141602918,
-   "name": "カシミヤタートルネックセーター(男款)",
+   "name": "カシミヤタートルネックセーター 喀什米爾高領毛衣(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -893,12 +895,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "カシミヤタートルネックセーター"
   },
   {
    "id": "p_uniqlokss_1795141602918_3",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/クルー/フリル(女款)",
+   "name": "ヒートテックソックス/クルー/フリル HEATTECH 襪/中筒/荷葉邊(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -961,12 +964,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/クルー/フリル"
   },
   {
    "id": "p_uniqlokss_1795141602918_4",
    "addedAt": 1795141602918,
-   "name": "ヒートテックハーフソックス/パイル(男款)",
+   "name": "ヒートテックハーフソックス/パイル HEATTECH 半筒襪/毛圈(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -1053,12 +1057,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックハーフソックス/パイル"
   },
   {
    "id": "p_uniqlokss_1795141602918_5",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/パイル(男款)",
+   "name": "ヒートテックソックス/パイル HEATTECH 襪/毛圈(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -1157,12 +1162,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/パイル"
   },
   {
    "id": "p_uniqlokss_1795141602918_6",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ソフトパイル(男款)",
+   "name": "ヒートテックソックス/ソフトパイル HEATTECH 襪/柔軟毛圈(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -1225,12 +1231,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/ソフトパイル"
   },
   {
    "id": "p_uniqlokss_1795141602918_7",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ワイドリブ(男款)",
+   "name": "ヒートテックソックス/ワイドリブ HEATTECH 襪/寬羅紋(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -1293,12 +1300,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/ワイドリブ"
   },
   {
    "id": "p_uniqlokss_1795141602918_8",
    "addedAt": 1795141602918,
-   "name": "カシミヤクルーネックセーター(女款)",
+   "name": "カシミヤクルーネックセーター 喀什米爾圓領毛衣(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -1863,12 +1871,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "カシミヤクルーネックセーター"
   },
   {
    "id": "p_uniqlokss_1795141602918_9",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス(女款)",
+   "name": "ヒートテックソックス HEATTECH 襪(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -2206,12 +2215,13 @@
     "E488962-000",
     "E491889-000",
     "E492318-000"
-   ]
+   ],
+   "nameJa": "ヒートテックソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_10",
    "addedAt": 1795141602918,
-   "name": "ヒートテックUネックT(女款)",
+   "name": "ヒートテックUネックT HEATTECH U領T恤(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -2292,12 +2302,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックUネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_11",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドクルーネックT(女款)",
+   "name": "極暖ヒートテックカシミヤブレンドクルーネックT HEATTECH 極暖 喀什米爾混紡圓領T恤(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -2554,12 +2565,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドクルーネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_12",
    "addedAt": 1795141602918,
-   "name": "ヒートテックニットリブタイツ(女款)",
+   "name": "ヒートテックニットリブタイツ HEATTECH 針織羅紋緊身褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -2634,12 +2646,13 @@
    "mergedProductIds": [
     "E469849-000",
     "E487125-000"
-   ]
+   ],
+   "nameJa": "ヒートテックニットリブタイツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_13",
    "addedAt": 1795141602918,
-   "name": "フリースジャケット",
+   "name": "フリースジャケット 刷毛絨外套",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -2870,12 +2883,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フリースジャケット"
   },
   {
    "id": "p_uniqlokss_1795141602918_14",
    "addedAt": 1795141602918,
-   "name": "ソフトニットフリースクルーネックT(女款)",
+   "name": "ソフトニットフリースクルーネックT 柔軟針織刷毛絨圓領T恤(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "短袖上衣",
@@ -3110,12 +3124,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ソフトニットフリースクルーネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_15",
    "addedAt": 1795141602918,
-   "name": "フランネルシャツ/バッファローチェック",
+   "name": "フランネルシャツ/バッファローチェック 法蘭絨襯衫/水牛格紋",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襯衫",
@@ -3202,12 +3217,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フランネルシャツ/バッファローチェック"
   },
   {
    "id": "p_uniqlokss_1795141602918_16",
    "addedAt": 1795141602918,
-   "name": "パフテックウォッシャブルパーカ(童裝)",
+   "name": "パフテックウォッシャブルパーカ PUFFTECH 可水洗連帽外套(童裝)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "連帽外套",
@@ -3354,12 +3370,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "パフテックウォッシャブルパーカ"
   },
   {
    "id": "p_uniqlokss_1795141602918_17",
    "addedAt": 1795141602918,
-   "name": "ファーリーフリースフルジップジャケット(童裝)",
+   "name": "ファーリーフリースフルジップジャケット 毛茸茸刷毛絨全拉鍊外套(童裝)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -3506,12 +3523,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ファーリーフリースフルジップジャケット"
   },
   {
    "id": "p_uniqlokss_1795141602918_18",
    "addedAt": 1795141602918,
-   "name": "フリースレギンス/10分丈(嬰幼兒)",
+   "name": "フリースレギンス/10分丈 刷毛絨內搭褲/十分(嬰幼兒)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -3657,12 +3675,13 @@
     "E478432-000",
     "E486439-000",
     "E486439-001"
-   ]
+   ],
+   "nameJa": "フリースレギンス/10分丈"
   },
   {
    "id": "p_uniqlokss_1795141602918_19",
    "addedAt": 1795141602918,
-   "name": "ヒートテックコットンクルーネックT(嬰幼兒)",
+   "name": "ヒートテックコットンクルーネックT HEATTECH 棉質圓領T恤(嬰幼兒)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -3733,12 +3752,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックコットンクルーネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_20",
    "addedAt": 1795141602918,
-   "name": "シームレスダウンパーカ(女款)",
+   "name": "シームレスダウンパーカ 無縫羽絨連帽外套(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "連帽外套",
@@ -3845,12 +3865,13 @@
    "mergedProductIds": [
     "E478577-000",
     "E489429-000"
-   ]
+   ],
+   "nameJa": "シームレスダウンパーカ"
   },
   {
    "id": "p_uniqlokss_1795141602918_21",
    "addedAt": 1795141602918,
-   "name": "フリースレギンス/コーデュロイライク/10分丈(嬰幼兒)",
+   "name": "フリースレギンス/コーデュロイライク/10分丈 刷毛絨內搭褲/燈芯絨質感/十分(嬰幼兒)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -3973,12 +3994,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フリースレギンス/コーデュロイライク/10分丈"
   },
   {
    "id": "p_uniqlokss_1795141602918_22",
    "addedAt": 1795141602918,
-   "name": "ヒートテックキャミソール(女款)",
+   "name": "ヒートテックキャミソール HEATTECH 細肩帶背心(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -4081,12 +4103,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックキャミソール"
   },
   {
    "id": "p_uniqlokss_1795141602918_23",
    "addedAt": 1795141602918,
-   "name": "バギーバレルレッグジーンズ",
+   "name": "バギーバレルレッグジーンズ Baggy 桶狀牛仔褲",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -4271,12 +4294,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "バギーバレルレッグジーンズ"
   },
   {
    "id": "p_uniqlokss_1795141602918_24",
    "addedAt": 1795141602918,
-   "name": "ウォームストレッチパンツ(男款)",
+   "name": "ウォームストレッチパンツ 保暖彈性褲(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -4411,12 +4435,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ウォームストレッチパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_25",
    "addedAt": 1795141602918,
-   "name": "ウォームストレッチパンツ/丈長め(男款)",
+   "name": "ウォームストレッチパンツ/丈長め 保暖彈性褲/長版(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -4551,12 +4576,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ウォームストレッチパンツ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_26",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンクルーネックT/9分袖(男款)",
+   "name": "極暖ヒートテックコットンクルーネックT/9分袖 HEATTECH 極暖 棉質圓領T恤/九分袖(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -4667,12 +4693,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックコットンクルーネックT/9分袖"
   },
   {
    "id": "p_uniqlokss_1795141602918_27",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンタイツ/前開き(男款)",
+   "name": "極暖ヒートテックコットンタイツ/前開き HEATTECH 極暖 棉質緊身褲/前開(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -4735,12 +4762,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックコットンタイツ/前開き"
   },
   {
    "id": "p_uniqlokss_1795141602918_28",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンVネックT/9分袖(男款)",
+   "name": "極暖ヒートテックコットンVネックT/9分袖 HEATTECH 極暖 棉質V領T恤/九分袖(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -4803,12 +4831,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックコットンVネックT/9分袖"
   },
   {
    "id": "p_uniqlokss_1795141602918_29",
    "addedAt": 1795141602918,
-   "name": "ヒートテックハイソックス(男款)",
+   "name": "ヒートテックハイソックス HEATTECH 高筒襪(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -4875,12 +4904,13 @@
    "mergedProductIds": [
     "E479562-000",
     "E493426-000"
-   ]
+   ],
+   "nameJa": "ヒートテックハイソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_30",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/5本指(男款)",
+   "name": "ヒートテックソックス/5本指 HEATTECH 襪/五趾(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -4919,12 +4949,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/5本指"
   },
   {
    "id": "p_uniqlokss_1795141602918_31",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/履き口ゴム無し(男款)",
+   "name": "ヒートテックソックス/履き口ゴム無し HEATTECH 襪/無束口(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -4991,12 +5022,13 @@
    "mergedProductIds": [
     "E479566-000",
     "E486955-000"
-   ]
+   ],
+   "nameJa": "ヒートテックソックス/履き口ゴム無し"
   },
   {
    "id": "p_uniqlokss_1795141602918_32",
    "addedAt": 1795141602918,
-   "name": "ソフトニットフリースクルーネックT",
+   "name": "ソフトニットフリースクルーネックT 柔軟針織刷毛絨圓領T恤",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "短袖上衣",
@@ -5275,12 +5307,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ソフトニットフリースクルーネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_33",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンUネックT/8分袖(女款)",
+   "name": "極暖ヒートテックコットンUネックT/8分袖 HEATTECH 極暖 棉質U領T恤/八分袖(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -5383,12 +5416,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックコットンUネックT/8分袖"
   },
   {
    "id": "p_uniqlokss_1795141602918_34",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドUネックT(女款)",
+   "name": "極暖ヒートテックカシミヤブレンドUネックT HEATTECH 極暖 喀什米爾混紡U領T恤(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -5557,12 +5591,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドUネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_35",
    "addedAt": 1795141602918,
-   "name": "ヒートテックカシミヤブレンドポインテールT(女款)",
+   "name": "ヒートテックカシミヤブレンドポインテールT HEATTECH 喀什米爾混紡尖尾T恤(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -5723,12 +5758,13 @@
    "mergedProductIds": [
     "E480584-000",
     "E488443-000"
-   ]
+   ],
+   "nameJa": "ヒートテックカシミヤブレンドポインテールT"
   },
   {
    "id": "p_uniqlokss_1795141602918_36",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/リブトップロール(女款)",
+   "name": "ヒートテックソックス/リブトップロール HEATTECH 襪/羅紋捲邊(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -5779,12 +5815,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/リブトップロール"
   },
   {
    "id": "p_uniqlokss_1795141602918_37",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/クルー/リラックス(女款)",
+   "name": "ヒートテックソックス/クルー/リラックス HEATTECH 襪/中筒/寬鬆(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -5835,12 +5872,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/クルー/リラックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_38",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ケーブル(女款)",
+   "name": "ヒートテックソックス/ケーブル HEATTECH 襪/麻花(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -5903,12 +5941,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/ケーブル"
   },
   {
    "id": "p_uniqlokss_1795141602918_39",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/リブ(女款)",
+   "name": "ヒートテックソックス/リブ HEATTECH 襪/羅紋(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -5971,12 +6010,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/リブ"
   },
   {
    "id": "p_uniqlokss_1795141602918_40",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ルーズ(女款)",
+   "name": "ヒートテックソックス/ルーズ HEATTECH 襪/寬鬆(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -6091,12 +6131,13 @@
    "mergedProductIds": [
     "E480727-000",
     "E487149-000"
-   ]
+   ],
+   "nameJa": "ヒートテックソックス/ルーズ"
   },
   {
    "id": "p_uniqlokss_1795141602918_41",
    "addedAt": 1795141602918,
-   "name": "ヒートテックショートソックス(女款)",
+   "name": "ヒートテックショートソックス HEATTECH 短襪(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -6135,12 +6176,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックショートソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_42",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ルームパイル(女款)",
+   "name": "ヒートテックソックス/ルームパイル HEATTECH 襪/居家毛圈(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -6191,12 +6233,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/ルームパイル"
   },
   {
    "id": "p_uniqlokss_1795141602918_43",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/5本指(女款)",
+   "name": "ヒートテックソックス/5本指 HEATTECH 襪/五趾(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -6235,12 +6278,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/5本指"
   },
   {
    "id": "p_uniqlokss_1795141602918_44",
    "addedAt": 1795141602918,
-   "name": "ヒートテックハイソックス/リブ(女款)",
+   "name": "ヒートテックハイソックス/リブ HEATTECH 高筒襪/羅紋(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -6291,12 +6335,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックハイソックス/リブ"
   },
   {
    "id": "p_uniqlokss_1795141602918_45",
    "addedAt": 1795141602918,
-   "name": "ヒートテックタイツ/着圧(女款)",
+   "name": "ヒートテックタイツ/着圧 HEATTECH 加壓緊身褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -6325,12 +6370,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックタイツ/着圧"
   },
   {
    "id": "p_uniqlokss_1795141602918_46",
    "addedAt": 1795141602918,
-   "name": "バギーバレルレッグジーンズ/丈短め",
+   "name": "バギーバレルレッグジーンズ/丈短め Baggy 桶狀牛仔褲/短版",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -6515,12 +6561,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "バギーバレルレッグジーンズ/丈短め"
   },
   {
    "id": "p_uniqlokss_1795141602918_47",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンレギンス/10分丈(女款)",
+   "name": "極暖ヒートテックコットンレギンス/10分丈 HEATTECH 極暖 棉質內搭褲/十分(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -6579,12 +6626,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックコットンレギンス/10分丈"
   },
   {
    "id": "p_uniqlokss_1795141602918_48",
    "addedAt": 1795141602918,
-   "name": "フランネルシャツ/オンブレチェック",
+   "name": "フランネルシャツ/オンブレチェック 法蘭絨襯衫/漸層格紋",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襯衫",
@@ -6699,12 +6747,13 @@
    "mergedProductIds": [
     "E481224-000",
     "E486602-000"
-   ]
+   ],
+   "nameJa": "フランネルシャツ/オンブレチェック"
   },
   {
    "id": "p_uniqlokss_1795141602918_49",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドクルーT/9分袖(男款)",
+   "name": "極暖ヒートテックカシミヤブレンドクルーT/9分袖 HEATTECH 極暖 喀什米爾混紡圓領T恤/九分袖(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -6887,12 +6936,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドクルーT/9分袖"
   },
   {
    "id": "p_uniqlokss_1795141602918_50",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドタートルT/9分袖(男款)",
+   "name": "極暖ヒートテックカシミヤブレンドタートルT/9分袖 HEATTECH 極暖 喀什米爾混紡高領T恤/九分袖(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -7051,12 +7101,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドタートルT/9分袖"
   },
   {
    "id": "p_uniqlokss_1795141602918_51",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドリブレギンス/10分丈(女款)",
+   "name": "極暖ヒートテックカシミヤブレンドリブレギンス/10分丈 HEATTECH 極暖 喀什米爾混紡羅紋內搭褲/十分(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -7103,12 +7154,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドリブレギンス/10分丈"
   },
   {
    "id": "p_uniqlokss_1795141602918_52",
    "addedAt": 1795141602918,
-   "name": "スウェットストレートパンツ",
+   "name": "スウェットストレートパンツ 運動直筒褲",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -7211,12 +7263,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スウェットストレートパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_53",
    "addedAt": 1795141602918,
-   "name": "ジップアップブルゾン(男款)",
+   "name": "ジップアップブルゾン 拉鍊夾克(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -7255,12 +7308,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ジップアップブルゾン"
   },
   {
    "id": "p_uniqlokss_1795141602918_54",
    "addedAt": 1795141602918,
-   "name": "デニムトラッカージャケット",
+   "name": "デニムトラッカージャケット 丹寧卡車夾克",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -7323,12 +7377,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "デニムトラッカージャケット"
   },
   {
    "id": "p_uniqlokss_1795141602918_55",
    "addedAt": 1795141602918,
-   "name": "ウルトラストレッチセット(女款)",
+   "name": "ウルトラストレッチセット Ultra Stretch 居家套裝(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "服飾",
@@ -7480,12 +7535,13 @@
     "E484608-000",
     "E485958-000",
     "E489052-000"
-   ]
+   ],
+   "nameJa": "ウルトラストレッチセット"
   },
   {
    "id": "p_uniqlokss_1795141602918_56",
    "addedAt": 1795141602918,
-   "name": "ウルトラストレッチスウェットセット(男款)",
+   "name": "ウルトラストレッチスウェットセット Ultra Stretch 運動衫套裝(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "服飾",
@@ -7673,12 +7729,13 @@
     "E484710-000",
     "E486480-000",
     "E492286-000"
-   ]
+   ],
+   "nameJa": "ウルトラストレッチスウェットセット"
   },
   {
    "id": "p_uniqlokss_1795141602918_57",
    "addedAt": 1795141602918,
-   "name": "バギーバレルレッグジーンズ/丈長め",
+   "name": "バギーバレルレッグジーンズ/丈長め Baggy 桶狀牛仔褲/長版",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -7829,12 +7886,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "バギーバレルレッグジーンズ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_58",
    "addedAt": 1795141602918,
-   "name": "スウェットストレートパンツ/丈長め",
+   "name": "スウェットストレートパンツ/丈長め 運動直筒褲/長版",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -7937,12 +7995,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スウェットストレートパンツ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_59",
    "addedAt": 1795141602918,
-   "name": "スウェットストレートパンツ/丈短め",
+   "name": "スウェットストレートパンツ/丈短め 運動直筒褲/短版",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -8045,12 +8104,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スウェットストレートパンツ/丈短め"
   },
   {
    "id": "p_uniqlokss_1795141602918_60",
    "addedAt": 1795141602918,
-   "name": "カシミヤクルーネックカーディガン(女款)",
+   "name": "カシミヤクルーネックカーディガン 喀什米爾圓領開襟衫(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -8219,12 +8279,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "カシミヤクルーネックカーディガン"
   },
   {
    "id": "p_uniqlokss_1795141602918_61",
    "addedAt": 1795141602918,
-   "name": "エアリズムウルトラストレッチセット(童裝)",
+   "name": "エアリズムウルトラストレッチセット AIRism Ultra Stretch 居家套裝(童裝)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -8279,12 +8340,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "エアリズムウルトラストレッチセット"
   },
   {
    "id": "p_uniqlokss_1795141602918_62",
    "addedAt": 1795141602918,
-   "name": "GIRLS エアリズムウルトラストレッチセット(童裝)",
+   "name": "GIRLS エアリズムウルトラストレッチセット 女童 AIRism Ultra Stretch 居家套裝(童裝)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -8339,12 +8401,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "GIRLS エアリズムウルトラストレッチセット"
   },
   {
    "id": "p_uniqlokss_1795141602918_63",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ/セルビッジ(男款)",
+   "name": "ストレートジーンズ/セルビッジ 直筒牛仔褲/赤耳(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -8439,12 +8502,13 @@
    "mergedProductIds": [
     "E485737-000",
     "E488684-000"
-   ]
+   ],
+   "nameJa": "ストレートジーンズ/セルビッジ"
   },
   {
    "id": "p_uniqlokss_1795141602918_64",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ/セルビッジ/丈長め(男款)",
+   "name": "ストレートジーンズ/セルビッジ/丈長め 直筒牛仔褲/赤耳/長版(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -8539,12 +8603,13 @@
    "mergedProductIds": [
     "E485738-000",
     "E488686-000"
-   ]
+   ],
+   "nameJa": "ストレートジーンズ/セルビッジ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_65",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンクルーネックT(女款)",
+   "name": "極暖ヒートテックコットンクルーネックT HEATTECH 極暖 棉質圓領T恤(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -8651,12 +8716,13 @@
    "mergedProductIds": [
     "E485833-000",
     "E485836-000"
-   ]
+   ],
+   "nameJa": "極暖ヒートテックコットンクルーネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_66",
    "addedAt": 1795141602918,
-   "name": "フリースジャケット/ユニクロ 京都・オンライン限定色(男款)",
+   "name": "フリースジャケット/ユニクロ 京都・オンライン限定色 刷毛絨外套/UNIQLO京都‧線上限定色(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -8719,12 +8785,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フリースジャケット/ユニクロ 京都・オンライン限定色"
   },
   {
    "id": "p_uniqlokss_1795141602918_67",
    "addedAt": 1795141602918,
-   "name": "スウェットシャツ",
+   "name": "スウェットシャツ 運動衫",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "大學T",
@@ -8907,12 +8974,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スウェットシャツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_68",
    "addedAt": 1795141602918,
-   "name": "パフテックジャケット(男款)",
+   "name": "パフテックジャケット PUFFTECH 外套(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -9047,12 +9115,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "パフテックジャケット"
   },
   {
    "id": "p_uniqlokss_1795141602918_69",
    "addedAt": 1795141602918,
-   "name": "シームレスダウンパーカ(男款)",
+   "name": "シームレスダウンパーカ 無縫羽絨連帽外套(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "連帽外套",
@@ -9163,12 +9232,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "シームレスダウンパーカ"
   },
   {
    "id": "p_uniqlokss_1795141602918_70",
    "addedAt": 1795141602918,
-   "name": "カウズ ユニバース スウェットシャツ",
+   "name": "カウズ ユニバース スウェットシャツ KAWS UNIVERSE 運動衫",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "大學T",
@@ -9260,12 +9330,13 @@
     "E486296-000",
     "E493506-000",
     "E493507-000"
-   ]
+   ],
+   "nameJa": "カウズ ユニバース スウェットシャツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_71",
    "addedAt": 1795141602918,
-   "name": "パフテックウォッシャブルパーカ(嬰幼兒)",
+   "name": "パフテックウォッシャブルパーカ PUFFTECH 可水洗連帽外套(嬰幼兒)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "連帽外套",
@@ -9364,12 +9435,13 @@
    "mergedProductIds": [
     "E486416-000",
     "E486417-000"
-   ]
+   ],
+   "nameJa": "パフテックウォッシャブルパーカ"
   },
   {
    "id": "p_uniqlokss_1795141602918_72",
    "addedAt": 1795141602918,
-   "name": "フランネルシャツ/オーバーチェック",
+   "name": "フランネルシャツ/オーバーチェック 法蘭絨襯衫/大格紋",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襯衫",
@@ -9511,12 +9583,13 @@
     "E486596-000",
     "E486598-000",
     "E486604-000"
-   ]
+   ],
+   "nameJa": "フランネルシャツ/オーバーチェック"
   },
   {
    "id": "p_uniqlokss_1795141602918_73",
    "addedAt": 1795141602918,
-   "name": "フランネルシャツ/ヘザー",
+   "name": "フランネルシャツ/ヘザー 法蘭絨襯衫/混紡色",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襯衫",
@@ -9603,12 +9676,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フランネルシャツ/ヘザー"
   },
   {
    "id": "p_uniqlokss_1795141602918_74",
    "addedAt": 1795141602918,
-   "name": "スフレヤーンチャンキーストール",
+   "name": "スフレヤーンチャンキーストール 蓬鬆紗粗針織圍巾",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "配件",
@@ -9707,12 +9781,13 @@
    "mergedProductIds": [
     "E486757-000",
     "E486758-000"
-   ]
+   ],
+   "nameJa": "スフレヤーンチャンキーストール"
   },
   {
    "id": "p_uniqlokss_1795141602918_75",
    "addedAt": 1795141602918,
-   "name": "スフレヤーンニットアームウォーマー",
+   "name": "スフレヤーンニットアームウォーマー 蓬鬆紗針織保暖袖套",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "配件",
@@ -9767,12 +9842,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スフレヤーンニットアームウォーマー"
   },
   {
    "id": "p_uniqlokss_1795141602918_76",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス",
+   "name": "ヒートテックソックス HEATTECH 襪",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -9875,12 +9951,13 @@
    "mergedProductIds": [
     "E486939-000",
     "E486940-000"
-   ]
+   ],
+   "nameJa": "ヒートテックソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_77",
    "addedAt": 1795141602918,
-   "name": "ヒートテックハーフソックス",
+   "name": "ヒートテックハーフソックス HEATTECH 半筒襪",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -9997,12 +10074,13 @@
    "mergedProductIds": [
     "E486941-000",
     "E486942-000"
-   ]
+   ],
+   "nameJa": "ヒートテックハーフソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_78",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ソフトフラッフィー(男款)",
+   "name": "ヒートテックソックス/ソフトフラッフィー HEATTECH 襪/柔軟蓬鬆(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -10065,12 +10143,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/ソフトフラッフィー"
   },
   {
    "id": "p_uniqlokss_1795141602918_79",
    "addedAt": 1795141602918,
-   "name": "ヒートテックハーフソックス(男款)",
+   "name": "ヒートテックハーフソックス HEATTECH 半筒襪(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -10137,12 +10216,13 @@
    "mergedProductIds": [
     "E486957-000",
     "E489455-000"
-   ]
+   ],
+   "nameJa": "ヒートテックハーフソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_80",
    "addedAt": 1795141602918,
-   "name": "ヒートテックニットタイツ(女款)",
+   "name": "ヒートテックニットタイツ HEATTECH 針織緊身褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -10185,12 +10265,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックニットタイツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_81",
    "addedAt": 1795141602918,
-   "name": "ヒートテックタイツ着圧(女款)",
+   "name": "ヒートテックタイツ着圧 HEATTECH 加壓緊身褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -10233,12 +10314,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックタイツ着圧"
   },
   {
    "id": "p_uniqlokss_1795141602918_82",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックボアタイツ(女款)",
+   "name": "極暖ヒートテックボアタイツ HEATTECH 極暖 毛絨緊身褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -10281,12 +10363,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックボアタイツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_83",
    "addedAt": 1795141602918,
-   "name": "ヒートテックハイソックス(女款)",
+   "name": "ヒートテックハイソックス HEATTECH 高筒襪(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -10325,12 +10408,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックハイソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_84",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドタイツ/前開き(男款)",
+   "name": "極暖ヒートテックカシミヤブレンドタイツ/前開き HEATTECH 極暖 喀什米爾混紡緊身褲/前開(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -10393,12 +10477,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドタイツ/前開き"
   },
   {
    "id": "p_uniqlokss_1795141602918_85",
    "addedAt": 1795141602918,
-   "name": "ウォームストレッチパンツ(女款)",
+   "name": "ウォームストレッチパンツ 保暖彈性褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -10501,12 +10586,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ウォームストレッチパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_86",
    "addedAt": 1795141602918,
-   "name": "ウォームストレッチパンツ/丈長め(女款)",
+   "name": "ウォームストレッチパンツ/丈長め 保暖彈性褲/長版(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -10609,12 +10695,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ウォームストレッチパンツ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_87",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドレギンス(女款)",
+   "name": "極暖ヒートテックカシミヤブレンドレギンス HEATTECH 極暖 喀什米爾混紡內搭褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -10717,12 +10804,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドレギンス"
   },
   {
    "id": "p_uniqlokss_1795141602918_88",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ(男款)",
+   "name": "ストレートジーンズ 直筒牛仔褲(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -10855,12 +10943,13 @@
    "mergedProductIds": [
     "E487206-000",
     "E487742-000"
-   ]
+   ],
+   "nameJa": "ストレートジーンズ"
   },
   {
    "id": "p_uniqlokss_1795141602918_89",
    "addedAt": 1795141602918,
-   "name": "ストレートワークパンツ(男款)",
+   "name": "ストレートワークパンツ 直筒工作褲(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -10955,12 +11044,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ストレートワークパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_90",
    "addedAt": 1795141602918,
-   "name": "イージーワイドパンツ(男款)",
+   "name": "イージーワイドパンツ 休閒寬褲(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -11035,12 +11125,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "イージーワイドパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_91",
    "addedAt": 1795141602918,
-   "name": "ユーティリティコットンブレンドパーカ(女款)",
+   "name": "ユーティリティコットンブレンドパーカ 實用棉混紡連帽外套(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "連帽外套",
@@ -11143,12 +11234,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ユーティリティコットンブレンドパーカ"
   },
   {
    "id": "p_uniqlokss_1795141602918_92",
    "addedAt": 1795141602918,
-   "name": "パフテックジャケット(女款)",
+   "name": "パフテックジャケット PUFFTECH 外套(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -11273,12 +11365,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "パフテックジャケット"
   },
   {
    "id": "p_uniqlokss_1795141602918_93",
    "addedAt": 1795141602918,
-   "name": "ジップアップショートジャケット",
+   "name": "ジップアップショートジャケット 拉鍊短外套",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -11363,12 +11456,13 @@
    "mergedProductIds": [
     "E487516-000",
     "E488787-000"
-   ]
+   ],
+   "nameJa": "ジップアップショートジャケット"
   },
   {
    "id": "p_uniqlokss_1795141602918_94",
    "addedAt": 1795141602918,
-   "name": "ファーリーフリースフルジップジャケット/ユニクロ 京都・オンライン限定色(女款)",
+   "name": "ファーリーフリースフルジップジャケット/ユニクロ 京都・オンライン限定色 毛茸茸刷毛絨全拉鍊外套/UNIQLO京都‧線上限定色(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -11471,12 +11565,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ファーリーフリースフルジップジャケット/ユニクロ 京都・オンライン限定色"
   },
   {
    "id": "p_uniqlokss_1795141602918_95",
    "addedAt": 1795141602918,
-   "name": "カバーオール",
+   "name": "カバーオール 工作外套",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -11539,12 +11634,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "カバーオール"
   },
   {
    "id": "p_uniqlokss_1795141602918_96",
    "addedAt": 1795141602918,
-   "name": "ウィンドプルーフスタンドブルゾン(女款)",
+   "name": "ウィンドプルーフスタンドブルゾン 防風立領夾克(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -11647,12 +11743,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ウィンドプルーフスタンドブルゾン"
   },
   {
    "id": "p_uniqlokss_1795141602918_97",
    "addedAt": 1795141602918,
-   "name": "フラッフィカシミヤリラックスカーディガン",
+   "name": "フラッフィカシミヤリラックスカーディガン 蓬鬆喀什米爾寬鬆開襟衫",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -11767,12 +11864,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フラッフィカシミヤリラックスカーディガン"
   },
   {
    "id": "p_uniqlokss_1795141602918_98",
    "addedAt": 1795141602918,
-   "name": "フラッフィカシミヤリラックスVネックセーター",
+   "name": "フラッフィカシミヤリラックスVネックセーター 蓬鬆喀什米爾寬鬆V領毛衣",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -11919,12 +12017,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フラッフィカシミヤリラックスVネックセーター"
   },
   {
    "id": "p_uniqlokss_1795141602918_99",
    "addedAt": 1795141602918,
-   "name": "スリムストレートジーンズ(女款)",
+   "name": "スリムストレートジーンズ 修身直筒牛仔褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -12041,12 +12140,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スリムストレートジーンズ"
   },
   {
    "id": "p_uniqlokss_1795141602918_100",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス(男款)",
+   "name": "ヒートテックソックス HEATTECH 襪(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -12187,12 +12287,13 @@
     "E488148-000",
     "E488149-000",
     "E489163-000"
-   ]
+   ],
+   "nameJa": "ヒートテックソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_101",
    "addedAt": 1795141602918,
-   "name": "ドライスウェットワイドパンツ(童裝)",
+   "name": "ドライスウェットワイドパンツ DRY 運動寬褲(童裝)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -12295,12 +12396,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ドライスウェットワイドパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_102",
    "addedAt": 1795141602918,
-   "name": "ドライスウェットパンツ(童裝)",
+   "name": "ドライスウェットパンツ DRY 運動褲(童裝)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -12381,12 +12483,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ドライスウェットパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_103",
    "addedAt": 1795141602918,
-   "name": "バギージーンズ(女款)",
+   "name": "バギージーンズ Baggy 牛仔褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -12441,12 +12544,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "バギージーンズ"
   },
   {
    "id": "p_uniqlokss_1795141602918_104",
    "addedAt": 1795141602918,
-   "name": "ブラッシュドジャージーバレルレッグパンツ(女款)",
+   "name": "ブラッシュドジャージーバレルレッグパンツ 刷毛針織桶狀褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -12514,12 +12618,13 @@
     "E488488-000",
     "E488488-001",
     "E488488-002"
-   ]
+   ],
+   "nameJa": "ブラッシュドジャージーバレルレッグパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_105",
    "addedAt": 1795141602918,
-   "name": "カシミヤクルーネックセーター/12ゲージ(女款)",
+   "name": "カシミヤクルーネックセーター/12ゲージ 喀什米爾圓領毛衣/12針(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -12634,12 +12739,13 @@
    "mergedProductIds": [
     "E488532-000",
     "E490474-000"
-   ]
+   ],
+   "nameJa": "カシミヤクルーネックセーター/12ゲージ"
   },
   {
    "id": "p_uniqlokss_1795141602918_106",
    "addedAt": 1795141602918,
-   "name": "カシミヤクルーネックセーター/7ゲージ(女款)",
+   "name": "カシミヤクルーネックセーター/7ゲージ 喀什米爾圓領毛衣/7針(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -12718,12 +12824,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "カシミヤクルーネックセーター/7ゲージ"
   },
   {
    "id": "p_uniqlokss_1795141602918_107",
    "addedAt": 1795141602918,
-   "name": "EZYバレルジーンズ",
+   "name": "EZYバレルジーンズ EZY桶狀牛仔褲",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -12858,12 +12965,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "EZYバレルジーンズ"
   },
   {
    "id": "p_uniqlokss_1795141602918_108",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ/丈長め(男款)",
+   "name": "ストレートジーンズ/丈長め 直筒牛仔褲/長版(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -12954,12 +13062,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ストレートジーンズ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_109",
    "addedAt": 1795141602918,
-   "name": "フラッフィカシミヤベスト(女款)",
+   "name": "フラッフィカシミヤベスト 蓬鬆喀什米爾背心(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -13034,12 +13143,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "フラッフィカシミヤベスト"
   },
   {
    "id": "p_uniqlokss_1795141602918_110",
    "addedAt": 1795141602918,
-   "name": "スリムストレートジーンズ/丈長め(女款)",
+   "name": "スリムストレートジーンズ/丈長め 修身直筒牛仔褲/長版(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -13156,12 +13266,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スリムストレートジーンズ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_111",
    "addedAt": 1795141602918,
-   "name": "フランネルシャツ",
+   "name": "フランネルシャツ 法蘭絨襯衫",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襯衫",
@@ -13276,12 +13387,13 @@
    "mergedProductIds": [
     "E488794-000",
     "E488795-000"
-   ]
+   ],
+   "nameJa": "フランネルシャツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_112",
    "addedAt": 1795141602918,
-   "name": "カバーオール/デニム",
+   "name": "カバーオール/デニム 工作外套/丹寧",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -13344,12 +13456,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "カバーオール/デニム"
   },
   {
    "id": "p_uniqlokss_1795141602918_113",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ルームライン(女款)",
+   "name": "ヒートテックソックス/ルームライン HEATTECH 襪/居家線條(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -13400,12 +13513,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/ルームライン"
   },
   {
    "id": "p_uniqlokss_1795141602918_114",
    "addedAt": 1795141602918,
-   "name": "ヒートテックソックス/ソフトフラッフィー(女款)",
+   "name": "ヒートテックソックス/ソフトフラッフィー HEATTECH 襪/柔軟蓬鬆(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -13456,12 +13570,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックソックス/ソフトフラッフィー"
   },
   {
    "id": "p_uniqlokss_1795141602918_115",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックカシミヤブレンドリブレギンス(女款)",
+   "name": "極暖ヒートテックカシミヤブレンドリブレギンス HEATTECH 極暖 喀什米爾混紡羅紋內搭褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內搭褲",
@@ -13542,12 +13657,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックカシミヤブレンドリブレギンス"
   },
   {
    "id": "p_uniqlokss_1795141602918_116",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ/ダメージ(男款)",
+   "name": "ストレートジーンズ/ダメージ 直筒牛仔褲/刷破(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -13600,12 +13716,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ストレートジーンズ/ダメージ"
   },
   {
    "id": "p_uniqlokss_1795141602918_117",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ/ダメージ/丈長め(男款)",
+   "name": "ストレートジーンズ/ダメージ/丈長め 直筒牛仔褲/刷破/長版(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -13658,12 +13775,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ストレートジーンズ/ダメージ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_118",
    "addedAt": 1795141602918,
-   "name": "スフレヤーンニットストール",
+   "name": "スフレヤーンニットストール 蓬鬆紗針織圍巾",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "配件",
@@ -13728,12 +13846,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スフレヤーンニットストール"
   },
   {
    "id": "p_uniqlokss_1795141602918_119",
    "addedAt": 1795141602918,
-   "name": "タックバレルレッグパンツ(女款)",
+   "name": "タックバレルレッグパンツ 打褶桶狀褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -13796,12 +13915,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "タックバレルレッグパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_120",
    "addedAt": 1795141602918,
-   "name": "ジップアップブルゾン",
+   "name": "ジップアップブルゾン 拉鍊夾克",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "外套",
@@ -13888,12 +14008,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ジップアップブルゾン"
   },
   {
    "id": "p_uniqlokss_1795141602918_121",
    "addedAt": 1795141602918,
-   "name": "ハイライズワイドジーンズ(女款)",
+   "name": "ハイライズワイドジーンズ 高腰寬版牛仔褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -14044,12 +14165,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ハイライズワイドジーンズ"
   },
   {
    "id": "p_uniqlokss_1795141602918_122",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ/ダメージ(女款)",
+   "name": "ストレートジーンズ/ダメージ 直筒牛仔褲/刷破(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -14132,12 +14254,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ストレートジーンズ/ダメージ"
   },
   {
    "id": "p_uniqlokss_1795141602918_123",
    "addedAt": 1795141602918,
-   "name": "ストレートジーンズ/ダメージ/丈長め(女款)",
+   "name": "ストレートジーンズ/ダメージ/丈長め 直筒牛仔褲/刷破/長版(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -14220,12 +14343,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ストレートジーンズ/ダメージ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_124",
    "addedAt": 1795141602918,
-   "name": "ハイライズワイドジーンズ/丈長め(女款)",
+   "name": "ハイライズワイドジーンズ/丈長め 高腰寬版牛仔褲/長版(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -14376,12 +14500,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ハイライズワイドジーンズ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_125",
    "addedAt": 1795141602918,
-   "name": "タックバレルレッグパンツ/丈長め(女款)",
+   "name": "タックバレルレッグパンツ/丈長め 打褶桶狀褲/長版(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -14444,12 +14569,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "タックバレルレッグパンツ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_126",
    "addedAt": 1795141602918,
-   "name": "スムースコットンクルーネックセーター",
+   "name": "スムースコットンクルーネックセーター 平滑棉質圓領毛衣",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "毛衣",
@@ -14530,12 +14656,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "スムースコットンクルーネックセーター"
   },
   {
    "id": "p_uniqlokss_1795141602918_127",
    "addedAt": 1795141602918,
-   "name": "エアリズム3Dマスク/2枚組",
+   "name": "エアリズム3Dマスク/2枚組 AIRism 3D口罩 2入組",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "配件",
@@ -14622,12 +14749,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "エアリズム3Dマスク/2枚組"
   },
   {
    "id": "p_uniqlokss_1795141602918_128",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンVネックT(男款)",
+   "name": "極暖ヒートテックコットンVネックT HEATTECH 極暖 棉質V領T恤(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -14690,12 +14818,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックコットンVネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_129",
    "addedAt": 1795141602918,
-   "name": "極暖ヒートテックコットンクルーネックT(男款)",
+   "name": "極暖ヒートテックコットンクルーネックT HEATTECH 極暖 棉質圓領T恤(男款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "內著",
@@ -14758,12 +14887,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "極暖ヒートテックコットンクルーネックT"
   },
   {
    "id": "p_uniqlokss_1795141602918_130",
    "addedAt": 1795141602918,
-   "name": "EZYバレルジーンズ/丈長め",
+   "name": "EZYバレルジーンズ/丈長め EZY桶狀牛仔褲/長版",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "牛仔褲",
@@ -14850,12 +14980,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "EZYバレルジーンズ/丈長め"
   },
   {
    "id": "p_uniqlokss_1795141602918_131",
    "addedAt": 1795141602918,
-   "name": "チノワイドパンツ(女款)",
+   "name": "チノワイドパンツ 卡其寬褲(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "長褲",
@@ -14918,12 +15049,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "チノワイドパンツ"
   },
   {
    "id": "p_uniqlokss_1795141602918_132",
    "addedAt": 1795141602918,
-   "name": "ヒートテックロングルームソックス(女款)",
+   "name": "ヒートテックロングルームソックス HEATTECH 長居家襪(女款)",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -14986,12 +15118,13 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックロングルームソックス"
   },
   {
    "id": "p_uniqlokss_1795141602918_133",
    "addedAt": 1795141602918,
-   "name": "ヒートテックデオドラントソックス",
+   "name": "ヒートテックデオドラントソックス HEATTECH 消臭襪",
    "brand": "UNIQLO",
    "country": "JP",
    "subtype": "襪類",
@@ -15048,7 +15181,8 @@
     }
    ],
    "campaign": "uniqlo-kanshasai-2026",
-   "saleEnd": "2026-11-26"
+   "saleEnd": "2026-11-26",
+   "nameJa": "ヒートテックデオドラントソックス"
   }
  ],
  "unflaggedProductIds": [
