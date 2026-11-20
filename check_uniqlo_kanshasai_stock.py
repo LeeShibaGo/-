@@ -20,7 +20,7 @@
   不動價格、名稱、圖片。
 
 用法:
-  python check_uniqlo_kanshasai_stock.py report   # 只看報告,不寫入(用公開讀取,不需要金鑰)
+  python check_uniqlo_kanshasai_stock.py report [all]  # 只看報告,不寫入(用公開讀取,不需要金鑰);加 all = 全部 UNIQLO 商品
   python check_uniqlo_kanshasai_stock.py apply    # 寫入(要 service account,走 GitHub Actions)
 """
 
@@ -92,7 +92,7 @@ def live_stock(pid):
 def image_code(color):
     """圖檔網址 .../jpgoods_62_491116_3x4.jpg -> (色碼 '62', 商品代碼 'E491116-000')"""
     m = re.search(r"goods_(\d+)_(\d+)_", color.get("image") or "")
-    return (m.group(1), f"E{m.group(2)}-000") if m else (None, None)
+    return (m.group(1), f"E{m.group(2)}") if m else (None, None)
 
 
 def base_name(name):
@@ -113,7 +113,8 @@ def main():
     else:
         raw = json.load(urllib.request.urlopen(DB + '/daigou-products-v1.json?orderBy="brand"&equalTo="UNIQLO"'))
         uniqlo = list(raw.values()) if isinstance(raw, dict) else raw
-    cards = [p for p in uniqlo if p.get("campaign") == CAMPAIGN]
+    scope_all = len(sys.argv) > 2 and sys.argv[2].strip().lower() == "all"  # all = 全部 UNIQLO 商品卡,不只感謝祭
+    cards = [p for p in uniqlo if (p.get("brand") == "UNIQLO" if scope_all else p.get("campaign") == CAMPAIGN)]
     print(f"感謝祭商品卡:{len(cards)} 張")
 
     all_pids = sorted({pid for c in cards for pid in pids_of(c)})
@@ -147,8 +148,8 @@ def main():
         used = set()
         for color in card.get("colors", []):
             code, img_pid = image_code(color)
-            cand = [x for x in pool if (x[0], x[1]) not in used and code and x[1] == code and x[0] == img_pid]
-            has_img_code = bool(code and img_pid in pids)
+            cand = [x for x in pool if (x[0], x[1]) not in used and code and x[1] == code and x[0].split("-")[0] == img_pid]
+            has_img_code = bool(code and img_pid in [q.split("-")[0] for q in pids])
             if not cand and not has_img_code:  # 沒有圖檔色碼可對時才退而用顏色名稱比對
                 nm = base_name(color.get("name"))
                 cand = [x for x in pool if (x[0], x[1]) not in used and x[2]["name"] == nm]

@@ -1779,6 +1779,22 @@ def sync_uniqlo(items):
             time.sleep(0.3)
             continue
 
+        # 2026-11-20:l2.sales 只是「這個規格可以販售」的旗標,不代表有貨——上線前核對發現
+        # 官網沒貨的尺寸/顏色大量被標成有貨、客人可以下單。真正的庫存在
+        # /products/{商品代碼}/stock(每個 l2Id 一個 statusCode:IN_STOCK/LOW_STOCK/STOCK_OUT
+        # 跟 quantity),改用它判斷。這個端點抓不到時整張卡先不動(寧可保留上次的庫存,也不要
+        # 退回用 sales 旗標把沒貨的又標成有貨)。
+        try:
+            stock_data = fetch(f"{UNIQLO_API}/{pid}/stock", timeout=20).json()
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 庫存端點抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+        if stock_data.get("status") != "ok":
+            errors += 1
+            continue
+        l2_stock = stock_data.get("result") or {}
+
         by_color = {}
         new_jpy = None
         for l2 in data.get("result", {}).get("l2s", []):
@@ -1788,7 +1804,10 @@ def sync_uniqlo(items):
             entry = by_color.setdefault(color_name, {"name": color_name, "sizes": [], "stock": {}})
             if size_key not in entry["stock"]:
                 entry["sizes"].append(size_key)
-            entry["stock"][size_key] = max(entry["stock"].get(size_key, 0), 1 if l2.get("sales") else 0)
+            st = l2_stock.get(l2.get("l2Id")) or {}
+            in_stock = bool(l2.get("sales")) and st.get("statusCode") in ("IN_STOCK", "LOW_STOCK") \
+                and (st.get("quantity") or 0) > 0
+            entry["stock"][size_key] = max(entry["stock"].get(size_key, 0), 1 if in_stock else 0)
             if new_jpy is None:
                 price_val = (l2.get("prices") or {}).get("base", {}).get("value")
                 if price_val:
