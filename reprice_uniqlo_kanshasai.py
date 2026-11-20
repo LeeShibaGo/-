@@ -7,7 +7,8 @@
   2. 今年價比去年「貴」的 -> 不動,列出來讓老闆看怎麼處理
   3. 去年沒出現過的商品 -> 一律 成本價 × 1.2
        成本 = 日幣價 × 匯率 + 重量 × 每公斤運費(跟網站既有鞋類的「成本×1.2」同一套算法,
-       見 index.html 的 shoeMarginPrice),四捨五入到整數。
+       見 index.html 的 shoeMarginPrice),含運費;算完先四捨五入到整數,再把尾數湊成
+       0 或 9(個位 0-4 捨成 0、5-9 進成 9,見 round_09)。去年的賣價是固定值,不再湊尾數。
   去年等於今年的(例如襪子 100)不動。
 
 怎麼對照:用商品名稱(日文原名,去掉顏色後面的說明文字)對去年報價單的編號,
@@ -74,6 +75,13 @@ RULES = [
 ]
 
 
+def round_09(x):
+    """尾數湊成 0 或 9(老闆指示:四捨到 0、五入到 9):
+    個位 0-4 -> 捨去成 0(243 -> 240);個位 5-9 -> 進到 9(245 -> 249、298 -> 299)。"""
+    base, r = x - x % 10, x % 10
+    return base if r <= 4 else base + 9
+
+
 def match_rule(name):
     b = base_of(name)
     for label, price, fn in RULES:
@@ -116,7 +124,7 @@ def main():
             # 感謝價用匯入檔裡的(每日同步偶爾會把少數卡的 jpy 改回官網原價,不可靠)
             sale_jpy = sale_jpy_by_id.get(p["id"], p["jpy"])
             cost = sale_jpy * rate + float(p.get("weight") or 0.3) * ship
-            target = round(cost * 1.2)
+            target = round_09(round(cost * 1.2))
             newp.append((p["name"], sale_jpy, cur, target))
             reason = "new"
         elif cur < last:  # 今年比去年便宜 -> 改成去年的賣價
