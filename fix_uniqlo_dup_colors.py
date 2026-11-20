@@ -29,13 +29,23 @@ def main():
         counts = collections.Counter(base)
         if all(v == 1 for v in counts.values()) and not any(OLD_SUFFIX.search(c.get("name") or "") for c in cols):
             continue
+        seq = collections.Counter()
         for c, b in zip(cols, base):
             if counts[b] > 1:
+                seq[b] += 1
                 m = CODE.search(c.get("image") or "")
-                c["name"] = f"{b} {m.group(1)}" if m else b
+                # 沒有圖片(抓不到色號)的顏色用流水號區分
+                c["name"] = f"{b} {m.group(1)}" if m else f"{b} {seq[b]}"
             else:
                 c["name"] = b
         names = [c["name"] for c in cols]
+        if len(set(names)) != len(names):  # 極少數:色號跟流水號撞名,全部改用流水號
+            seq = collections.Counter()
+            for c, b in zip(cols, base):
+                if counts[b] > 1:
+                    seq[b] += 1
+                    c["name"] = f"{b} {seq[b]}"
+            names = [c["name"] for c in cols]
         assert len(set(names)) == len(names), (p["name"], names)
         print(f"  {p['name']}: {names}")
         changed.append(p)
