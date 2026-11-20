@@ -328,6 +328,11 @@ def build_products_index(items):
             "hidden": bool(p.get("hidden")),
             "addedAt": p.get("addedAt"),
             "extraSoldQty": p.get("extraSoldQty"),
+            # 限期活動專區(index.html CAMPAIGNS,例如 UNIQLO 感謝祭)靠這個欄位
+            # 在索引裡就篩得出來,不用先載入完整商品資料。沒有活動的商品這兩個是
+            # None,Firebase 會直接省略,不增加索引大小。
+            "campaign": p.get("campaign"),
+            "saleEnd": p.get("saleEnd"),
             "soldOut": _is_fully_sold_out(p),
         })
     return index
