@@ -1806,7 +1806,9 @@ def sync_uniqlo(items):
             stock_changed += 1
         card["colors"] = new_colors
 
-        if new_jpy and new_jpy != card.get("jpy"):
+        # 限期活動卡(感謝祭)的日幣價是促銷價,官網 prices.base 常是原價,不能拿來改價,
+        # 不然商品卡會顯示「¥7,990 / NT$725」這種對不起來的價格。
+        if new_jpy and new_jpy != card.get("jpy") and not card.get("campaign"):
             print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
             price_change_lines.append(f"[UNIQLO] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
             card["jpy"] = new_jpy
