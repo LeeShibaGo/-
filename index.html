@@ -962,6 +962,10 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
   </a>
   -->
 
+  <!-- 2026-11-20:首頁的限期活動橫幅(UNIQLO 感謝祭),見 renderHomeCampaignBanner();
+  活動截止或沒有商品時整塊自動隱藏。 -->
+  <div class="wrap"><div id="homeCampaignBanner" style="display:none;"></div></div>
+
   <div class="wrap brand-showcase">
     <h2 class="brand-showcase-title">BRAND</h2>
     <div class="brand-showcase-grid" id="brandShowcaseGrid"></div>
@@ -2730,6 +2734,7 @@ function render(){
   renderSocialLinks();
   renderTrustSection();
   renderBrandShowcase();
+  renderHomeCampaignBanner();
   renderProducts();
   renderNewArrivals();
   renderBestSellers();
@@ -3022,6 +3027,42 @@ function activeCampaignKey(){
   }
   return null;
 }
+// 首頁橫幅:跟品牌頁的專區入口同一套條件(活動沒截止、還有商品),點下去
+// 直接切到該品牌 + 專區。樣式沿用 .campaign-zone-btn。
+function renderHomeCampaignBanner(){
+  const wrap = document.getElementById('homeCampaignBanner');
+  if(!wrap) return;
+  const hide = () => { wrap.style.display = 'none'; wrap.innerHTML = ''; };
+  const visible = visibleProducts();
+  const key = Object.keys(CAMPAIGNS).find(k => Date.now() <= new Date(CAMPAIGNS[k].until).getTime()
+    && visible.some(p => p.campaign === k));
+  if(!key){ hide(); return; }
+  const c = CAMPAIGNS[key];
+  const count = visible.filter(p => p.campaign === key).length;
+  wrap.style.display = '';
+  wrap.innerHTML = `
+    <button type="button" class="campaign-zone-btn" id="homeCampaignBtn" style="margin:0 0 18px;">
+      <span class="cz-icon">${c.icon}</span>
+      <span class="cz-text"><b>${escapeHtml(c.label)}</b><small>期間限定價,至 ${escapeHtml(c.untilText)} 止・共 ${count} 件</small></span>
+      <span class="cz-go">立即逛 ▶</span>
+    </button>`;
+  document.getElementById('homeCampaignBtn').addEventListener('click', () => {
+    const match = visible.find(p => p.campaign === key && productBrand(p) === c.brand);
+    if(!match) return;
+    currentTier = productTier(match);
+    currentBrand = c.brand;
+    currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all';
+    currentCampaign = key;
+    currentPage = 1;
+    updateHomeSectionsVisibility();
+    renderProducts();
+    renderNewArrivals();
+    renderBestSellers();
+    triggerPageTransition();
+    scrollToProductGrid();
+  });
+}
+
 function renderCampaignZone(){
   const wrap = document.getElementById('campaignZone');
   const key = activeCampaignKey();
