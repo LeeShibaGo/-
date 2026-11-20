@@ -2637,7 +2637,7 @@ function applyUrlParams(){
         }
       }
       const zone = q.get('zone');
-      const zoneKey = Object.keys(CAMPAIGNS).find(k => CAMPAIGNS[k].zoneParam === zone && CAMPAIGNS[k].brand === currentBrand);
+      const zoneKey = Object.keys(CAMPAIGNS).find(k => (CAMPAIGNS[k].zoneParam === zone || (CAMPAIGNS[k].zoneAliases || []).includes(zone)) && CAMPAIGNS[k].brand === currentBrand);
       if(zoneKey) currentCampaign = zoneKey;
     }
   }
@@ -2656,7 +2656,7 @@ function updateUrl(){
   }
   // 專區用 ?zone= 參數(例如 /UNIQLO/?zone=kanshasai),分享連結才進得到專區
   if(currentCampaign !== 'all' && CAMPAIGNS[currentCampaign]){
-    path += '?zone=' + CAMPAIGNS[currentCampaign].zoneParam;
+    path += '?zone=' + encodeURIComponent(CAMPAIGNS[currentCampaign].zoneParam);
   }
   history.replaceState(null, '', path);
 }
@@ -3016,7 +3016,7 @@ function renderTopCatNav(){
 // 歸類,不需要商品打標記;noHome:true 表示首頁不放橫幅。
 const CAMPAIGNS = {
   'uniqlo-kanshasai-2026': {
-    brand: 'UNIQLO', zoneParam: 'kanshasai', icon: '🎉', label: 'UNIQLO 感謝祭專區',
+    brand: 'UNIQLO', zoneParam: '感謝祭', zoneAliases: ['kanshasai'], icon: '🎉', label: 'UNIQLO 感謝祭專區',
     untilText: '11/26', until: '2026/11/26 23:59:59',
   },
   'uniqlo-heattech': {
