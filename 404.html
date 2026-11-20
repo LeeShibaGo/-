@@ -286,6 +286,25 @@ if (GA4_MEASUREMENT_ID) {
   .cat-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
   .cat-tabs.subcat{ margin-top:-10px; padding-left:4px; }
   .cat-tabs.subcat .cat-tab{ font-size:12px; padding:5px 12px; border-style:dashed; }
+
+  /* 限期活動專區入口(UNIQLO 感謝祭) */
+  .campaign-zone-btn{
+    display:flex; align-items:center; gap:12px; width:100%; margin:4px 0 14px;
+    padding:12px 16px; border-radius:14px; cursor:pointer; text-align:left;
+    border:1.5px solid #C9973F; color:#141F2B; font-family:inherit;
+    background:linear-gradient(135deg,#FFF6DC 0%,#F6E3B0 100%);
+    box-shadow:0 4px 14px rgba(201,151,63,.22);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .campaign-zone-btn:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(201,151,63,.3); }
+  .campaign-zone-btn .cz-icon{ font-size:26px; line-height:1; }
+  .campaign-zone-btn .cz-text{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .campaign-zone-btn .cz-text b{ font-size:15px; }
+  .campaign-zone-btn .cz-text small{ font-size:12px; color:#7A5B1E; }
+  .campaign-zone-btn .cz-go{ font-size:12.5px; font-weight:700; white-space:nowrap; color:#A6392C; }
+  .campaign-zone-btn.active{ background:#C9973F; box-shadow:0 4px 14px rgba(201,151,63,.45); }
+  .campaign-zone-btn.active .cz-text small{ color:#3D2C08; }
+  .campaign-zone-btn.active .cz-go{ color:#141F2B; }
   .cat-tab{
     background:transparent; border:1px solid var(--line-strong-onlight); color:var(--muted-onlight);
     padding:6px 14px; border-radius:20px; font-size:13px; cursor:pointer; transition:all .15s ease;
@@ -979,6 +998,9 @@ isBrowsingProducts()/updateHomeSectionsVisibility())。客人按了「所有商�
   進站、什麼都還沒選的時候先不要顯示,等客人主動選了品牌/分類、或按了
   「所有商品」才出現(見 updateHomeSectionsVisibility)。 -->
   <nav class="top-cat-nav" id="topCatNav"></nav>
+  <!-- 2026-11-20:限期活動專區入口(目前只有 UNIQLO 感謝祭),只在選定該品牌、
+  活動還沒截止、而且還有商品時才顯示,見 renderCampaignZone()。 -->
+  <div id="campaignZone" style="display:none;"></div>
   <div class="shop-layout" id="shopLayoutSection" style="display:none;">
     <aside class="cat-sidebar">
       <div class="cat-tabs subcat" id="groupTabs"></div>
@@ -2355,6 +2377,7 @@ let currentBrand = 'all';
 let currentGroup = 'all'; // 上身/褲子/裙子/外套/鞋子/包包/配件...(見 SUBTYPE_GROUP)
 let currentSubtype = 'all';
 let currentSeries = 'all';
+let currentCampaign = 'all'; // 限期活動專區(見 CAMPAIGNS),'all' = 沒進專區
 // 「所有商品 ▶」按的時候,篩選條件其實全部都是 'all'(跟一開始進站什麼都
 // 沒選一樣),單看 currentBrand/currentTier 沒辦法分辨「客人剛進站」跟
 // 「客人主動按了所有商品要逛全部」——這個旗標專門記這件事,只有按下
@@ -2605,6 +2628,9 @@ function applyUrlParams(){
           currentSeries = ser;
         }
       }
+      const zone = q.get('zone');
+      const zoneKey = Object.keys(CAMPAIGNS).find(k => CAMPAIGNS[k].zoneParam === zone && CAMPAIGNS[k].brand === currentBrand);
+      if(zoneKey) currentCampaign = zoneKey;
     }
   }
 }
@@ -2619,6 +2645,10 @@ function updateUrl(){
         path += '/' + encodeURIComponent(currentSeries);
       }
     }
+  }
+  // 專區用 ?zone= 參數(例如 /UNIQLO/?zone=kanshasai),分享連結才進得到專區
+  if(currentCampaign !== 'all' && CAMPAIGNS[currentCampaign]){
+    path += '?zone=' + CAMPAIGNS[currentCampaign].zoneParam;
   }
   history.replaceState(null, '', path);
 }
@@ -2652,7 +2682,7 @@ setInterval(updateCountdownDisplay, 1000);
 // 的首頁」,這時候應該直接看導覽列+商品清單,不要再看一次行銷區塊。
 function isBrowsingProducts(){
   return browseAllProductsMode || currentBrand !== 'all' || currentTier !== 'all'
-    || currentGroup !== 'all' || currentSubtype !== 'all' || currentSeries !== 'all';
+    || currentGroup !== 'all' || currentSubtype !== 'all' || currentSeries !== 'all' || currentCampaign !== 'all';
 }
 function updateHomeSectionsVisibility(){
   const browsing = isBrowsingProducts();
@@ -2887,7 +2917,7 @@ function scrollToProductGrid(){
 function applyTopCatSelection(tier, brand){
   currentTier = tier;
   currentBrand = brand;
-  currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all'; // 換大分類/品牌時,底下的種類/系列篩選重設
+  currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all'; currentCampaign = 'all'; // 換大分類/品牌時,底下的種類/系列篩選重設
   currentPage = 1;
   if(tier === 'all' && brand === 'all') browseAllProductsMode = false; // 點「全部」等於回到首頁式的瀏覽,行銷區塊要放回來
   closeAllTopCatDropdowns();
@@ -2967,11 +2997,58 @@ function renderTopCatNav(){
   });
 }
 
+// ===== 限期活動專區(2026-11-20,UNIQLO 感謝祭)=====
+// 商品資料裡有 campaign 欄位(精簡索引也帶,見 sync_stock.build_products_index)的
+// 商品,在對應品牌頁最上面多一個「專區」入口,點進去只看這個活動的商品,再點一次
+// 回到全部。入口只在「選了該品牌 + 活動還沒截止 + 還有商品」時顯示——截止時間到了
+// 就算商品還沒被下架腳本隱藏,入口也會自己消失,不會留一個過期的專區在那邊。
+// 之後有新的限期活動,在 CAMPAIGNS 加一筆(商品打上同樣的 campaign 欄位)就好。
+const CAMPAIGNS = {
+  'uniqlo-kanshasai-2026': {
+    brand: 'UNIQLO', zoneParam: 'kanshasai', icon: '🎉', label: 'UNIQLO 感謝祭專區',
+    untilText: '11/26', until: '2026/11/26 23:59:59',
+  },
+};
+function activeCampaignKey(){
+  for(const key of Object.keys(CAMPAIGNS)){
+    const c = CAMPAIGNS[key];
+    if(currentBrand !== c.brand) continue;
+    if(Date.now() > new Date(c.until).getTime()) continue;
+    return key;
+  }
+  return null;
+}
+function renderCampaignZone(){
+  const wrap = document.getElementById('campaignZone');
+  const key = activeCampaignKey();
+  const hide = () => { currentCampaign = 'all'; wrap.style.display = 'none'; wrap.innerHTML = ''; };
+  if(!key){ hide(); return; }
+  const c = CAMPAIGNS[key];
+  const count = visibleProducts().filter(p => p.campaign === key && productBrand(p) === c.brand).length;
+  if(count === 0){ hide(); return; }
+  const active = currentCampaign === key;
+  wrap.style.display = '';
+  wrap.innerHTML = `
+    <button type="button" class="campaign-zone-btn ${active ? 'active' : ''}" id="campaignZoneBtn">
+      <span class="cz-icon">${c.icon}</span>
+      <span class="cz-text"><b>${escapeHtml(c.label)}</b><small>期間限定價,至 ${escapeHtml(c.untilText)} 止・共 ${count} 件</small></span>
+      <span class="cz-go">${active ? '✕ 回到全部' : '進入專區 ▶'}</span>
+    </button>`;
+  document.getElementById('campaignZoneBtn').addEventListener('click', () => {
+    currentCampaign = active ? 'all' : key;
+    currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all'; // 進出專區時,底下的分類篩選重設
+    currentPage = 1;
+    renderProducts();
+    triggerPageTransition();
+  });
+}
+
 function renderGroupTabs(){
   const wrap = document.getElementById('groupTabs');
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的大分類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
-  const scoped = visibleProducts().filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  let scoped = visibleProducts().filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
+  if(currentCampaign !== 'all') scoped = scoped.filter(p => p.campaign === currentCampaign);
   const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean)));
   // 這個品牌底下只有一種大分類,沒必要多一排標籤
   if(groups.length < 2){ wrap.innerHTML = ''; return; }
@@ -2995,6 +3072,7 @@ function renderSubtypeTabs(){
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
   let scoped = visibleProducts().filter(p => productBrand(p) === currentBrand);
   if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
+  if(currentCampaign !== 'all') scoped = scoped.filter(p => p.campaign === currentCampaign);
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
   }
@@ -3022,6 +3100,7 @@ function renderSeriesTabs(){
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
   }
+  if(currentCampaign !== 'all') scoped = scoped.filter(p => p.campaign === currentCampaign);
   if(currentSubtype !== 'all'){
     scoped = scoped.filter(p => p.subtype === currentSubtype);
   }
@@ -3055,6 +3134,7 @@ function renderSeriesTabs(){
 let renderProductsToken = 0;
 function renderProducts(){
   renderTopCatNav();
+  renderCampaignZone();
   renderGroupTabs();
   renderSubtypeTabs();
   renderSeriesTabs();
@@ -3081,6 +3161,9 @@ function renderProducts(){
   }
   if(currentSeries !== 'all'){
     list = list.filter(p => p.series === currentSeries);
+  }
+  if(currentCampaign !== 'all'){
+    list = list.filter(p => p.campaign === currentCampaign);
   }
   // 2026-09-06:老闆要求搜尋要「更多元」——原本只比對商品名稱/品牌,
   // 客人如果打的是分類名稱(例如「連帽外套」「網球鞋」)或系列名稱
@@ -4197,7 +4280,7 @@ function renderBrandShowcase(){
       if(!match) return;
       currentTier = productTier(match);
       currentBrand = brand;
-      currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all';
+      currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all'; currentCampaign = 'all';
       currentPage = 1;
       updateHomeSectionsVisibility();
       renderProducts();
@@ -4221,7 +4304,7 @@ document.getElementById('brandShowcaseAllBtn').addEventListener('click', () => {
 // 給不知道要選哪個品牌、單純想從頭逛的客人用。
 document.getElementById('brandShowcaseAllProductsBtn').addEventListener('click', () => {
   currentTier = 'all'; currentBrand = 'all'; currentGroup = 'all';
-  currentSubtype = 'all'; currentSeries = 'all'; searchQuery = '';
+  currentSubtype = 'all'; currentSeries = 'all'; currentCampaign = 'all'; searchQuery = '';
   document.getElementById('searchInput').value = '';
   currentPage = 1;
   browseAllProductsMode = true;
@@ -5055,7 +5138,7 @@ document.getElementById('homeSearchInput').addEventListener('input', (e) => {
     const wasBrowsing = isBrowsingProducts();
     if(!wasBrowsing){
       currentTier = 'all'; currentBrand = 'all'; currentGroup = 'all';
-      currentSubtype = 'all'; currentSeries = 'all';
+      currentSubtype = 'all'; currentSeries = 'all'; currentCampaign = 'all';
       browseAllProductsMode = true;
       updateHomeSectionsVisibility();
     }
