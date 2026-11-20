@@ -3008,20 +3008,27 @@ function renderTopCatNav(){
 // 回到全部。入口只在「選了該品牌 + 活動還沒截止 + 還有商品」時顯示——截止時間到了
 // 就算商品還沒被下架腳本隱藏,入口也會自己消失,不會留一個過期的專區在那邊。
 // 之後有新的限期活動,在 CAMPAIGNS 加一筆(商品打上同樣的 campaign 欄位)就好。
+// 沒有 until 的專區是常駐專區(例如 HEATTECH 發熱衣),用 match(p) 依商品名稱自動
+// 歸類,不需要商品打標記;noHome:true 表示首頁不放橫幅。
 const CAMPAIGNS = {
   'uniqlo-kanshasai-2026': {
     brand: 'UNIQLO', zoneParam: 'kanshasai', icon: '🎉', label: 'UNIQLO 感謝祭專區',
     untilText: '11/26', until: '2026/11/26 23:59:59',
   },
+  'uniqlo-heattech': {
+    brand: 'UNIQLO', zoneParam: 'heattech', icon: '🔥', label: 'UNIQLO HEATTECH 發熱衣專區',
+    noHome: true,
+    match: p => /ヒートテック|HEATTECH|發熱/i.test(p.name || ''),
+  },
 };
-function activeCampaignKey(){
-  for(const key of Object.keys(CAMPAIGNS)){
-    const c = CAMPAIGNS[key];
-    if(currentBrand !== c.brand) continue;
-    if(Date.now() > new Date(c.until).getTime()) continue;
-    return key;
-  }
-  return null;
+function inCampaign(p, key){
+  const c = CAMPAIGNS[key];
+  if(!c) return false;
+  return c.match ? c.match(p) : p.campaign === key;
+}
+function campaignExpired(c){ return !!c.until && Date.now() > new Date(c.until).getTime(); }
+function activeCampaignKeys(){
+  return Object.keys(CAMPAIGNS).filter(k => CAMPAIGNS[k].brand === currentBrand && !campaignExpired(CAMPAIGNS[k]));
 }
 // 首頁橫幅:跟品牌頁的專區入口同一套條件(活動沒截止、還有商品),點下去
 // 直接切到該品牌 + 專區。樣式沿用 .campaign-zone-btn。
@@ -3030,11 +3037,11 @@ function renderHomeCampaignBanner(){
   if(!wrap) return;
   const hide = () => { wrap.style.display = 'none'; wrap.innerHTML = ''; };
   const visible = visibleProducts();
-  const key = Object.keys(CAMPAIGNS).find(k => Date.now() <= new Date(CAMPAIGNS[k].until).getTime()
-    && visible.some(p => p.campaign === k));
+  const key = Object.keys(CAMPAIGNS).find(k => !CAMPAIGNS[k].noHome && !campaignExpired(CAMPAIGNS[k])
+    && visible.some(p => inCampaign(p, k)));
   if(!key){ hide(); return; }
   const c = CAMPAIGNS[key];
-  const count = visible.filter(p => p.campaign === key).length;
+  const count = visible.filter(p => inCampaign(p, key)).length;
   wrap.style.display = '';
   wrap.innerHTML = `
     <button type="button" class="campaign-zone-btn" id="homeCampaignBtn" style="margin:0 0 18px;">
@@ -3043,7 +3050,7 @@ function renderHomeCampaignBanner(){
       <span class="cz-go">立即逛 ▶</span>
     </button>`;
   document.getElementById('homeCampaignBtn').addEventListener('click', () => {
-    const match = visible.find(p => p.campaign === key && productBrand(p) === c.brand);
+    const match = visible.find(p => inCampaign(p, key) && productBrand(p) === c.brand);
     if(!match) return;
     currentTier = productTier(match);
     currentBrand = c.brand;
@@ -3061,27 +3068,33 @@ function renderHomeCampaignBanner(){
 
 function renderCampaignZone(){
   const wrap = document.getElementById('campaignZone');
-  const key = activeCampaignKey();
   const hide = () => { currentCampaign = 'all'; wrap.style.display = 'none'; wrap.innerHTML = ''; };
-  if(!key){ hide(); return; }
-  const c = CAMPAIGNS[key];
-  const count = visibleProducts().filter(p => p.campaign === key && productBrand(p) === c.brand).length;
-  if(count === 0){ hide(); return; }
-  const active = currentCampaign === key;
+  const visible = visibleProducts();
+  const items = activeCampaignKeys().map(key => {
+    const c = CAMPAIGNS[key];
+    return { key, c, count: visible.filter(p => inCampaign(p, key) && productBrand(p) === c.brand).length };
+  }).filter(x => x.count > 0);
+  if(!items.length){ hide(); return; }
+  if(!items.some(x => x.key === currentCampaign)) currentCampaign = 'all';
   wrap.style.display = '';
-  wrap.innerHTML = `
-    <button type="button" class="campaign-zone-btn ${active ? 'active' : ''}" id="campaignZoneBtn">
+  wrap.innerHTML = items.map(({key, c, count}) => {
+    const active = currentCampaign === key;
+    const sub = c.until ? `期間限定價,至 ${escapeHtml(c.untilText)} 止・共 ${count} 件` : `共 ${count} 件`;
+    return `
+    <button type="button" class="campaign-zone-btn ${active ? 'active' : ''}" data-key="${escapeHtml(key)}">
       <span class="cz-icon">${c.icon}</span>
-      <span class="cz-text"><b>${escapeHtml(c.label)}</b><small>期間限定價,至 ${escapeHtml(c.untilText)} 止・共 ${count} 件</small></span>
+      <span class="cz-text"><b>${escapeHtml(c.label)}</b><small>${sub}</small></span>
       <span class="cz-go">${active ? '✕ 回到全部' : '進入專區 ▶'}</span>
     </button>`;
-  document.getElementById('campaignZoneBtn').addEventListener('click', () => {
-    currentCampaign = active ? 'all' : key;
+  }).join('');
+  wrap.querySelectorAll('.campaign-zone-btn').forEach(btn => btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    currentCampaign = currentCampaign === key ? 'all' : key;
     currentGroup = 'all'; currentSubtype = 'all'; currentSeries = 'all'; // 進出專區時,底下的分類篩選重設
     currentPage = 1;
     renderProducts();
     triggerPageTransition();
-  });
+  }));
 }
 
 function renderGroupTabs(){
@@ -3089,7 +3102,7 @@ function renderGroupTabs(){
   // 只有選定某個品牌(不是「全部」)時,才顯示底下的大分類標籤
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
   let scoped = visibleProducts().filter(p => productTier(p) === currentTier && productBrand(p) === currentBrand);
-  if(currentCampaign !== 'all') scoped = scoped.filter(p => p.campaign === currentCampaign);
+  if(currentCampaign !== 'all') scoped = scoped.filter(p => inCampaign(p, currentCampaign));
   const groups = Array.from(new Set(scoped.map(p => subtypeGroup(p.subtype)).filter(Boolean)));
   // 這個品牌底下只有一種大分類,沒必要多一排標籤
   if(groups.length < 2){ wrap.innerHTML = ''; return; }
@@ -3113,7 +3126,7 @@ function renderSubtypeTabs(){
   if(currentBrand === 'all'){ wrap.innerHTML = ''; return; }
   let scoped = visibleProducts().filter(p => productBrand(p) === currentBrand);
   if(currentTier !== 'all') scoped = scoped.filter(p => productTier(p) === currentTier);
-  if(currentCampaign !== 'all') scoped = scoped.filter(p => p.campaign === currentCampaign);
+  if(currentCampaign !== 'all') scoped = scoped.filter(p => inCampaign(p, currentCampaign));
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
   }
@@ -3141,7 +3154,7 @@ function renderSeriesTabs(){
   if(currentGroup !== 'all'){
     scoped = scoped.filter(p => subtypeGroup(p.subtype) === currentGroup);
   }
-  if(currentCampaign !== 'all') scoped = scoped.filter(p => p.campaign === currentCampaign);
+  if(currentCampaign !== 'all') scoped = scoped.filter(p => inCampaign(p, currentCampaign));
   if(currentSubtype !== 'all'){
     scoped = scoped.filter(p => p.subtype === currentSubtype);
   }
@@ -3204,7 +3217,7 @@ function renderProducts(){
     list = list.filter(p => p.series === currentSeries);
   }
   if(currentCampaign !== 'all'){
-    list = list.filter(p => p.campaign === currentCampaign);
+    list = list.filter(p => inCampaign(p, currentCampaign));
   }
   // 2026-09-06:老闆要求搜尋要「更多元」——原本只比對商品名稱/品牌,
   // 客人如果打的是分類名稱(例如「連帽外套」「網球鞋」)或系列名稱
