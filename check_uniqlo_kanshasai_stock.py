@@ -41,6 +41,7 @@ CAMPAIGN = "uniqlo-kanshasai-2026"
 API = "https://www.uniqlo.com/jp/api/commerce/v5/ja/products"
 HEADERS = {"x-fr-clientid": "uq.jp.web-spa", "User-Agent": "Mozilla/5.0"}
 DB = "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app"
+BRAND = "UNIQLO"
 
 
 def fix_size_key(s):
@@ -106,15 +107,22 @@ def main():
         print("用法:python check_uniqlo_kanshasai_stock.py report|apply")
         sys.exit(1)
 
+    # 第三個參數可以指定品牌(UNIQLO 預設 / GU):GU 跟 UNIQLO 是同一套官網 API,只是網域跟 client id 不同
+    global API, HEADERS, BRAND
+    BRAND = (sys.argv[3].strip().upper() if len(sys.argv) > 3 else "UNIQLO")
+    if BRAND == "GU":
+        API = "https://www.gu-global.com/jp/api/commerce/v5/ja/products"
+        HEADERS = {"x-fr-clientid": "gu.jp.web-spa", "User-Agent": "Mozilla/5.0"}
+
     if mode == "apply":
         from sync_stock import load_products_by_brand, merge_and_save, firebase_app
         firebase_app()
-        uniqlo = load_products_by_brand("UNIQLO")
+        uniqlo = load_products_by_brand(BRAND)
     else:
-        raw = json.load(urllib.request.urlopen(DB + '/daigou-products-v1.json?orderBy="brand"&equalTo="UNIQLO"'))
+        raw = json.load(urllib.request.urlopen(DB + f'/daigou-products-v1.json?orderBy="brand"&equalTo="{BRAND}"'))
         uniqlo = list(raw.values()) if isinstance(raw, dict) else raw
-    scope_all = len(sys.argv) > 2 and sys.argv[2].strip().lower() == "all"  # all = 全部 UNIQLO 商品卡,不只感謝祭
-    cards = [p for p in uniqlo if (p.get("brand") == "UNIQLO" if scope_all else p.get("campaign") == CAMPAIGN)]
+    scope_all = len(sys.argv) > 2 and sys.argv[2].strip().lower() == "all"  # all = 全部該品牌商品卡,不只感謝祭
+    cards = [p for p in uniqlo if (p.get("brand") == BRAND if scope_all else p.get("campaign") == CAMPAIGN)]
     print(f"感謝祭商品卡:{len(cards)} 張")
 
     all_pids = sorted({pid for c in cards for pid in pids_of(c)})
@@ -145,38 +153,40 @@ def main():
             for code, e in live[p][1].items():
                 pool.append((p, code, e))
         before = json.dumps(card.get("colors"), ensure_ascii=False, sort_keys=True)
-        used = set()
         for color in card.get("colors", []):
+            # 比對順序(2026-11-20 改):1. 顏色名稱 2. 名稱有多個同名時用圖檔色碼分辨 3. 名稱找不到再用
+            # 圖檔色碼。不能把圖檔色碼放第一——GU/舊 UNIQLO 商品卡有些顏色掛的圖檔是別的顏色的
+            # (例如 GRAY 掛著 NAVY 的圖),先用圖檔會把庫存對到錯的顏色。
+            nm = color.get("name") or ""
             code, img_pid = image_code(color)
-            cand = [x for x in pool if (x[0], x[1]) not in used and code and x[1] == code and x[0].split("-")[0] == img_pid]
-            has_img_code = bool(code and img_pid in [q.split("-")[0] for q in pids])
-            if not cand and not has_img_code:  # 沒有圖檔色碼可對時才退而用顏色名稱比對
-                nm = base_name(color.get("name"))
-                cand = [x for x in pool if (x[0], x[1]) not in used and x[2]["name"] == nm]
-                if not cand:
-                    cand = [x for x in pool if (x[0], x[1]) not in used and x[2]["name"] == color.get("name")]
+            cand = [x for x in pool if x[2]["name"] == nm]
+            if not cand:
+                bn = re.sub(r"\s+\d+$", "", base_name(nm))  # 去掉重複顏色修正時加的 (色碼)/流水號
+                cand = [x for x in pool if x[2]["name"] == bn]
+            if len(cand) > 1 and code:
+                narrowed = [x for x in cand if x[1] == code and x[0].split("-")[0] == img_pid]
+                if narrowed:
+                    cand = narrowed
             gone_color = False
             if not cand:
-                if has_img_code:
-                    # 圖檔有色碼、商品代碼也還在,但官網現在已經沒有這個顏色 -> 該顏色下架,全部標缺貨
-                    gone_color = True
+                by_img = [x for x in pool if code and x[1] == code and x[0].split("-")[0] == img_pid]
+                if by_img:
+                    cand = by_img[:1]
+                elif pool:
+                    gone_color = True  # 官網這個商品現在已經沒有這個顏色 -> 該顏色下架,全部標缺貨
                 else:
                     n_unmatched += 1
                     lines.append(f"  對不到官網顏色(不動):{card['name']} / {color.get('name')} {pids}")
                     continue
-            if len(cand) > 1:
-                # 沒有圖可以分辨、官網有好幾個同名顏色(例如兩個 GREEN):各尺寸取「任一個有貨就算有貨」
-                merged = {}
+            if gone_color:
+                sizes_live = {}
+            elif len(cand) > 1:
+                # 官網有好幾個同名顏色又分辨不出來(例如兩個 GREEN):各尺寸取「任一個有貨就算有貨」
+                sizes_live = {}
                 for x in cand:
                     for sz, v in x[2]["sizes"].items():
-                        merged[sz] = max(merged.get(sz, 0), v)
-                sizes_live = merged
-                for x in cand:
-                    used.add((x[0], x[1]))
-            elif gone_color:
-                sizes_live = {}
+                        sizes_live[sz] = max(sizes_live.get(sz, 0), v)
             else:
-                used.add((cand[0][0], cand[0][1]))
                 sizes_live = cand[0][2]["sizes"]
             stock = dict(color.get("stock") or {}) if isinstance(color.get("stock"), dict) else {}
             sizes = list(color.get("sizes") or [])

@@ -27,4 +27,7 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
       - name: Check real stock and apply
-        run: python check_uniqlo_kanshasai_stock.py apply all
+        run: python check_uniqlo_kanshasai_stock.py apply all UNIQLO
+
+      - name: Check real stock (GU)
+        run: python check_uniqlo_kanshasai_stock.py apply all GU

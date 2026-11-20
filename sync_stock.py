@@ -1703,6 +1703,20 @@ def sync_gu(items):
             time.sleep(0.3)
             continue
 
+        # 2026-11-20:跟 UNIQLO 同一個問題——l2.sales 只是可販售旗標,不代表有貨。
+        # 真實庫存在 /products/{商品代碼}/stock(statusCode + quantity),說明見 sync_uniqlo。
+        # 這個端點抓不到時整張卡先不動。
+        try:
+            stock_data = fetch(f"{GU_API}/{pid}/stock", timeout=20).json()
+        except Exception as e:
+            print(f"  [{idx+1}/{len(cards)}] 庫存端點抓取失敗:{card.get('name')} ({e})")
+            errors += 1
+            continue
+        if stock_data.get("status") != "ok":
+            errors += 1
+            continue
+        l2_stock = stock_data.get("result") or {}
+
         by_color = {}
         new_jpy = None
         for l2 in data.get("result", {}).get("l2s", []):
@@ -1712,7 +1726,10 @@ def sync_gu(items):
             entry = by_color.setdefault(color_name, {"name": color_name, "sizes": [], "stock": {}})
             if size_key not in entry["stock"]:
                 entry["sizes"].append(size_key)
-            entry["stock"][size_key] = max(entry["stock"].get(size_key, 0), 1 if l2.get("sales") else 0)
+            st = l2_stock.get(l2.get("l2Id")) or {}
+            in_stock = bool(l2.get("sales")) and st.get("statusCode") in ("IN_STOCK", "LOW_STOCK") \
+                and (st.get("quantity") or 0) > 0
+            entry["stock"][size_key] = max(entry["stock"].get(size_key, 0), 1 if in_stock else 0)
             if new_jpy is None:
                 price_val = (l2.get("prices") or {}).get("base", {}).get("value")
                 if price_val:
