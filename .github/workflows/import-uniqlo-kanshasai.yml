@@ -1,0 +1,53 @@
+name: "One-off: import UNIQLO kanshasai"
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "trial = 只匯入 3 筆試水;rest = 匯入其餘全部(trial 匯過的會自動跳過)"
+        required: true
+        type: choice
+        options:
+          - trial
+          - rest
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # 寫入之前先把目前 Firebase 上的商品資料和索引完整備份成 artifact(保留 30 天),
+      # 出問題時可以拿來還原。商品資料本來就是公開可讀,不需要金鑰。
+      - name: Back up current products from Firebase
+        run: |
+          mkdir -p backup
+          curl -sf "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app/daigou-products-v1.json" -o backup/products.json
+          curl -sf "https://shibago-4dd3c-default-rtdb.asia-southeast1.firebasedatabase.app/daigou-products-index-v1.json" -o backup/products-index.json
+          ls -la backup
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: products-backup-before-uniqlo-${{ inputs.stage }}
+          path: backup/
+          retention-days: 30
+
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'KEYEOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          KEYEOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Import UNIQLO kanshasai products
+        run: python import_uniqlo_kanshasai.py ${{ inputs.stage }}

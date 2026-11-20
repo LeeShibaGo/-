@@ -1,0 +1,43 @@
+name: "One-off: expire UNIQLO kanshasai"
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "end = 新增的卡設成隱藏、既有商品還原價格;delete = 新增的卡整張刪除(也是匯入的回滾)"
+        required: true
+        type: choice
+        options:
+          - end
+          - delete
+      apply:
+        description: "勾選才會真的寫入;不勾只會列出將要改什麼(dry-run)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  expire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'KEYEOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          KEYEOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Expire UNIQLO kanshasai products
+        run: python expire_uniqlo_kanshasai.py ${{ inputs.mode }} ${{ inputs.apply && 'apply' || 'dry-run' }}

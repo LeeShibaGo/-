@@ -1745,7 +1745,13 @@ def sync_gu(items):
 
 def sync_uniqlo(items):
     print("=== UNIQLO 同步開始 ===")
-    cards = [p for p in items if p.get("brand") == "UNIQLO" and p.get("id") not in UNIQLO_MANUAL_SKIP_IDS]
+    # mergedProductIds:2026-11 感謝祭匯入時,把「同名同價、不同商品代碼」的多個顏色
+    # 合併成同一張卡(見 prepare_uniqlo_kanshasai.py)。這種卡的 link 只指向其中一個
+    # 商品代碼,下面的同步會用那一個代碼的顏色把整張卡的 colors 洗掉,其他代碼的
+    # 顏色會憑空消失,所以排除在每日同步之外(限期特價本來就只有一週,不值得為了它
+    # 讓同步支援多商品代碼)。
+    cards = [p for p in items if p.get("brand") == "UNIQLO" and p.get("id") not in UNIQLO_MANUAL_SKIP_IDS
+             and not p.get("mergedProductIds")]
     stock_changed = price_changed = errors = 0
     for idx, card in enumerate(cards):
         pid = gu_product_id_from_link(card.get("link"))
