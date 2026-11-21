@@ -31,7 +31,7 @@ PRICE_TABLE = {
     990: 299,
     1290: 350,
     1990: 499,
-    2990: 725,
+    2990: 745,  # 2026-11-21 老闆指示:¥2,990 全部改賣 745(原 725)
     3990: 1050,
     5990: 1600,
     7990: 2100,
@@ -61,7 +61,10 @@ def main():
     else:
         raw = json.load(urllib.request.urlopen(DB + '/daigou-products-v1.json?orderBy="brand"&equalTo="UNIQLO"'))
         uniqlo = list(raw.values()) if isinstance(raw, dict) else raw
-    cards = [p for p in uniqlo if p.get("campaign") == CAMPAIGN]
+    # 不屬於感謝祭、但老闆指定也照價目表賣的商品(id -> 日幣價):2026-11 新上架的 HEATTECH 高領/亨利領
+    extra_jpy = {"p_uniqlo3_1795181728265_0": 3990, "p_uniqlo3_1795248263245_1": 2990}
+    cards = [p for p in uniqlo if p.get("campaign") == CAMPAIGN or p.get("id") in extra_jpy]
+    sale_jpy_by_id.update(extra_jpy)
     print(f"感謝祭商品卡 {len(cards)} 張")
 
     to_save, unchanged, unknown = [], 0, []
@@ -76,7 +79,8 @@ def main():
         if cur == target:
             unchanged += 1
             continue
-        p.setdefault("campaignTwdExcel", cur)
+        if p.get("campaign") == CAMPAIGN:
+            p.setdefault("campaignTwdExcel", cur)
         p["twdOverride"] = target
         to_save.append(p)
         if target > cur:
