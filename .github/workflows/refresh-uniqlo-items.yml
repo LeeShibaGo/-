@@ -1,0 +1,37 @@
+name: "One-off: refresh UNIQLO items"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "商品卡 id,空格分開"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'KEYEOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          KEYEOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Refresh stock
+        env:
+          IDS: ${{ inputs.ids }}
+        run: python refresh_uniqlo_items.py $IDS
