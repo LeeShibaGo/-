@@ -1679,7 +1679,9 @@ def gu_product_id_from_link(link):
 
 def sync_gu(items):
     print("=== GU 同步開始 ===")
-    cards = [p for p in items if p.get("brand") == "GU"]
+    # mergedProductIds:2026-11 GU 感謝祭匯入時把同名的多個商品代碼合併成一張卡(跟 UNIQLO 一樣,
+    # 見 sync_uniqlo 的說明),同步只看得到 link 那一個商品代碼,會把其他顏色洗掉,所以排除。
+    cards = [p for p in items if p.get("brand") == "GU" and not p.get("mergedProductIds")]
     stock_changed = price_changed = errors = 0
     for idx, card in enumerate(cards):
         pid = gu_product_id_from_link(card.get("link"))
@@ -1748,7 +1750,8 @@ def sync_gu(items):
             stock_changed += 1
         card["colors"] = new_colors
 
-        if new_jpy and new_jpy != card.get("jpy"):
+        # 限期活動卡(感謝祭)的日幣價是 App 會員特別價,不能被官網一般價(base)蓋回去
+        if new_jpy and new_jpy != card.get("jpy") and not card.get("campaign"):
             print(f"  價格變動:{card.get('name')} ¥{card.get('jpy')} → ¥{new_jpy}")
             price_change_lines.append(f"[GU] {card.get('name')}:¥{card.get('jpy'):,} → ¥{new_jpy:,}")
             card["jpy"] = new_jpy

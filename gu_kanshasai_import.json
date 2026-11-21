@@ -1,0 +1,2638 @@
+{
+ "campaign": "gu-kanshasai-2026",
+ "saleEnd": "2026-11-26",
+ "updates": [
+  {
+   "id": "p_gu_1785577719555_999",
+   "productId": "E362878-000",
+   "name": "ボウタイチェックブラウスCL",
+   "nameJa": "ボウタイチェックブラウス",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_1042",
+   "productId": "E361759-000",
+   "name": "パフィータッチニットVネックカーディガンCL",
+   "nameJa": "パフィータッチニットVネックカーディガン",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_1035",
+   "productId": "E361756-000",
+   "name": "アゼポロセーター MN",
+   "nameJa": "アゼポロセーター",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_987",
+   "productId": "E361657-000",
+   "name": "ボウタイストライプブラウスCL",
+   "nameJa": "ボウタイストライプブラウス",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_594",
+   "productId": "E361576-000",
+   "name": "ヘビーウェイトスウェットコクーンパーカ(バイカラー)ST（オーバーサイズフィット）",
+   "nameJa": "ヘビーウェイトスウェットコクーンパーカ(バイカラー)(オーバーサイズフィット)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 3990,
+   "gender": "男款"
+  },
+  {
+   "id": "p_gu_1785577719555_340",
+   "productId": "E361552-000",
+   "name": "タックテーパードパンツ(ツイーディー)MN(丈長め)",
+   "nameJa": "タックテーパードパンツ(ツイーディー)(丈長め)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_336",
+   "productId": "E361550-000",
+   "name": "タックテーパードパンツ(ツイーディー)MN",
+   "nameJa": "タックテーパードパンツ(ツイーディー)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_159",
+   "productId": "E361524-000",
+   "name": "ソフトコットンクルーネックT(長袖)CL",
+   "nameJa": "ソフトコットンクルーネックT(長袖)",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_665",
+   "productId": "E361486-000",
+   "name": "ヘビーウェイトスウェットカーゴパンツUL",
+   "nameJa": "ヘビーウェイトスウェットカーゴパンツ",
+   "oldJpy": 2990,
+   "jpy": 2990,
+   "twdOverride": 745,
+   "originalJpy": 3990,
+   "gender": "男款"
+  },
+  {
+   "id": "p_gu_1785577719555_1023",
+   "productId": "E361379-000",
+   "name": "パフィータッチニットアーガイルクルーネックカーディガン CL",
+   "nameJa": "パフィータッチニットアーガイルクルーネックカーディガン",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_254",
+   "productId": "E361214-000",
+   "name": "3Dバレルジーンズ UL(丈短め)",
+   "nameJa": "3Dバレルジーンズ(丈短め)",
+   "oldJpy": 2490,
+   "jpy": 2490,
+   "twdOverride": 620,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_339",
+   "productId": "E361198-000",
+   "name": "タックテーパードパンツMN(丈長め)",
+   "nameJa": "タックテーパードパンツ(丈長め)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_633",
+   "productId": "E361130-000",
+   "name": "ヘビーウェイトスウェットジョガーパンツST(丈長め)",
+   "nameJa": "ヘビーウェイトスウェットジョガーパンツ(丈長め)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男款"
+  },
+  {
+   "id": "p_gu_1785577719555_648",
+   "productId": "E361124-000",
+   "name": "3Dバレルジーンズ PF(丈長め)",
+   "nameJa": "3Dバレルジーンズ(丈長め)",
+   "oldJpy": 2490,
+   "jpy": 2490,
+   "twdOverride": 620,
+   "originalJpy": 2990,
+   "gender": "男款"
+  },
+  {
+   "id": "p_gu_1785577719555_647",
+   "productId": "E361123-000",
+   "name": "3Dバレルジーンズ PF",
+   "nameJa": "3Dバレルジーンズ",
+   "oldJpy": 2490,
+   "jpy": 2490,
+   "twdOverride": 620,
+   "originalJpy": 2990,
+   "gender": "男款"
+  },
+  {
+   "id": "p_gu_1785577719555_511",
+   "productId": "E361086-000",
+   "name": "カラーキャンバススニーカー PF",
+   "nameJa": "カラーキャンバススニーカー",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_335",
+   "productId": "E361021-000",
+   "name": "タックテーパードパンツ MN",
+   "nameJa": "タックテーパードパンツ",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_255",
+   "productId": "E361016-000",
+   "name": "3Dバレルジーンズ UL(丈長め)",
+   "nameJa": "3Dバレルジーンズ(丈長め)",
+   "oldJpy": 2490,
+   "jpy": 2490,
+   "twdOverride": 620,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_986",
+   "productId": "E360855-000",
+   "name": "ボウタイブラウス CL",
+   "nameJa": "ボウタイブラウス",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_564",
+   "productId": "E360669-000",
+   "name": "スクエアバックルベルトPF",
+   "nameJa": "スクエアバックルベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_565",
+   "productId": "E360667-000",
+   "name": "ラウンドナローベルト PF",
+   "nameJa": "ラウンドナローベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_562",
+   "productId": "E360666-000",
+   "name": "Dカンループベルト UL",
+   "nameJa": "Dカンループベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_560",
+   "productId": "E360660-000",
+   "name": "ダブルメタルループベルト MN",
+   "nameJa": "ダブルメタルループベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_311",
+   "productId": "E360650-000",
+   "name": "ヘビーウェイトスウェット3DバレルパンツST(丈短め)",
+   "nameJa": "ヘビーウェイトスウェット3Dバレルパンツ(丈短め)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_312",
+   "productId": "E360649-000",
+   "name": "ヘビーウェイトスウェット3DバレルパンツST(丈長め)",
+   "nameJa": "ヘビーウェイトスウェット3Dバレルパンツ(丈長め)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_310",
+   "productId": "E360648-000",
+   "name": "ヘビーウェイトスウェット3DバレルパンツST",
+   "nameJa": "ヘビーウェイトスウェット3Dバレルパンツ",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_253",
+   "productId": "E360647-000",
+   "name": "3Dバレルジーンズ UL",
+   "nameJa": "3Dバレルジーンズ",
+   "oldJpy": 2490,
+   "jpy": 2490,
+   "twdOverride": 620,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_1027",
+   "productId": "E360549-000",
+   "name": "パフィータッチニットクルーネックカーディガンCL",
+   "nameJa": "パフィータッチニットクルーネックカーディガン",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_1033",
+   "productId": "E360547-000",
+   "name": "パフィータッチニットオーバーサイズハイネックセーターCL",
+   "nameJa": "パフィータッチニットオーバーサイズハイネックセーター",
+   "oldJpy": 1490,
+   "jpy": 1490,
+   "twdOverride": 390,
+   "originalJpy": 1990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_35",
+   "productId": "E360533-000",
+   "name": "ウォームパデッドパーカ UL",
+   "nameJa": "ウォームパデッドパーカ",
+   "oldJpy": 4990,
+   "jpy": 4990,
+   "twdOverride": 1329,
+   "originalJpy": 5990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_315",
+   "productId": "E360522-000",
+   "name": "ヘビーウェイトスウェットジョガーパンツST",
+   "nameJa": "ヘビーウェイトスウェットジョガーパンツ",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_809",
+   "productId": "E360505-000",
+   "name": "GIRLSパフィータッチニットセーター(アニマル)CZ",
+   "nameJa": "GIRLSパフィータッチニットセーター(アニマル)",
+   "oldJpy": 1490,
+   "jpy": 1490,
+   "twdOverride": 390,
+   "originalJpy": 1990,
+   "gender": "童裝"
+  },
+  {
+   "id": "p_gu_1785577719555_65",
+   "productId": "E360458-000",
+   "name": "ヘビーウェイトスウェットコクーンパーカST（オーバーサイズフィット）",
+   "nameJa": "ヘビーウェイトスウェットコクーンパーカ(オーバーサイズフィット)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_0",
+   "productId": "E360435-000",
+   "name": "コージーメルトンショートフーディコートCL",
+   "nameJa": "コージーメルトンショートフーディコート",
+   "oldJpy": 4990,
+   "jpy": 4990,
+   "twdOverride": 1329,
+   "originalJpy": 5990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_31",
+   "productId": "E360434-000",
+   "name": "ウォームパデッドブルゾンUL",
+   "nameJa": "ウォームパデッドブルゾン",
+   "oldJpy": 4990,
+   "jpy": 4990,
+   "twdOverride": 1329,
+   "originalJpy": 5990,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_1039",
+   "productId": "E360408-000",
+   "name": "ファインゲージニットVネックカーディガン MN",
+   "nameJa": "ファインゲージニットVネックカーディガン",
+   "oldJpy": 1290,
+   "jpy": 1290,
+   "twdOverride": 350,
+   "originalJpy": 1990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_997",
+   "productId": "E360391-000",
+   "name": "フランネルシャツ(チェック3)PF",
+   "nameJa": "フランネルシャツ(チェック3)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_998",
+   "productId": "E360390-000",
+   "name": "フランネルシャツ(チェック2)PF",
+   "nameJa": "フランネルシャツ(チェック2)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_996",
+   "productId": "E360389-000",
+   "name": "フランネルシャツ(チェック1)PF",
+   "nameJa": "フランネルシャツ(チェック1)",
+   "oldJpy": 1990,
+   "jpy": 1990,
+   "twdOverride": 499,
+   "originalJpy": 2990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_597",
+   "productId": "E360316-000",
+   "name": "スウェットジョガーパンツ(丈長め74.0～78.0cm)",
+   "nameJa": "スウェットジョガーパンツ(丈長め74.0～78.0cm)",
+   "oldJpy": 1290,
+   "jpy": 1290,
+   "twdOverride": 350,
+   "originalJpy": 1990,
+   "gender": "男款"
+  },
+  {
+   "id": "p_gu_1785577719555_559",
+   "productId": "E359055-000",
+   "name": "オーバルバックルリバーシブルベルト MN",
+   "nameJa": "オーバルバックルリバーシブルベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_558",
+   "productId": "E359051-000",
+   "name": "メタルループスクエアバックルベルトMN",
+   "nameJa": "メタルループスクエアバックルベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_314",
+   "productId": "E358973-000",
+   "name": "スウェットジョガーパンツ",
+   "nameJa": "スウェットジョガーパンツ",
+   "oldJpy": 1290,
+   "jpy": 1290,
+   "twdOverride": 350,
+   "originalJpy": 1990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_397",
+   "productId": "E358190-000",
+   "name": "フリースラウンジセット(長袖&ロングパンツ)",
+   "nameJa": "フリースラウンジセット(長袖&ロングパンツ)",
+   "oldJpy": 1490,
+   "jpy": 1490,
+   "twdOverride": 390,
+   "originalJpy": 1990,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_166",
+   "productId": "E357492-000",
+   "name": "ソフトコットンクルーネックT(長袖)",
+   "nameJa": "ソフトコットンクルーネックT(長袖)",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "男女兼用"
+  },
+  {
+   "id": "p_gu_1785577719555_561",
+   "productId": "E357288-000",
+   "name": "リバーシブルビットベルトMN",
+   "nameJa": "リバーシブルビットベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_146",
+   "productId": "E357242-000",
+   "name": "ウォームリブタートルネックT(長袖)",
+   "nameJa": "ウォームリブタートルネックT(長袖)",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_556",
+   "productId": "E351288-000",
+   "name": "ダブルメタルループミドルベルトMN",
+   "nameJa": "ダブルメタルループミドルベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_555",
+   "productId": "E350981-000",
+   "name": "メタルループベルト MN",
+   "nameJa": "メタルループベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  },
+  {
+   "id": "p_gu_1785577719555_563",
+   "productId": "E349155-000",
+   "name": "サークルバックルワイドベルト",
+   "nameJa": "サークルバックルワイドベルト",
+   "oldJpy": 990,
+   "jpy": 990,
+   "twdOverride": 299,
+   "originalJpy": 1290,
+   "gender": "女款"
+  }
+ ],
+ "new": [
+  {
+   "id": "p_gukss_1795250580899_1",
+   "addedAt": 1795250580899,
+   "name": "ヘビーウェイトスウェットコクーンパーカ(バイカラー2)",
+   "nameJa": "ヘビーウェイトスウェットコクーンパーカ(バイカラー2)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "連帽外套",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.55,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男款・感謝祭限定價(App 會員價)¥1,990(原價 ¥3,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E362874-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362874/item/jpgoods_03_362874_3x4.jpg",
+   "colors": [
+    {
+     "name": "GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362874/item/jpgoods_03_362874_3x4.jpg"
+    },
+    {
+     "name": "NAVY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362874/item/jpgoods_69_362874_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男款",
+   "_pid": "E362874-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_2",
+   "addedAt": 1795250580899,
+   "name": "KIDSデニムパデッドジップアップパーカ",
+   "nameJa": "KIDSデニムパデッドジップアップパーカ",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "連帽外套",
+   "jpy": 2990,
+   "twdOverride": 745,
+   "weight": 0.55,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "童裝・感謝祭限定價(App 會員價)¥2,990(原價 ¥4,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E362857-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362857/item/jpgoods_08_362857_3x4.jpg",
+   "colors": [
+    {
+     "name": "DARK GRAY",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362857/item/jpgoods_08_362857_3x4.jpg"
+    },
+    {
+     "name": "BLUE",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362857/item/jpgoods_64_362857_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "童裝",
+   "_pid": "E362857-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_3",
+   "addedAt": 1795250580899,
+   "name": "コーデュロイスーパーワイドパンツ(丈短め)",
+   "nameJa": "コーデュロイスーパーワイドパンツ(丈短め)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "長褲",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男款・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E362206-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362206/item/jpgoods_07_362206_3x4.jpg",
+   "colors": [
+    {
+     "name": "GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 0,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362206/item/jpgoods_07_362206_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 0,
+      "S": 1,
+      "M": 0,
+      "L": 1,
+      "XL": 1,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362206/item/jpgoods_09_362206_3x4.jpg"
+    },
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 0,
+      "S": 1,
+      "M": 0,
+      "L": 1,
+      "XL": 1,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/362206/item/jpgoods_38_362206_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男款",
+   "_pid": "E362206-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_4",
+   "addedAt": 1795250580899,
+   "name": "リバーシブルベルト",
+   "nameJa": "リバーシブルベルト",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "配件",
+   "jpy": 990,
+   "twdOverride": 299,
+   "weight": 0.15,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥990(原價 ¥1,290)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361951-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361951/item/goods_09_361951_3x4.jpg",
+   "colors": [
+    {
+     "name": "BLACK",
+     "sizes": [
+      "ONE SIZE"
+     ],
+     "stock": {
+      "ONE SIZE": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361951/item/goods_09_361951_3x4.jpg"
+    },
+    {
+     "name": "BROWN",
+     "sizes": [
+      "ONE SIZE"
+     ],
+     "stock": {
+      "ONE SIZE": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361951/item/goods_36_361951_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E361951-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_5",
+   "addedAt": 1795250580899,
+   "name": "コーデュロイコクーンバッグ",
+   "nameJa": "コーデュロイコクーンバッグ",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "包包",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.4,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男女兼用・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361841-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361841/item/goods_09_361841_3x4.jpg",
+   "colors": [
+    {
+     "name": "BLACK",
+     "sizes": [
+      "ONE SIZE"
+     ],
+     "stock": {
+      "ONE SIZE": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361841/item/goods_09_361841_3x4.jpg"
+    },
+    {
+     "name": "BROWN",
+     "sizes": [
+      "ONE SIZE"
+     ],
+     "stock": {
+      "ONE SIZE": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361841/item/goods_36_361841_3x4.jpg"
+    },
+    {
+     "name": "YELLOW",
+     "sizes": [
+      "ONE SIZE"
+     ],
+     "stock": {
+      "ONE SIZE": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361841/item/goods_48_361841_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男女兼用",
+   "_pid": "E361841-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_6",
+   "addedAt": 1795250580899,
+   "name": "KIDSパデッドジップアップパーカ",
+   "nameJa": "KIDSパデッドジップアップパーカ",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "連帽外套",
+   "jpy": 2990,
+   "twdOverride": 745,
+   "weight": 0.55,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "童裝・感謝祭限定價(App 會員價)¥2,990(原價 ¥4,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361835-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361835/item/jpgoods_32_361835_3x4.jpg",
+   "colors": [
+    {
+     "name": "BEIGE",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361835/item/jpgoods_32_361835_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "童裝",
+   "_pid": "E361835-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_7",
+   "addedAt": 1795250580899,
+   "name": "チェックショートブーツ",
+   "nameJa": "チェックショートブーツ",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "鞋類",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.8,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361823-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361823/item/goods_18_361823_3x4.jpg",
+   "colors": [
+    {
+     "name": "WINE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/361823/item/goods_18_361823_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E361823-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_8",
+   "addedAt": 1795250580899,
+   "name": "コージーメルトンテーラードロングコート(丈長め)(オーバーサイズフィット)",
+   "nameJa": "コージーメルトンテーラードロングコート(丈長め)(オーバーサイズフィット)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "外套",
+   "jpy": 5990,
+   "twdOverride": 1600,
+   "weight": 0.6,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥5,990(原價 ¥7,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361819-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361819/item/jpgoods_08_361819_3x4.jpg",
+   "colors": [
+    {
+     "name": "DARK GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361819/item/jpgoods_08_361819_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361819/item/jpgoods_09_361819_3x4.jpg"
+    },
+    {
+     "name": "BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361819/item/jpgoods_34_361819_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E361819-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_11",
+   "addedAt": 1795250580899,
+   "name": "GIRLSフラッフィーフーディブルゾン",
+   "nameJa": "GIRLSフラッフィーフーディブルゾン",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "連帽外套",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.55,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "童裝・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361743-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361743/item/jpgoods_09_361743_3x4.jpg",
+   "colors": [
+    {
+     "name": "BLACK",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361743/item/jpgoods_09_361743_3x4.jpg"
+    },
+    {
+     "name": "BEIGE",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361743/item/jpgoods_31_361743_3x4.jpg"
+    },
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361743/item/jpgoods_39_361743_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "童裝",
+   "_pid": "E361743-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_12",
+   "addedAt": 1795250580899,
+   "name": "パフィータッチニットヘンリーネックセーター",
+   "nameJa": "パフィータッチニットヘンリーネックセーター",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "針織衫",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男女兼用・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361739-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361739/item/jpgoods_02_361739_3x4.jpg",
+   "colors": [
+    {
+     "name": "LIGHT GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361739/item/jpgoods_02_361739_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361739/item/jpgoods_09_361739_3x4.jpg"
+    },
+    {
+     "name": "ORANGE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 0,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361739/item/jpgoods_27_361739_3x4.jpg"
+    },
+    {
+     "name": "OLIVE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361739/item/jpgoods_57_361739_3x4.jpg"
+    },
+    {
+     "name": "NAVY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 0,
+      "M": 1,
+      "L": 0,
+      "XL": 0,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361739/item/jpgoods_69_361739_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男女兼用",
+   "_pid": "E361739-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_13",
+   "addedAt": 1795250580899,
+   "name": "ウォームスムースラウンジセット長袖＆ロングパンツ（スリムフィット）",
+   "nameJa": "ウォームスムースラウンジセット長袖＆ロングパンツ（スリムフィット）",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "家居服",
+   "jpy": 2490,
+   "twdOverride": 620,
+   "weight": 0.3,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥2,490(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361732-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361732/item/jpgoods_38_361732_3x4.jpg",
+   "colors": [
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361732/item/jpgoods_38_361732_3x4.jpg"
+    },
+    {
+     "name": "DARK GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361732/item/jpgoods_08_361732_3x4.jpg"
+    },
+    {
+     "name": "LIGHT GREEN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361732/item/jpgoods_50_361732_3x4.jpg"
+    },
+    {
+     "name": "PURPLE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361732/item/jpgoods_71_361732_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E361732-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_15",
+   "addedAt": 1795250580899,
+   "name": "シャギーチェックショートフーディコート",
+   "nameJa": "シャギーチェックショートフーディコート",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "連帽外套",
+   "jpy": 4990,
+   "twdOverride": 1329,
+   "weight": 0.55,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥4,990(原價 ¥5,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361616-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361616/item/jpgoods_69_361616_3x4.jpg",
+   "colors": [
+    {
+     "name": "NAVY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 0,
+      "M": 0,
+      "L": 0,
+      "XL": 0,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361616/item/jpgoods_69_361616_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E361616-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_17",
+   "addedAt": 1795250580899,
+   "name": "タックテーパードパンツ(チェック)(丈長め)",
+   "nameJa": "タックテーパードパンツ(チェック)(丈長め)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "長褲",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361553-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361553/item/jpgoods_18_361553_3x4.jpg",
+   "colors": [
+    {
+     "name": "WINE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 0,
+      "L": 0,
+      "XL": 0,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361553/item/jpgoods_18_361553_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E361553-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_19",
+   "addedAt": 1795250580899,
+   "name": "タックテーパードパンツ(チェック)",
+   "nameJa": "タックテーパードパンツ(チェック)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "長褲",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361551-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361551/item/jpgoods_18_361551_3x4.jpg",
+   "colors": [
+    {
+     "name": "WINE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 0,
+      "XXL": 0,
+      "3XL": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361551/item/jpgoods_18_361551_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E361551-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_26",
+   "addedAt": 1795250580899,
+   "name": "TEENウォームパデッドフーディブルゾンJR",
+   "nameJa": "TEENウォームパデッドフーディブルゾンJR",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "連帽外套",
+   "jpy": 3990,
+   "twdOverride": 1050,
+   "weight": 0.55,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "童裝・感謝祭限定價(App 會員價)¥3,990(原價 ¥5,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361138-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361138/item/jpgoods_56_361138_3x4.jpg",
+   "colors": [
+    {
+     "name": "OLIVE",
+     "sizes": [
+      "S",
+      "M",
+      "L"
+     ],
+     "stock": {
+      "S": 1,
+      "M": 1,
+      "L": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361138/item/jpgoods_56_361138_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "S",
+      "M",
+      "L"
+     ],
+     "stock": {
+      "S": 1,
+      "M": 1,
+      "L": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361138/item/jpgoods_09_361138_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "童裝",
+   "_pid": "E361138-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_28",
+   "addedAt": 1795250580899,
+   "name": "コーデュロイスーパーワイドパンツ(丈長め)",
+   "nameJa": "コーデュロイスーパーワイドパンツ(丈長め)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "長褲",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男款・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E361128-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361128/item/jpgoods_07_361128_3x4.jpg",
+   "colors": [
+    {
+     "name": "GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361128/item/jpgoods_07_361128_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 0,
+      "S": 0,
+      "M": 0,
+      "L": 1,
+      "XL": 1,
+      "XXL": 0,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361128/item/jpgoods_09_361128_3x4.jpg"
+    },
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 0,
+      "S": 0,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/361128/item/jpgoods_38_361128_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男款",
+   "_pid": "E361128-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_34",
+   "addedAt": 1795250580899,
+   "name": "コージーメルトンテーラードロングコート(オーバーサイズフィット)",
+   "nameJa": "コージーメルトンテーラードロングコート(オーバーサイズフィット)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "外套",
+   "jpy": 5990,
+   "twdOverride": 1600,
+   "weight": 0.6,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥5,990(原價 ¥7,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360951-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360951/item/jpgoods_34_360951_3x4.jpg",
+   "colors": [
+    {
+     "name": "BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360951/item/jpgoods_34_360951_3x4.jpg"
+    },
+    {
+     "name": "DARK GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360951/item/jpgoods_08_360951_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360951/item/jpgoods_09_360951_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E360951-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_35",
+   "addedAt": 1795250580899,
+   "name": "フェイクムートンショートブーツ",
+   "nameJa": "フェイクムートンショートブーツ",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "鞋類",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.8,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360868-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360868/item/goods_32_360868_3x4.jpg",
+   "colors": [
+    {
+     "name": "BEIGE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360868/item/goods_32_360868_3x4.jpg"
+    },
+    {
+     "name": "BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360868/item/goods_36_360868_3x4.jpg"
+    },
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360868/item/goods_38_360868_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E360868-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_37",
+   "addedAt": 1795250580899,
+   "name": "フラッフィージップアップブルゾン（オーバーサイズフィット）",
+   "nameJa": "フラッフィージップアップブルゾン（オーバーサイズフィット）",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "外套",
+   "jpy": 2990,
+   "twdOverride": 745,
+   "weight": 0.6,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥2,990(原價 ¥3,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360822-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360822/item/jpgoods_39_360822_3x4.jpg",
+   "colors": [
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360822/item/jpgoods_39_360822_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360822/item/jpgoods_09_360822_3x4.jpg"
+    },
+    {
+     "name": "BEIGE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360822/item/jpgoods_31_360822_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E360822-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_38",
+   "addedAt": 1795250580899,
+   "name": "フリースラウンジセット(長袖＆ロングパンツ)",
+   "nameJa": "フリースラウンジセット(長袖＆ロングパンツ)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "家居服",
+   "jpy": 1490,
+   "twdOverride": 390,
+   "weight": 0.3,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男女兼用・感謝祭限定價(App 會員價)¥1,490(原價 ¥1,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360706-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360706/item/jpgoods_08_360706_3x4.jpg",
+   "colors": [
+    {
+     "name": "DARK GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360706/item/jpgoods_08_360706_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360706/item/jpgoods_09_360706_3x4.jpg"
+    },
+    {
+     "name": "BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360706/item/jpgoods_37_360706_3x4.jpg"
+    },
+    {
+     "name": "GREEN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360706/item/jpgoods_53_360706_3x4.jpg"
+    },
+    {
+     "name": "NAVY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360706/item/jpgoods_69_360706_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男女兼用",
+   "_pid": "E360706-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_47",
+   "addedAt": 1795250580899,
+   "name": "KIDS裏フリースバレルイージーパンツ",
+   "nameJa": "KIDS裏フリースバレルイージーパンツ",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "長褲",
+   "jpy": 1490,
+   "twdOverride": 390,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "童裝・感謝祭限定價(App 會員價)¥1,490(原價 ¥1,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360627-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360627/item/jpgoods_09_360627_3x4.jpg",
+   "colors": [
+    {
+     "name": "BLACK",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360627/item/jpgoods_09_360627_3x4.jpg"
+    },
+    {
+     "name": "ORANGE",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360627/item/jpgoods_27_360627_3x4.jpg"
+    },
+    {
+     "name": "OLIVE",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360627/item/jpgoods_56_360627_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "童裝",
+   "_pid": "E360627-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_48",
+   "addedAt": 1795250580899,
+   "name": "ウォームリブタートルネックT(長袖)",
+   "nameJa": "ウォームリブタートルネックT(長袖)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "T恤",
+   "jpy": 990,
+   "twdOverride": 299,
+   "weight": 0.18,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "女款・感謝祭限定價(App 會員價)¥990(原價 ¥1,290)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360579-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360579/item/jpgoods_15_360579_3x4.jpg",
+   "colors": [
+    {
+     "name": "RED",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360579/item/jpgoods_15_360579_3x4.jpg"
+    },
+    {
+     "name": "OFF WHITE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360579/item/jpgoods_01_360579_3x4.jpg"
+    },
+    {
+     "name": "DARK GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360579/item/goods_08_360579_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360579/item/goods_09_360579_3x4.jpg"
+    },
+    {
+     "name": "YELLOW",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360579/item/goods_47_360579_3x4.jpg"
+    },
+    {
+     "name": "GREEN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/AsianCommon/imagesgoods/360579/item/goods_53_360579_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "女款",
+   "_pid": "E360579-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_49",
+   "addedAt": 1795250580899,
+   "name": "コージーメルトンパーカ ENGINEERED GARMENTS",
+   "nameJa": "コージーメルトンパーカ ENGINEERED GARMENTS",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "連帽外套",
+   "jpy": 3990,
+   "twdOverride": 1050,
+   "weight": 0.55,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男女兼用・感謝祭限定價(App 會員價)¥3,990(原價 ¥5,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360552-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360552/item/jpgoods_69_360552_3x4.jpg",
+   "colors": [
+    {
+     "name": "NAVY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360552/item/jpgoods_69_360552_3x4.jpg"
+    },
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360552/item/jpgoods_39_360552_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男女兼用",
+   "_pid": "E360552-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_50",
+   "addedAt": 1795250580899,
+   "name": "パデッド2WAYオーバーサイズワークコート ENGINEERED GARMENTS",
+   "nameJa": "パデッド2WAYオーバーサイズワークコート ENGINEERED GARMENTS",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "外套",
+   "jpy": 7990,
+   "twdOverride": 2100,
+   "weight": 0.6,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男女兼用・感謝祭限定價(App 會員價)¥7,990(原價 ¥9,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360551-001/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360551001/item/jpgoods_65_360551001_3x4.jpg",
+   "colors": [
+    {
+     "name": "BLUE",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 0,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360551001/item/jpgoods_65_360551001_3x4.jpg"
+    },
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360551/item/jpgoods_39_360551_3x4.jpg"
+    },
+    {
+     "name": "NAVY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360551/item/jpgoods_69_360551_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男女兼用",
+   "_pid": "E360551-001",
+   "mergedProductIds": [
+    "E360551-001",
+    "E360551-000"
+   ]
+  },
+  {
+   "id": "p_gukss_1795250580899_55",
+   "addedAt": 1795250580899,
+   "name": "コーデュロイスーパーワイドパンツ",
+   "nameJa": "コーデュロイスーパーワイドパンツ",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "長褲",
+   "jpy": 1990,
+   "twdOverride": 499,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "男女兼用・感謝祭限定價(App 會員價)¥1,990(原價 ¥2,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360524-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360524/item/jpgoods_38_360524_3x4.jpg",
+   "colors": [
+    {
+     "name": "DARK BROWN",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360524/item/jpgoods_38_360524_3x4.jpg"
+    },
+    {
+     "name": "GRAY",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 1,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360524/item/jpgoods_07_360524_3x4.jpg"
+    },
+    {
+     "name": "BLACK",
+     "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+      "3XL"
+     ],
+     "stock": {
+      "XS": 1,
+      "S": 1,
+      "M": 1,
+      "L": 1,
+      "XL": 1,
+      "XXL": 0,
+      "3XL": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360524/item/jpgoods_09_360524_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "男女兼用",
+   "_pid": "E360524-000"
+  },
+  {
+   "id": "p_gukss_1795250580899_57",
+   "addedAt": 1795250580899,
+   "name": "GIRLSパフィータッチニットセーター(フラワー)",
+   "nameJa": "GIRLSパフィータッチニットセーター(フラワー)",
+   "brand": "GU",
+   "country": "JP",
+   "subtype": "針織衫",
+   "jpy": 1490,
+   "twdOverride": 390,
+   "weight": 0.35,
+   "saleType": "instock",
+   "hidden": false,
+   "desc": "童裝・感謝祭限定價(App 會員價)¥1,490(原價 ¥1,990)・至 11/26",
+   "link": "https://www.gu-global.com/jp/ja/products/E360506-000/00",
+   "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360506/item/jpgoods_30_360506_3x4.jpg",
+   "colors": [
+    {
+     "name": "NATURAL",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360506/item/jpgoods_30_360506_3x4.jpg"
+    },
+    {
+     "name": "BROWN",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 1
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360506/item/jpgoods_36_360506_3x4.jpg"
+    },
+    {
+     "name": "NAVY",
+     "sizes": [
+      "100cm",
+      "110cm",
+      "120cm",
+      "130cm",
+      "140cm",
+      "150cm",
+      "160cm"
+     ],
+     "stock": {
+      "100cm": 1,
+      "110cm": 1,
+      "120cm": 1,
+      "130cm": 1,
+      "140cm": 1,
+      "150cm": 1,
+      "160cm": 0
+     },
+     "image": "https://image.uniqlo.com/GU/ST3/jp/imagesgoods/360506/item/jpgoods_69_360506_3x4.jpg"
+    }
+   ],
+   "campaign": "gu-kanshasai-2026",
+   "saleEnd": "2026-11-26",
+   "_gender": "童裝",
+   "_pid": "E360506-000"
+  }
+ ]
+}
