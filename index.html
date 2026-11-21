@@ -3033,6 +3033,10 @@ const CAMPAIGNS = {
     brand: 'UNIQLO', zoneParam: '感謝祭', zoneAliases: ['kanshasai'], icon: '🎉', label: 'UNIQLO 感謝祭專區',
     untilText: '11/26', until: '2026/11/26 23:59:59',
   },
+  'gu-kanshasai-2026': {
+    brand: 'GU', zoneParam: '感謝祭', zoneAliases: ['kanshasai'], icon: '🎉', label: 'GU 感謝祭專區',
+    untilText: '11/26', until: '2026/11/26 23:59:59',
+  },
   'uniqlo-heattech': {
     brand: 'UNIQLO', zoneParam: 'heattech', icon: '🔥', label: 'UNIQLO HEATTECH 發熱衣專區',
     noHome: true,
@@ -3055,19 +3059,23 @@ function renderHomeCampaignBanner(){
   if(!wrap) return;
   const hide = () => { wrap.style.display = 'none'; wrap.innerHTML = ''; };
   const visible = visibleProducts();
-  const key = Object.keys(CAMPAIGNS).find(k => !CAMPAIGNS[k].noHome && !campaignExpired(CAMPAIGNS[k])
+  const keys = Object.keys(CAMPAIGNS).filter(k => !CAMPAIGNS[k].noHome && !campaignExpired(CAMPAIGNS[k])
     && visible.some(p => inCampaign(p, k)));
-  if(!key){ hide(); return; }
-  const c = CAMPAIGNS[key];
-  const count = visible.filter(p => inCampaign(p, key)).length;
+  if(!keys.length){ hide(); return; }
   wrap.style.display = '';
-  wrap.innerHTML = `
-    <button type="button" class="campaign-zone-btn" id="homeCampaignBtn" style="margin:0 0 18px;">
+  wrap.innerHTML = keys.map(key => {
+    const c = CAMPAIGNS[key];
+    const count = visible.filter(p => inCampaign(p, key)).length;
+    return `
+    <button type="button" class="campaign-zone-btn home-campaign-btn" data-key="${escapeHtml(key)}" style="margin:0 0 12px;">
       <span class="cz-icon">${c.icon}</span>
       <span class="cz-text"><b>${escapeHtml(c.label)}</b><small>期間限定價,至 ${escapeHtml(c.untilText)} 止・共 ${count} 件</small></span>
       <span class="cz-go">立即逛 ▶</span>
     </button>`;
-  document.getElementById('homeCampaignBtn').addEventListener('click', () => {
+  }).join('');
+  wrap.querySelectorAll('.home-campaign-btn').forEach(btn => btn.addEventListener('click', () => {
+    const key = btn.dataset.key;
+    const c = CAMPAIGNS[key];
     const match = visible.find(p => inCampaign(p, key) && productBrand(p) === c.brand);
     if(!match) return;
     currentTier = productTier(match);
@@ -3081,7 +3089,7 @@ function renderHomeCampaignBanner(){
     renderBestSellers();
     triggerPageTransition();
     scrollToProductGrid();
-  });
+  }));
 }
 
 function renderCampaignZone(){

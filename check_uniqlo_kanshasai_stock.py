@@ -108,9 +108,10 @@ def main():
         sys.exit(1)
 
     # 第三個參數可以指定品牌(UNIQLO 預設 / GU):GU 跟 UNIQLO 是同一套官網 API,只是網域跟 client id 不同
-    global API, HEADERS, BRAND
+    global API, HEADERS, BRAND, CAMPAIGN
     BRAND = (sys.argv[3].strip().upper() if len(sys.argv) > 3 else "UNIQLO")
     if BRAND == "GU":
+        CAMPAIGN = "gu-kanshasai-2026"
         API = "https://www.gu-global.com/jp/api/commerce/v5/ja/products"
         HEADERS = {"x-fr-clientid": "gu.jp.web-spa", "User-Agent": "Mozilla/5.0"}
 

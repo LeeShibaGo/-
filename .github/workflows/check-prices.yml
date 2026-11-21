@@ -96,6 +96,10 @@ jobs:
         if: matrix.brand == 'uniqlo'
         run: python check_uniqlo_kanshasai_stock.py apply
 
+      - name: Refresh GU kanshasai stock (merged cards)
+        if: matrix.brand == 'gu'
+        run: python check_uniqlo_kanshasai_stock.py apply campaign GU
+
   # 全部品牌都同步完之後才重新產生 SEO 用的靜態品牌頁面(brand/*/index.html)
   # 跟 sitemap.xml,不然會拿還沒同步完的舊資料生頁面。
   # 2026-08-23 抓到:CELINE 最近連續好幾天單獨跑超過 6 小時被 GitHub 強制

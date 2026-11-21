@@ -30,21 +30,30 @@ for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
-CAMPAIGN = "uniqlo-kanshasai-2026"
+# 品牌 -> (活動標記, 新增卡 id 開頭)。第三個參數指定品牌,預設 UNIQLO;GU 感謝祭用 GU。
+BRANDS = {
+    "UNIQLO": ("uniqlo-kanshasai-2026", "p_uniqlokss_"),
+    "GU": ("gu-kanshasai-2026", "p_gukss_"),
+}
 
 
 def main():
     mode = (sys.argv[1] if len(sys.argv) > 1 else "").strip().lower()
     apply = (sys.argv[2] if len(sys.argv) > 2 else "dry-run").strip().lower() == "apply"
     if mode not in ("end", "delete"):
-        print("用法:python expire_uniqlo_kanshasai.py end|delete [apply]")
+        print("用法:python expire_uniqlo_kanshasai.py end|delete [apply] [UNIQLO|GU]")
         sys.exit(1)
+    brand = (sys.argv[3] if len(sys.argv) > 3 else "UNIQLO").strip().upper()
+    if brand not in BRANDS:
+        print("品牌只能是 UNIQLO 或 GU")
+        sys.exit(1)
+    CAMPAIGN, PREFIX = BRANDS[brand]
 
     firebase_app()
-    uniqlo = load_products_by_brand("UNIQLO")
+    uniqlo = load_products_by_brand(brand)
     campaign_items = [p for p in uniqlo if p.get("campaign") == CAMPAIGN]
-    new_cards = [p for p in campaign_items if str(p.get("id", "")).startswith("p_uniqlokss_")]
-    repriced = [p for p in campaign_items if not str(p.get("id", "")).startswith("p_uniqlokss_")]
+    new_cards = [p for p in campaign_items if str(p.get("id", "")).startswith(PREFIX)]
+    repriced = [p for p in campaign_items if not str(p.get("id", "")).startswith(PREFIX)]
     print(f"感謝祭商品:新增卡 {len(new_cards)} 張、只更新價格的既有商品 {len(repriced)} 件")
     print(f"模式:{mode}({'實際寫入' if apply else 'dry-run,不寫入'})")
 
@@ -64,7 +73,7 @@ def main():
     for p in repriced:
         if p.get("campaignOrigJpy") is not None:
             p["jpy"] = p["campaignOrigJpy"]
-        for k in ("twdOverride", "campaign", "saleEnd", "campaignOrigJpy"):
+        for k in ("twdOverride", "campaign", "saleEnd", "campaignOrigJpy", "campaignTwdExcel"):
             p.pop(k, None)
         changed.append(p)
 

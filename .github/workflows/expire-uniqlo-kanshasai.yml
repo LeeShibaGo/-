@@ -1,4 +1,4 @@
-name: "One-off: expire UNIQLO kanshasai"
+name: "One-off: expire UNIQLO + GU kanshasai"
 
 on:
   workflow_dispatch:
@@ -40,4 +40,6 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
 
       - name: Expire UNIQLO kanshasai products
-        run: python expire_uniqlo_kanshasai.py ${{ inputs.mode }} ${{ inputs.apply && 'apply' || 'dry-run' }}
+        run: |
+          python expire_uniqlo_kanshasai.py ${{ inputs.mode }} ${{ inputs.apply && 'apply' || 'dry-run' }} UNIQLO
+          python expire_uniqlo_kanshasai.py ${{ inputs.mode }} ${{ inputs.apply && 'apply' || 'dry-run' }} GU
