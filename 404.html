@@ -113,14 +113,15 @@ if (GA4_MEASUREMENT_ID) {
   .board-top-nav{
     display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
   }
-  /* 手機版按鈕縮小,盡量擠在同一排,擠不下的話用橫向捲動而不是換行 */
+  /* 手機版按鈕縮小;2026-11-21 起改成擠不下就換行置中(原本橫向捲動,
+     置中 + overflow 會讓最左邊的按鈕被切掉點不到,右邊齒輪也被切一半、
+     而且齒輪的行內 padding/字級比其他按鈕大,看起來不協調) */
   @media (max-width: 640px){
     .board-top-nav{
-      flex-wrap:nowrap; justify-content:center; width:100%;
-      overflow-x:auto; -webkit-overflow-scrolling:touch; gap:2px; padding-bottom:2px;
+      flex-wrap:wrap; justify-content:center; width:100%; gap:6px;
     }
     .board-top-nav .ghost-btn{
-      padding:6px 6px; font-size:11px; white-space:nowrap; flex-shrink:0;
+      padding:7px 10px !important; font-size:12px !important; white-space:nowrap; flex-shrink:0;
     }
     #userBadge{ flex-shrink:0; }
     #userBadge span{ white-space:nowrap; font-size:11px !important; }
