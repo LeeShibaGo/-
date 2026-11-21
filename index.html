@@ -392,7 +392,10 @@ if (GA4_MEASUREMENT_ID) {
        (實測某些 iOS Safari)在 flex 版面裡的格子容器算 auto-fill 欄數時
        會出錯,算成寬度不夠只排一欄,導致手機上一排變成一張超大的卡片。
        直接鎖定 2 欄不會有這個問題。 */
-    .shop-main .grid{ grid-template-columns: repeat(2, 1fr); }
+    /* 2026-11-21:1fr 的最小寬度是內容寬度,卡片裡的尺寸按鈕/下拉選單不換行會把兩欄撐到
+       超出螢幕(右邊那張被切掉)。改 minmax(0,1fr) + min-width:0 讓兩欄平分、內容自己縮。 */
+    .shop-main .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .shop-main .grid > .card{ min-width:0; }
     /* 手機版兩欄卡片較窄,商品名稱/說明用原本電腦版的字級會一直換行、
        整張卡都被文字塞滿,圖片反而不明顯。限制行數+縮小字級,圖片為主。 */
     .card{ padding:12px; gap:6px; }
