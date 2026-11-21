@@ -762,6 +762,10 @@ if (GA4_MEASUREMENT_ID) {
   .ghost-btn{ background:transparent; border:1px solid #D8D2C3; color:var(--ink); padding:10px 14px; border-radius:9px; cursor:pointer; font-size:13px; }
 
   .notice-box{ background:#EFE7D0; border:1px solid #DCCFA6; border-radius:10px; padding:10px 12px; font-size:12px; color:#6B5B3E; margin-top:10px; }
+  /* 結帳頁「訂金為總金額的 50%…」那行(2026-11-21 老闆要求):字放大一點、
+     顏色跟「應付訂金」同一個紅色(--stamp),客人比較不會漏看。只改這一個,
+     其他地方的 .notice-box 不動。 */
+  #noticeBox{ font-size:14px; font-weight:600; color:var(--stamp); line-height:1.5; }
 
   /* 後台「轉換分析」分頁的漏斗列——名稱/人數一行,底下配一條進度條表示
      相對於第一關(進站)的比例,一眼看出是哪一關掉最多人。 */
