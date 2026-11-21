@@ -899,7 +899,7 @@ if (GA4_MEASUREMENT_ID) {
       <div class="rate-disclaimer">為即時參考匯率,已含代購服務費,實際售價請見商品卡片</div>
       <div class="board-meta">
         <div class="rate-sub" id="rateUpdated">上次更新:—</div>
-        <!-- 2026-11-21:不再另外收國際運費,看板上的「每公斤運費」先藏起來(元素留著,程式還會寫值進去) -->
+        <!-- 2026-11-21:國際運費已含在賣價裡、不另外加收,看板上的「每公斤運費」先藏起來(元素留著,程式還會寫值進去) -->
         <div class="ship-line" style="display:none;">每公斤運費 <b id="shipRateShow">150</b> 元</div>
         <div class="ship-line" style="margin-top:4px;">下單需先付 <b>50%</b> 訂金</div>
       </div>
@@ -2141,7 +2141,7 @@ The North Face、Carhartt、Aape、Human Made、Bape、Beams…
 可以,下單或私訊時請註明想要的顏色/尺寸,如果現場沒有會盡量幫忙調貨或告知缺貨狀況。
 ---
 運費怎麼計算?
-不另外收國際運費,只收國內取貨運費,依您選擇的取貨方式(賣貨便/7-11店到店/面交)計算,結帳時會自動算給您看。
+國際運費已經包含在商品售價裡,不另外加收;結帳時只會另外計算國內取貨運費,依您選擇的取貨方式(賣貨便/7-11店到店/面交)計算,會自動算給您看。
 ---
 台幣價格怎麼換算的?為什麼感覺匯率不太一樣?
 售價已包含即時匯率、代購服務費與國際運費,依商品原幣金額分級距換算,金額越高的商品換算比例越低,所以不會出現精品類商品比台灣專櫃還貴的情況。實際售價都已經換算好顯示在商品卡片上,不需要自己再算一次。
@@ -3758,7 +3758,7 @@ document.getElementById('closeStorePickupConfirm').onclick = cancelStorePickupPe
 function computeTotals(){
   const lines = cartLines();
   const subtotal = lines.reduce((s,l) => s + sellPriceTwd(l) * l.qty, 0);
-  // 2026-11-21 老闆指示:不再另外收國際運費(結帳只收國內取貨運費,例如賣貨便 38)。
+  // 2026-11-21 老闆指示:國際運費已經含在賣價裡,結帳不再另外加收(只加國內取貨運費,例如賣貨便 38)。
   // shipping 欄位保留、固定 0,是因為舊訂單(以及後台/對帳訊息)還有這個欄位;
   // 每公斤運費設定(settings.shippingPerKg)仍留著,鞋類定價的成本公式還會用到。
   const shipping = 0;
