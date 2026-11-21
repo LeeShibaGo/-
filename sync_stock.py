@@ -1721,9 +1721,25 @@ def sync_gu(items):
 
         by_color = {}
         new_jpy = None
-        for l2 in data.get("result", {}).get("l2s", []):
+        # 2026-11-21 客人回報「官網有兩種灰色,網站只有一種」:UNIQLO/GU 有些商品會有「不同色號但
+        # 同名」的顏色(例如 03 GRAY 跟 07 GRAY),原本用顏色名稱當鍵,兩個 GRAY 被併成一個、
+        # 庫存也混在一起(UNIQLO 54 張卡受影響)。同名但色號不同的,名稱後面加色號區分
+        # (GRAY 03 / GRAY 07),並且用官網該色號自己的圖片;沒有同名衝突的顏色名稱維持不變。
+        res_all = data.get("result", {})
+        codes_by_name = {}
+        for l2 in res_all.get("l2s", []):
+            c = l2.get("color") or {}
+            codes_by_name.setdefault(c.get("name") or c.get("displayCode") or "-", set()).add(c.get("displayCode"))
+        main_images = (res_all.get("images") or {}).get("main") or {}
+        dup_image = {}
+        for l2 in res_all.get("l2s", []):
             color = l2.get("color") or {}
-            color_name = color.get("name") or color.get("displayCode") or "-"
+            base_name = color.get("name") or color.get("displayCode") or "-"
+            code = color.get("displayCode")
+            dup = len(codes_by_name.get(base_name, ())) > 1
+            color_name = f"{base_name} {code}" if dup else base_name
+            if dup and (main_images.get(code) or {}).get("image"):
+                dup_image[color_name] = main_images[code]["image"]
             size_key = fix_size_key((l2.get("size") or {}).get("name") or "-")
             entry = by_color.setdefault(color_name, {"name": color_name, "sizes": [], "stock": {}})
             if size_key not in entry["stock"]:
@@ -1746,6 +1762,8 @@ def sync_gu(items):
         for c in new_colors:
             if c["name"] in old_images:
                 c["image"] = old_images[c["name"]]
+            elif c["name"] in dup_image:
+                c["image"] = dup_image[c["name"]]
         if new_colors != card.get("colors"):
             stock_changed += 1
         card["colors"] = new_colors
@@ -1817,9 +1835,25 @@ def sync_uniqlo(items):
 
         by_color = {}
         new_jpy = None
-        for l2 in data.get("result", {}).get("l2s", []):
+        # 2026-11-21 客人回報「官網有兩種灰色,網站只有一種」:UNIQLO/GU 有些商品會有「不同色號但
+        # 同名」的顏色(例如 03 GRAY 跟 07 GRAY),原本用顏色名稱當鍵,兩個 GRAY 被併成一個、
+        # 庫存也混在一起(UNIQLO 54 張卡受影響)。同名但色號不同的,名稱後面加色號區分
+        # (GRAY 03 / GRAY 07),並且用官網該色號自己的圖片;沒有同名衝突的顏色名稱維持不變。
+        res_all = data.get("result", {})
+        codes_by_name = {}
+        for l2 in res_all.get("l2s", []):
+            c = l2.get("color") or {}
+            codes_by_name.setdefault(c.get("name") or c.get("displayCode") or "-", set()).add(c.get("displayCode"))
+        main_images = (res_all.get("images") or {}).get("main") or {}
+        dup_image = {}
+        for l2 in res_all.get("l2s", []):
             color = l2.get("color") or {}
-            color_name = color.get("name") or color.get("displayCode") or "-"
+            base_name = color.get("name") or color.get("displayCode") or "-"
+            code = color.get("displayCode")
+            dup = len(codes_by_name.get(base_name, ())) > 1
+            color_name = f"{base_name} {code}" if dup else base_name
+            if dup and (main_images.get(code) or {}).get("image"):
+                dup_image[color_name] = main_images[code]["image"]
             size_key = fix_size_key((l2.get("size") or {}).get("name") or "-")
             entry = by_color.setdefault(color_name, {"name": color_name, "sizes": [], "stock": {}})
             if size_key not in entry["stock"]:
@@ -1841,6 +1875,8 @@ def sync_uniqlo(items):
         for c in new_colors:
             if c["name"] in old_images:
                 c["image"] = old_images[c["name"]]
+            elif c["name"] in dup_image:
+                c["image"] = dup_image[c["name"]]
         if new_colors != card.get("colors"):
             stock_changed += 1
         card["colors"] = new_colors
