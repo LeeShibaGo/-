@@ -3041,8 +3041,39 @@ const CAMPAIGNS = {
     brand: 'UNIQLO', zoneParam: 'heattech', icon: '🔥', label: 'UNIQLO HEATTECH 發熱衣專區',
     noHome: true,
     match: p => /ヒートテック|HEATTECH|發熱/i.test(p.name || ''),
+    // 2026-11-21 專區內細分:三排篩選(取代一般的分類/種類/系列列),可疊加,每個選項帶件數。
+    // 分類全部由商品名稱(日文原名 + 中文)判斷,不用另外存欄位,新上架的發熱衣自動歸類。
+    facets: [
+      { key: 'level', container: 'groupTabs', allLabel: '全部保暖等級',
+        order: ['一般', '極暖', '超極暖'],
+        pick: p => { const n = p.name || ''; return /超極暖/.test(n) ? '超極暖' : /極暖/.test(n) ? '極暖' : '一般'; } },
+      { key: 'part', container: 'subtypeTabs', allLabel: '全部款式',
+        order: ['圓領T', 'U領T', 'V領T', '高領T', '其他上衣', '緊身褲', '內搭褲', '短褲', '襪子'],
+        pick: p => {
+          const n = p.name || '';
+          if(/ソックス|襪/.test(n)) return '襪子';
+          if(/タイツ|緊身褲/.test(n)) return '緊身褲';
+          if(/レギンス|內搭褲/.test(n)) return '內搭褲';
+          if(/ショートパンツ|短褲/.test(n)) return '短褲';
+          if(/タートル|ハイネック|高領/.test(n)) return '高領T';
+          if(/クルー|圓領/.test(n)) return '圓領T';
+          if(/Uネック|U領/.test(n)) return 'U領T';
+          if(/Vネック|V領/.test(n)) return 'V領T';
+          return '其他上衣'; // 細肩帶背心、暖身衣、亨利領、尖尾T 等
+        } },
+      { key: 'gender', container: 'seriesTabs', allLabel: '全部性別',
+        order: ['女款', '男款', '男女兼用', '嬰幼兒'],
+        pick: p => { const n = p.name || ''; return /嬰幼兒/.test(n) ? '嬰幼兒' : /女款/.test(n) ? '女款' : /男款/.test(n) ? '男款' : '男女兼用'; } },
+    ],
   },
 };
+// 專區的細分篩選狀態(見 CAMPAIGNS[*].facets);換專區/離開專區時在 renderProducts 重設。
+let zoneFacetSel = {};
+let zoneFacetCamp = 'all';
+function zoneFacets(){
+  const c = currentCampaign !== 'all' ? CAMPAIGNS[currentCampaign] : null;
+  return c && c.facets ? c.facets : null;
+}
 function inCampaign(p, key){
   const c = CAMPAIGNS[key];
   if(!c) return false;
@@ -3211,13 +3242,41 @@ function renderSeriesTabs(){
 // 反而把新畫面蓋掉」的問題:每次呼叫都拿一個新號碼,非同步抓資料回來
 // 之後如果號碼已經不是最新的,就代表篩選條件在等待期間又變了,直接放棄
 // 這次的畫面更新。
+// 專區內的細分篩選列(目前只有發熱衣專區):借用 #groupTabs/#subtypeTabs/#seriesTabs 三個
+// 容器,樣式跟一般分類列一樣。每個選項帶件數,件數是「套用其他兩排目前選擇」後的結果。
+function renderZoneFacetTabs(){
+  const zf = zoneFacets();
+  if(!zf) return;
+  const base = visibleProducts().filter(p => productBrand(p) === currentBrand && inCampaign(p, currentCampaign)
+    && (currentTier === 'all' || productTier(p) === currentTier));
+  zf.forEach(f => {
+    const wrap = document.getElementById(f.container);
+    const others = base.filter(p => zf.every(g => g === f || !zoneFacetSel[g.key] || g.pick(p) === zoneFacetSel[g.key]));
+    const counts = {};
+    others.forEach(p => { const v = f.pick(p); counts[v] = (counts[v] || 0) + 1; });
+    const vals = f.order.filter(v => counts[v] || zoneFacetSel[f.key] === v);
+    if(vals.length < 2 && !zoneFacetSel[f.key]){ wrap.innerHTML = ''; return; }
+    const cur = zoneFacetSel[f.key] || 'all';
+    wrap.innerHTML = [`<button type="button" class="cat-tab ${cur === 'all' ? 'active' : ''}" data-v="all">${escapeHtml(f.allLabel)} (${others.length})</button>`]
+      .concat(vals.map(v => `<button type="button" class="cat-tab ${cur === v ? 'active' : ''}" data-v="${escapeHtml(v)}">${escapeHtml(v)} (${counts[v] || 0})</button>`)).join('');
+    wrap.querySelectorAll('.cat-tab').forEach(btn => btn.addEventListener('click', () => {
+      const v = btn.dataset.v;
+      if(v === 'all') delete zoneFacetSel[f.key]; else zoneFacetSel[f.key] = v;
+      currentPage = 1;
+      renderProducts();
+    }));
+  });
+}
+
 let renderProductsToken = 0;
 function renderProducts(){
   renderTopCatNav();
   renderCampaignZone();
+  if(zoneFacetCamp !== currentCampaign){ zoneFacetCamp = currentCampaign; zoneFacetSel = {}; }
   renderGroupTabs();
   renderSubtypeTabs();
   renderSeriesTabs();
+  renderZoneFacetTabs();
   const grid = document.getElementById('productGrid');
   if(productsIndex.length === 0){
     grid.innerHTML = '<div class="empty-note">目前尚未上架商品。</div>';
@@ -3244,6 +3303,8 @@ function renderProducts(){
   }
   if(currentCampaign !== 'all'){
     list = list.filter(p => inCampaign(p, currentCampaign));
+    const zf = zoneFacets();
+    if(zf) zf.forEach(f => { const v = zoneFacetSel[f.key]; if(v) list = list.filter(p => f.pick(p) === v); });
   }
   // 2026-09-06:老闆要求搜尋要「更多元」——原本只比對商品名稱/品牌,
   // 客人如果打的是分類名稱(例如「連帽外套」「網球鞋」)或系列名稱
