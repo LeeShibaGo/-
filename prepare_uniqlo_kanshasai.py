@@ -79,6 +79,13 @@ WEIGHT_BY_SUBTYPE = {
 
 
 def guess_subtype(name):
+    # 2026-11-24:名稱已經寫明袖長/款式的先處理——下面的 Tシャツ 規則一律當短袖,
+    # 「Tシャツ/長袖」「ソフトニットフリースクルーネックT」(刷毛絨長袖)會被誤分到短袖上衣
+    if "タンクトップ" in name:
+        return "背心"
+    if re.search(r"長袖|ロングスリーブ", name) or "ソフトニットフリース" in name or "ソフトリブクルーネックT" in name:
+        if "ヒートテック" not in name:  # 發熱衣一律歸內著(見下面規則)
+            return "長袖上衣"
     # Tシャツ 要在 シャツ 之前判斷,不然 Tシャツ 會被當襯衫
     if "Tシャツ" in name or re.search(r"クルーネックT(/|$)", name) or re.search(r"[A-Za-zぁ-んァ-ヶ]T/", name):
         if not any(k in name for k in ("ヒートテック", "エアリズム")):
