@@ -2342,7 +2342,23 @@ function celineBeatTwPrice(p){
 // 3. CELINE 裡有台灣參考價(twRefPrice)的,套「比台灣便宜但保底有margin」的算法。
 // 4. 韓幣商品維持原本單一 rateKRW 換算(目前沒有分級需求)。
 // 5. 其他日幣商品依原幣價格,用累進級距匯率換算(見 tieredJpyToTwd)。
+// UNIQLO / GU 有抓到台灣官網售價(twRefPrice)的商品:不賣得比台灣貴(2026-11-24 老闆指示)。
+// 成本 = 日幣原價換算 + 運費(跟鞋類、CELINE 同一套)。
+//   - 原本算出來的價格 ≤ 台灣價:不動。
+//   - 比台灣貴,但降到台灣價仍有 ≥15% 毛利(成本×1.15):降到台灣價
+//     (台灣價 ≥ 成本×1.2 時毛利 ≥20%,介於兩者之間毛利 15~20%)。
+//   - 降到台灣價連 15% 都不到:維持原價(會比台灣貴),由後台報表列出給老闆決定。
+function capAtTwPrice(p, price){
+  if(typeof p.twRefPrice !== 'number' || !(p.twRefPrice > 0)) return price;
+  if(price <= p.twRefPrice) return price;
+  const cost = p.jpy * settings.rate + (p.weight || 0) * settings.shippingPerKg;
+  return p.twRefPrice >= cost * 1.15 ? p.twRefPrice : price;
+}
 function sellPriceTwd(p){
+  const base = baseSellPriceTwd(p);
+  return (p.brand === 'UNIQLO' || p.brand === 'GU') ? capAtTwPrice(p, base) : base;
+}
+function baseSellPriceTwd(p){
   if(p.twdOverride != null && p.twdOverride !== '' && !isNaN(p.twdOverride)){
     return Number(p.twdOverride);
   }
