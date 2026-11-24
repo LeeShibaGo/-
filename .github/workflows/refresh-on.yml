@@ -1,0 +1,32 @@
+name: "One-off: refresh On (rebuild colours from official site)"
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Firebase service account key
+        run: |
+          cat > "$RUNNER_TEMP/firebase-service-account.json" <<'KEYEOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          KEYEOF
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      # 不帶 LINE token:這次會一次標記一大批官網下架的商品,不需要發一堆通知給老闆
+      - name: Rebuild On colours and stock
+        run: python sync_stock.py on

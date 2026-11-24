@@ -447,15 +447,22 @@ def on_image_key(url):
 
 
 def sync_on(items):
+    """2026-11-24 改寫:原本靠「顏色圖片」對官網顏色,但站上 On 商品卡每個顏色都是同一張圖,
+    對不到就整張卡庫存歸零(650 張裡 259 張全缺貨,抽查官網其實有貨)。現在每次直接依官網
+    hasVariant 重建顏色清單:每色自己的圖、sku、尺寸庫存;顏色名稱沿用舊名稱或查 on_colors
+    字典(查不到的詞保留英文,見 on_colors.py)。官網已下架(網址被導向 /shop)的商品整張標缺貨。"""
     print("=== On 同步開始 ===")
+    from on_colors import assign_names
     cards = [p for p in items if p.get("brand") == "On"]
-    stock_changed = price_changed = errors = 0
+    stock_changed = price_changed = errors = delisted = 0
     for idx, card in enumerate(cards):
         link = card.get("link")
         if not link:
             continue
         try:
-            html = fetch(link, timeout=25).text
+            res = fetch(link, timeout=25)
+            html = res.text
+            final_url = res.url or link
             time.sleep(0.4)
         except Exception as e:
             print(f"  [{idx+1}/{len(cards)}] 抓取失敗:{card.get('name')} ({e})")
@@ -463,14 +470,19 @@ def sync_on(items):
             continue
         group, _ = extract_ldjson(html)
         if not group:
-            errors += 1
+            # 官網下架的商品網址會被導向 /ja-jp/shop;其他情況(沒解析到)當作暫時錯誤,不動資料
+            if final_url.rstrip("/").endswith("/shop") and not link.rstrip("/").endswith("/shop"):
+                if any(v > 0 for c in card.get("colors", []) for v in _stock_values(c.get("stock"))):
+                    mark_all_sold_out(card)
+                    delisted += 1
+                    delisted_lines.append(f"[On] {card.get('name')} 官網已下架,標記全面缺貨")
+            else:
+                errors += 1
             continue
         variants = group.get("hasVariant", [])
-        by_asset = {}
-        for v in variants:
-            img = v.get("image")
-            img = img[0] if isinstance(img, list) else img
-            by_asset[on_image_key(img)] = v
+        if not variants:
+            errors += 1
+            continue
 
         new_jpy = None
         for v in variants:
@@ -487,29 +499,58 @@ def sync_on(items):
             card["jpy"] = new_jpy
             price_changed += 1
 
-        for color in card.get("colors", []):
-            v = by_asset.get(on_image_key(color.get("image")))
-            if not v:
-                color["stock"] = {s: 0 for s in color.get("sizes", [])}
-                continue
+        old_colors = card.get("colors", [])
+        old_by_sku = {c["sku"]: c for c in old_colors if c.get("sku")}
+        legacy = [c for c in old_colors if not c.get("sku")]
+        live_names = [v.get("color") or "" for v in variants]
+        guessed = assign_names(live_names, [c.get("name", "") for c in legacy])
+
+        new_colors = []
+        fetch_failed = False
+        seen_names = set()
+        for v, guess in zip(variants, guessed):
+            sku = v.get("sku") or ""
             offer = v.get("offers", {})
             color_url = offer.get("url", "")
             full_url = color_url if color_url.startswith("http") else ON_BASE + color_url
+            old = old_by_sku.get(sku)
             try:
                 sizes_stock = extract_size_stock(fetch(full_url, timeout=25).text)
                 time.sleep(0.4)
             except Exception:
-                continue  # 單一顏色抓失敗就先保留舊資料,下次再更新
+                fetch_failed = True
+                if old:
+                    new_colors.append(old)  # 單一顏色抓失敗就先保留舊資料,下次再更新
+                continue
             if not sizes_stock:
                 continue
-            if sizes_stock != (color.get("stock") or {}):
-                stock_changed += 1
-            color["sizes"] = list(sizes_stock.keys())
-            color["stock"] = sizes_stock
+            img = v.get("image")
+            img = img[0] if isinstance(img, list) else img
+            name = old["name"] if old else guess
+            if name in seen_names:  # 官網有兩個顏色字串一樣(sku 不同)時,加 sku 尾碼區分
+                name = f"{name} {sku[-4:]}"
+            seen_names.add(name)
+            entry = {"name": name, "sizes": list(sizes_stock.keys()), "stock": sizes_stock, "sku": sku}
+            entry["image"] = img or (old or {}).get("image")
+            new_colors.append(entry)
+        if not new_colors:
+            if not fetch_failed:
+                # 官網顏色全都查不到尺寸庫存:當作全缺貨,但保留舊資料結構
+                if any(v > 0 for c in old_colors for v in _stock_values(c.get("stock"))):
+                    mark_all_sold_out(card)
+                    stock_changed += 1
+            else:
+                errors += 1
+            continue
+        if new_colors != old_colors:
+            stock_changed += 1
+        card["colors"] = new_colors
+        if new_colors[0].get("image"):
+            card["image"] = new_colors[0]["image"]
         if (idx + 1) % 50 == 0:
             print(f"  進度 {idx+1}/{len(cards)}(庫存有變 {stock_changed},錯誤 {errors})")
-    print(f"On 完成:{len(cards)} 張卡,庫存有變 {stock_changed} 個顏色,"
-          f"價格變動 {price_changed} 件,錯誤 {errors} 件")
+    print(f"On 完成:{len(cards)} 張卡,內容有變 {stock_changed} 張,"
+          f"價格變動 {price_changed} 件,下架 {delisted} 件,錯誤 {errors} 件")
     merge_and_save(cards)
 
 
