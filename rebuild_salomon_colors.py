@@ -78,10 +78,29 @@ def main():
     def word_ok(e, z):
         return z == e or z in tr.get(e, ())
 
-    def matches(zh_name, p):
+    def score(zh_name, p):
+        """None = 有詞明確衝突(不是同一個商品);否則回傳「有證據吻合的詞數」。
+        字典裡沒有這個英文詞的翻譯(unknown)不算衝突也不算證據。"""
         zh = [w.strip() for w in zh_name.split("|")]
         en = [w.strip() for w in en_colour(p).split("/")]
-        return len(zh) == len(en) and all(word_ok(e, z) for e, z in zip(en, zh))
+        if len(zh) != len(en):
+            return None
+        ev = 0
+        for e, z in zip(en, zh):
+            if word_ok(e, z):
+                ev += 1
+            elif e in tr:
+                return None
+        return ev if ev >= max(1, len(en) - 1) else None
+
+    def best_match(zh_name, cands, used):
+        sc = [(score(zh_name, p), p) for p in cands if p["handle"] not in used]
+        sc = [(s_, p) for s_, p in sc if s_ is not None]
+        if not sc:
+            return None, 0
+        top = max(s_ for s_, _ in sc)
+        tops = [p for s_, p in sc if s_ == top]
+        return (tops[0] if len(tops) == 1 else None), (len(tops) if len(tops) > 1 else 0)
 
     rows, changed, near_miss = [], [], []
     tot = dict(cards=0, old=0, kept=0, dup_removed=0, unmatched=0, hidden=0, ambiguous=0)
@@ -94,18 +113,13 @@ def main():
             cand = [p for p in cand if "ウィメンズ" not in (p.get("tags") or [])]
         kept, dups, unmatched, amb, used = [], [], [], 0, set()
         for old in c["colors"]:
-            ms = [p for p in cand if matches(old["name"], p) and p["handle"] not in used]
-            if len(ms) > 1:
+            p, namb = best_match(old["name"], cand, used)
+            if namb:
                 amb += 1
-            if not ms:
+            if p is None:
                 unmatched.append(old["name"])
-                zh = [w.strip() for w in old["name"].split("|")]
-                near = [p for p in cand if len(zh) == len(en_colour(p).split("/")) and
-                        sum(word_ok(e.strip(), z) for e, z in zip(en_colour(p).split("/"), zh)) >= 2]
-                if near:
-                    near_miss.append((c["name"], old["name"], en_colour(near[0])))
+                near_miss.append((c["name"], old["name"], f"同標題官網商品 {len(cand)} 個"))
                 continue
-            p = ms[0]
             used.add(p["handle"])
             if p["handle"] in standalone_handles and p["handle"] != handle_of(c):
                 dups.append(old["name"])
@@ -142,9 +156,9 @@ def main():
     for r in rows:
         print("\t".join(str(x) for x in r))
     print("TOTAL", tot)
-    print("NEAR_MISS_COUNT", len(near_miss))
-    for nm in near_miss[:40]:
-        print("NEAR", nm)
+    print("UNMATCHED_COUNT", len(near_miss))
+    for nm in near_miss[:60]:
+        print("UNM", nm)
     # 官網現在還有幾個同標題商品、官網整體商品數
     if APPLY and changed:
         merge_and_save(changed)
