@@ -2554,11 +2554,26 @@ async function fetchProductsByIds(ids){
 // 進後台當下才整包抓一次 daigou-products-v1 到 products(後台那組
 // admin 開頭的函式邏輯完全不變,繼續讀 products),同一個 session
 // 只抓一次,不會每次打開後台都重抓。
+// 2026-11-24:原本抓失敗(手機行動網路抓 16MB 逾時/斷線)時 storageGet 回 null,
+// 這裡會把「空清單」當成成功並永遠記住,後台就變成「這個分類目前沒有商品」,
+// 重新整理前怎麼點都不會再抓。改成:失敗不記住、自動重試一次,回傳是否成功。
 async function ensureAdminProductsLoaded(){
-  if(adminProductsLoaded) return;
-  const p = await storageGet(PRODUCTS_KEY);
-  products = p ? (Array.isArray(p) ? p : Object.values(p)) : [];
+  if(adminProductsLoaded) return true;
+  let p = await storageGet(PRODUCTS_KEY);
+  if(!p) p = await storageGet(PRODUCTS_KEY);
+  if(!p) return false;
+  products = Array.isArray(p) ? p : Object.values(p);
   adminProductsLoaded = true;
+  return true;
+}
+
+// 訂單整包讀取要有老闆的登入身分。頁面載入時(loadAll)如果還沒登入,讀到的是空的;
+// 之後才按齒輪登入,orders 仍是空的,後台就顯示「目前還沒有訂單」。
+// 2026-11-24:每次開後台都用目前登入身分重抓一次。
+async function reloadOrdersForAdmin(){
+  const o = await storageGet(ORDERS_KEY);
+  if(o) orders = Array.isArray(o) ? o : Object.values(o);
+  return !!o;
 }
 
 async function loadAll(){
@@ -4595,8 +4610,17 @@ async function openAdmin(){
   document.getElementById('adminChatThreadWrap').style.display = 'none';
   adminActiveCustomerUid = null;
   renderAdminCustomerList();
-  await ensureAdminProductsLoaded();
-  renderProductAdminList();
+  // 訂單跟商品同時重抓(都帶登入身分),各自完成就各自畫
+  const ordersTask = reloadOrdersForAdmin().then(() => renderOrdersAdminList());
+  const okProducts = await ensureAdminProductsLoaded();
+  if(okProducts){
+    renderProductAdminList();
+  }else{
+    const box = document.getElementById('productList');
+    box.innerHTML = '<div class="empty-note">商品資料載入失敗(網路不穩或登入已過期)。<button type="button" id="retryAdminProducts" style="margin-left:8px;">重新載入</button></div>';
+    document.getElementById('retryAdminProducts').onclick = () => openAdmin();
+  }
+  await ordersTask;
 }
 document.getElementById('closeAdmin').onclick = () => document.getElementById('adminOverlay').classList.remove('open');
 document.getElementById('ownerLogoutBtn').onclick = async () => {
