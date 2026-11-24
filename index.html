@@ -1362,7 +1362,7 @@ flipMorphClose() 那組膠囊變形動畫是綁在這個 .sheet 元素本身量�
       <input type="number" step="0.0001" id="rateKRWInput" placeholder="0.024">
       <button type="button" class="ghost-btn" id="fetchRateBtn" style="margin-top:8px;">帶入即時匯率(日圓+韓元,每日更新)</button>
       <label style="margin-top:16px;">日幣商品分級加價(每行一個級距:「這個級距的原幣價格上限,加價百分比」,最後一行價格上限留空代表以上都算這一級。便宜商品可以加價高一點賺工本費,精品加價低一點避免比台灣專櫃還貴。這裡填的是「加價幾%」,不是匯率本身——實際匯率 = 上面的即時匯率 ×(1+這裡的加價%),之後即時匯率更新,毛利率會自動維持不變,不用回來重算這幾個數字。採累進制計算,像所得稅級距一樣——每個級距只對落在該級距內的那一段金額套用對應加價,不是整筆金額都套同一個級距,價格才會隨原幣價格平滑增加,不會在級距交界處忽然變便宜)</label>
-      <textarea id="priceTiersInput" style="min-height:100px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="10000,50&#10;50000,40&#10;100000,30&#10;200000,25&#10;,25"></textarea>
+      <textarea id="priceTiersInput" style="min-height:100px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="10000,40&#10;50000,40&#10;100000,30&#10;200000,25&#10;,25"></textarea>
       <label style="margin-top:16px;">每公斤運費(台幣)</label>
       <input type="number" step="1" id="shipInput" placeholder="150">
       <button class="primary-btn" id="saveRateBtn">儲存並更新看板</button>
@@ -2059,7 +2059,7 @@ const DEFAULT_SETTINGS = {
   // 匯率 = rate(每次帶入即時匯率都會更新) × (1+加價百分比),毛利率不會再受匯率波動影響。
   // 韓幣商品目前還是用上面單一的 rateKRW,之後如果韓幣商品也需要分級,可以比照這個
   // 做法另外加一個 priceTiersKRW。
-  priceTiers: `10000,50\n50000,40\n100000,30\n200000,25\n,25`,
+  priceTiers: `10000,40\n50000,40\n100000,30\n200000,25\n,25`,
   shippingPerKg: 150,
   // 本期收單/出貨/抵台時程的精簡版,會直接顯示在首頁看板上(不用點「代購須知」
   // 才看得到),每次開新一團記得回來更新;詳細版規則還是寫在 purchaseGuide 裡。
@@ -2211,6 +2211,7 @@ const TIER_BY_BRAND = {
   '9090': '潮流品牌',
   '9090 girl': '潮流品牌',
   'HUMAN MADE': '潮流品牌',
+  'STARBUCKS x BEAMS': '潮流品牌',
   'GU': '生活選物',
 };
 const TIER_ORDER = ['精品', '運動品牌', '潮流品牌', '生活選物'];
