@@ -75,6 +75,8 @@ def main():
             for e, z in zip(en, zh):
                 tr[e].add(z)
 
+    all_zh = set().union(*tr.values()) if tr else set()
+
     def word_ok(e, z):
         return z == e or z in tr.get(e, ())
 
@@ -89,8 +91,9 @@ def main():
         for e, z in zip(en, zh):
             if word_ok(e, z):
                 ev += 1
-            elif e in tr:
-                return None
+            elif z.isascii() or z in all_zh:
+                return None  # 舊名稱這個詞是別的英文詞的翻譯(或是不同的英文)=> 不是同一個顏色
+            # 否則舊名稱用了字典沒見過的中文寫法(例如 杏仁奶油 vs 杏仁奶油色),不當衝突
         return ev if ev >= max(1, len(en) - 1) else None
 
     def best_match(zh_name, cands, used):
