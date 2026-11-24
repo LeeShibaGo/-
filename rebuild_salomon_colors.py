@@ -83,7 +83,7 @@ def main():
         en = [w.strip() for w in en_colour(p).split("/")]
         return len(zh) == len(en) and all(word_ok(e, z) for e, z in zip(en, zh))
 
-    rows, changed = [], []
+    rows, changed, near_miss = [], [], []
     tot = dict(cards=0, old=0, kept=0, dup_removed=0, unmatched=0, hidden=0, ambiguous=0)
     for c in bad:
         gender = "w" if c["name"].startswith("女款") else ("m" if c["name"].startswith("男款") else None)
@@ -99,6 +99,11 @@ def main():
                 amb += 1
             if not ms:
                 unmatched.append(old["name"])
+                zh = [w.strip() for w in old["name"].split("|")]
+                near = [p for p in cand if len(zh) == len(en_colour(p).split("/")) and
+                        sum(word_ok(e.strip(), z) for e, z in zip(en_colour(p).split("/"), zh)) >= 2]
+                if near:
+                    near_miss.append((c["name"], old["name"], en_colour(near[0])))
                 continue
             p = ms[0]
             used.add(p["handle"])
@@ -137,6 +142,10 @@ def main():
     for r in rows:
         print("\t".join(str(x) for x in r))
     print("TOTAL", tot)
+    print("NEAR_MISS_COUNT", len(near_miss))
+    for nm in near_miss[:40]:
+        print("NEAR", nm)
+    # 官網現在還有幾個同標題商品、官網整體商品數
     if APPLY and changed:
         merge_and_save(changed)
         print("已寫入", len(changed), "張卡")
