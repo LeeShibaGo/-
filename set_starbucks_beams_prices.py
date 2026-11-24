@@ -12,7 +12,10 @@ for _s in (sys.stdout, sys.stderr):
 PRICE = {
     "https://menu.starbucks.co.jp/4524785659971": 6500,   # 純銀戒指 (p_starbucks_..._1)
     "https://menu.starbucks.co.jp/4524785660076": 7000,   # 皮革包   (p_starbucks_..._5)
-    "https://menu.starbucks.co.jp/4524785660038": 23999,  # 皮外套   (p_starbucks_..._4)
+    "https://menu.starbucks.co.jp/4524785660038": 24500,  # 皮外套 (p_starbucks_..._4;23999 -> 24500)
+    "https://menu.starbucks.co.jp/4524785660120": 4880,   # 圓領大學 T (p_starbucks_..._3)
+    "https://menu.starbucks.co.jp/4524785656352": 1599,   # TOGO 保溫瓶 (p_starbucks_..._0)
+    "https://menu.starbucks.co.jp/4524785660212": 799,    # DRINK-ID 襪子 (p_starbucks_..._11)
 }
 
 
