@@ -61,28 +61,29 @@ def main():
     bad_ids = {c["id"] for c in bad}
     standalone_handles = {handle_of(c) for c in cards if c["id"] not in bad_ids}
 
-    # 英文 -> {中文...} 字典:從站上的獨立單色卡(官網商品已知)學出來
+    # 英文 -> {中文...} 字典。站上獨立單色卡的顏色名稱是「未翻譯的英文」,學不到翻譯,
+    # 所以改從舊合併卡學:每張舊卡的第一個顏色就是它的 link 對到的官網商品(逐詞對齊),
+    # 再用「唯一對得上」的顏色反覆學新詞,直到不再增加。
     tr = defaultdict(set)
-    for c in cards:
-        if c["id"] in bad_ids or len(c.get("colors", [])) != 1:
-            continue
-        p = by_handle.get(handle_of(c))
-        if not p:
-            continue
-        en = [w.strip() for w in en_colour(p).split("/")]
-        zh = [w.strip() for w in c["colors"][0]["name"].split("|")]
+
+    def learn(en_name, zh_name):
+        en = [w.strip() for w in en_name.split("/")]
+        zh = [w.strip() for w in zh_name.split("|")]
         if len(en) == len(zh):
             for e, z in zip(en, zh):
-                tr[e].add(z)
+                if e and z and z != e:
+                    tr[e].add(z)
 
-    all_zh = set().union(*tr.values()) if tr else set()
+    for c in bad:
+        p = by_handle.get(handle_of(c))
+        if p:
+            learn(en_colour(p), c["colors"][0]["name"])
 
     def word_ok(e, z):
         return z == e or z in tr.get(e, ())
 
-    def score(zh_name, p):
-        """None = 有詞明確衝突(不是同一個商品);否則回傳「有證據吻合的詞數」。
-        字典裡沒有這個英文詞的翻譯(unknown)不算衝突也不算證據。"""
+    def score(zh_name, p, all_zh):
+        """None = 有詞明確衝突(不是同一個商品);否則回傳「有證據吻合的詞數」。"""
         zh = [w.strip() for w in zh_name.split("|")]
         en = [w.strip() for w in en_colour(p).split("/")]
         if len(zh) != len(en):
@@ -92,38 +93,63 @@ def main():
             if word_ok(e, z):
                 ev += 1
             elif z.isascii() or z in all_zh:
-                return None  # 舊名稱這個詞是別的英文詞的翻譯(或是不同的英文)=> 不是同一個顏色
-            # 否則舊名稱用了字典沒見過的中文寫法(例如 杏仁奶油 vs 杏仁奶油色),不當衝突
+                return None  # 這個詞是別的英文詞的翻譯(或不同英文)=> 不是同一個顏色
         return ev if ev >= max(1, len(en) - 1) else None
 
-    def best_match(zh_name, cands, used):
-        sc = [(score(zh_name, p), p) for p in cands if p["handle"] not in used]
-        sc = [(s_, p) for s_, p in sc if s_ is not None]
-        if not sc:
-            return None, 0
-        top = max(s_ for s_, _ in sc)
-        tops = [p for s_, p in sc if s_ == top]
-        return (tops[0] if len(tops) == 1 else None), (len(tops) if len(tops) > 1 else 0)
-
-    rows, changed, near_miss = [], [], []
-    tot = dict(cards=0, old=0, kept=0, dup_removed=0, unmatched=0, hidden=0, ambiguous=0)
-    for c in bad:
+    def match_card(c):
+        """回傳 [(舊顏色, 官網商品或None, 平手數)];官網商品同一張卡內不重複使用。"""
         gender = "w" if c["name"].startswith("女款") else ("m" if c["name"].startswith("男款") else None)
         cand = by_title.get(norm(c["name"]), [])
         if gender == "w":
             cand = [p for p in cand if "ウィメンズ" in (p.get("tags") or [])]
         elif gender == "m":
             cand = [p for p in cand if "ウィメンズ" not in (p.get("tags") or [])]
-        kept, dups, unmatched, amb, used = [], [], [], 0, set()
-        for old in c["colors"]:
-            p, namb = best_match(old["name"], cand, used)
+        all_zh = set().union(*tr.values()) if tr else set()
+        used = set()
+        order = sorted(range(len(c["colors"])), key=lambda i: i != 0)
+        res = {}
+        for i in order:
+            old = c["colors"][i]
+            p, namb = None, 0
+            first = by_handle.get(handle_of(c))
+            if i == 0 and first is not None and first in cand:
+                p = first
+            else:
+                sc = [(score(old["name"], q, all_zh), q) for q in cand if q["handle"] not in used]
+                sc = [(s_, q) for s_, q in sc if s_ is not None]
+                if sc:
+                    top = max(s_ for s_, _ in sc)
+                    tops = [q for s_, q in sc if s_ == top]
+                    if len(tops) == 1:
+                        p = tops[0]
+                    else:
+                        namb = len(tops)
+            if p is not None:
+                used.add(p["handle"])
+            res[i] = (old, p, namb)
+        return [res[i] for i in range(len(c["colors"]))]
+
+    for _round in range(6):
+        before = sum(len(v) for v in tr.values())
+        for c in bad:
+            for old, p, _ in match_card(c):
+                if p is not None:
+                    learn(en_colour(p), old["name"])
+        if sum(len(v) for v in tr.values()) == before:
+            break
+    print("學到的顏色詞(英->中)", len(tr))
+
+    rows, changed, near_miss = [], [], []
+    tot = dict(cards=0, old=0, kept=0, dup_removed=0, unmatched=0, hidden=0, ambiguous=0)
+    for c in bad:
+        kept, dups, unmatched, amb = [], [], [], 0
+        for old, p, namb in match_card(c):
             if namb:
                 amb += 1
             if p is None:
                 unmatched.append(old["name"])
-                near_miss.append((c["name"], old["name"], f"同標題官網商品 {len(cand)} 個"))
+                near_miss.append((c["name"], old["name"], f"同標題官網商品 {len(by_title.get(norm(c['name']), []))} 個"))
                 continue
-            used.add(p["handle"])
             if p["handle"] in standalone_handles and p["handle"] != handle_of(c):
                 dups.append(old["name"])
                 continue
