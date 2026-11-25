@@ -152,7 +152,26 @@ def main():
     print("學到的顏色詞(英->中)", len(tr))
 
     rows, changed, near_miss = [], [], []
-    covered = set(standalone_handles)
+    # 預先算「官網有、站上完全沒有卡片」的商品(舊卡片對不到、也沒有獨立卡)
+    matched_pre = set()
+    for c in bad:
+        for _old, _p, _ in match_card(c):
+            if _p is not None:
+                matched_pre.add(_p["handle"])
+    uncovered = [q for h, q in by_handle.items()
+                 if h not in standalone_handles and h not in matched_pre]
+    unc_by_title = defaultdict(list)
+    for q in uncovered:
+        unc_by_title[norm(q["title"])].append(q)
+    added_global = set()
+    print("UNCOVERED 官網有、站上沒卡片的商品數(全部)", len(uncovered))
+
+    def zh_name(q):
+        out = []
+        for w in [w.strip() for w in en_colour(q).split("/")]:
+            z = tr.get(w)
+            out.append(sorted(z)[0] if z and len(z) == 1 else w)
+        return " | ".join(out)
     tot = dict(cards=0, old=0, kept=0, dup_removed=0, dup_restored=0, ordered_oos=0,
                unmatched=0, hidden=0, ambiguous=0)
 
@@ -184,17 +203,27 @@ def main():
                     near_miss.append((c["name"], old["name"], f"同標題官網商品 {len(by_title.get(norm(c['name']), []))} 個"))
                 continue
             entry = build_colour(old, p)
-            covered.add(p["handle"])
             if p["handle"] in standalone_handles and p["handle"] != handle_of(c):
                 dups.append(entry)
                 continue
             kept.append(entry)
+        # 官網同標題、站上還沒卡片的在售商品:一律補進這張卡(官網沒下架的不能不見)
+        gender = "w" if c["name"].startswith("女款") else ("m" if c["name"].startswith("男款") else None)
+        added = []
+        for q in unc_by_title.get(norm(c["name"]), []):
+            if q["handle"] in added_global:
+                continue
+            is_w = "ウィメンズ" in (q.get("tags") or [])
+            if (gender == "w" and not is_w) or (gender == "m" and is_w):
+                continue
+            added_global.add(q["handle"])
+            added.append(build_colour({"name": zh_name(q), "image": None}, q))
         restored = 0
-        if not kept and not oos and dups:
+        if not kept and not oos and not added and dups:
             # 官網還在賣的商品不能因為合併卡而被隱藏:整張卡只剩重複色時,把重複色放回來
             kept, restored, dups = dups, len(dups), []
-        final = kept + oos
-        tot["cards"] += 1; tot["old"] += len(c["colors"]); tot["kept"] += len(kept)
+        final = kept + added + oos
+        tot["added_live"] = tot.get("added_live", 0) + len(added); tot["cards"] += 1; tot["old"] += len(c["colors"]); tot["kept"] += len(kept)
         tot["dup_removed"] += len(dups); tot["dup_restored"] += restored
         tot["ordered_oos"] += len(oos); tot["unmatched"] += len(unmatched); tot["ambiguous"] += amb
         # 官網還有同名商品 => 不隱藏、也不動這張卡(只隱藏官網整個系列都已下架的)
@@ -211,10 +240,11 @@ def main():
             if final:
                 c["colors"] = [{k: v for k, v in k_.items() if k not in ("handle", "price")} for k_ in final]
                 c["image"] = final[0]["image"]
-                if kept:
-                    c["link"] = "https://salomon.jp/products/" + kept[0]["handle"]
+                if kept or added:
+                    first = (kept + added)[0]
+                    c["link"] = "https://salomon.jp/products/" + first["handle"]
                     try:
-                        c["jpy"] = int(float(kept[0]["price"]))
+                        c["jpy"] = int(float(first["price"]))
                     except (TypeError, ValueError):
                         pass
             elif hide:
@@ -223,22 +253,7 @@ def main():
                 continue
             changed.append(c)
 
-    uncovered = [q for h, q in by_handle.items() if h not in covered]
-    print("UNCOVERED 官網有、但站上沒有任何卡片的商品數", len(uncovered))
-    for q in uncovered[:40]:
-        print("UNCOV", q["handle"], q["title"], en_colour(q))
-    # 風險檢查:有「對不到的舊顏色」的卡,官網同標題是否還有「站上沒有任何卡片」的商品(可能是對錯字漏掉的活商品)
-    unc_by_title = defaultdict(list)
-    for q in uncovered:
-        unc_by_title[norm(q["title"])].append(q)
-    risk_cards = risk_cols = 0
-    for r in rows:
-        if r[7] > 0:
-            n_unc = len(unc_by_title.get(norm(r[1]), []))
-            if n_unc:
-                risk_cards += 1; risk_cols += r[7]
-                print("RISK", r[0], r[1], "對不到", r[7], "官網同標題但站上沒卡", n_unc)
-    print("RISK_TOTAL cards", risk_cards, "colours", risk_cols)
+    print("ADDED_LIVE 補進卡片的官網在售商品", len(added_global))
     print("ID\tNAME\tOLD\tKEPT\tDUP_RESTORED\tORDERED_OOS\tDUP_REMOVED\tUNMATCHED\tAMBIG\tHIDE")
     for r in rows:
         print("\t".join(str(x) for x in r))
