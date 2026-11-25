@@ -1,0 +1,36 @@
+{
+  "QNWFDG": {
+    "code": "QNWFDG",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 391.5,
+    "device": "手機",
+    "email": "jenny0979292@gmail.com",
+    "id": "ord_1795522545288",
+    "items": [
+      {
+        "color": "BROWN",
+        "country": "JP",
+        "jpy": 2990,
+        "name": "バギーバレルレッグジーンズ Baggy 桶狀牛仔褲",
+        "productId": "p_uniqlokss_1795141602918_23",
+        "purchased": false,
+        "qty": 1,
+        "size": "25",
+        "weight": 0.55
+      }
+    ],
+    "name": "王郁涵",
+    "note": "卡其色/25/正常版型",
+    "phone": "0968906958",
+    "shipping": 0,
+    "status": "已收訂金",
+    "statusTimestamps": {
+      "已收訂金": 1795524589481,
+      "待確認訂金": 1795524588187
+    },
+    "subtotal": 745,
+    "time": 1795522545288,
+    "total": 783
+  }
+}
