@@ -16,6 +16,9 @@ PRICE = {
     "https://menu.starbucks.co.jp/4524785660120": 4880,   # 圓領大學 T (p_starbucks_..._3)
     "https://menu.starbucks.co.jp/4524785656352": 1599,   # TOGO 保溫瓶 (p_starbucks_..._0)
     "https://menu.starbucks.co.jp/4524785660212": 799,    # DRINK-ID 襪子 (p_starbucks_..._11)
+    "https://menu.starbucks.co.jp/4524785660168": 2000,   # 6P LOGO 棒球帽 (p_starbucks_..._6)
+    "https://menu.starbucks.co.jp/4524785660175": 2000,   # LOGO 工作圍裙 (p_starbucks_..._7)
+    "https://menu.starbucks.co.jp/4524785660182": 799,    # 2 件組收納包 (p_starbucks_..._8)
 }
 
 
