@@ -4632,6 +4632,7 @@ async function openAdmin(){
   const okProducts = await ensureAdminProductsLoaded();
   if(okProducts){
     renderProductAdminList();
+    renderOrdersAdminList(); // 商品載入後重畫訂單,才查得到商品連結
   }else{
     const box = document.getElementById('productList');
     box.innerHTML = '<div class="empty-note">商品資料載入失敗(網路不穩或登入已過期)。<button type="button" id="retryAdminProducts" style="margin-left:8px;">重新載入</button></div>';
@@ -5139,6 +5140,16 @@ document.getElementById('addProdBtn').onclick = async () => {
   renderProducts();
 };
 
+// 2026-11-25 老闆要求:客訂訂單要看得到商品連結才知道客人買了什麼。
+// 訂單裡只存 productId(不改訂單寫入的欄位,避免資料庫規則擋單),
+// 後台顯示時再用 productId 去查商品的官網連結;商品已被刪除就查不到、不顯示連結。
+function orderItemLinkHtml(i){
+  const p = (i.productId && (productsFull.get(i.productId) || products.find(x => x && x.id === i.productId))) || null;
+  const url = (i.link || (p && p.link) || '').trim();
+  if(!/^https?:\/\//i.test(url)) return '';
+  return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="font-size:12px; margin-left:4px; white-space:nowrap;" title="${escapeHtml(url)}">官網連結 ↗</a>`;
+}
+
 function renderOrdersAdminList(){
   const box = document.getElementById('ordersList');
   const empty = document.getElementById('ordersEmpty');
@@ -5185,6 +5196,7 @@ function renderOrdersAdminList(){
         <label style="display:flex; align-items:center; gap:6px; padding:2px 0; cursor:pointer;">
           <input type="checkbox" ${i.purchased ? 'checked' : ''} onchange="toggleItemPurchased('${o.id}', ${idx})">
           <span style="${i.purchased ? 'text-decoration:line-through; color:#B5AE9C;' : ''}">${escapeHtml(i.name)}${i.color ? ' ['+escapeHtml(i.color)+']' : ''}${i.size ? ' ('+escapeHtml(i.size)+')' : ''}×${i.qty}</span>
+          ${orderItemLinkHtml(i)}
         </label>
       `).join('')}</div>
       <div style="font-family:'JetBrains Mono',monospace; font-size:13px;">總額 ${fmtMoney(o.total)}　訂金 ${fmtMoney(o.deposit)}${o.deliveryMethod ? `　取貨:${escapeHtml(o.deliveryMethod)}` : ''}${o.storeName ? `　門市:${escapeHtml(o.storeName)}` : ''}</div>
