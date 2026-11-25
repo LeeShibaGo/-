@@ -7,13 +7,15 @@
   1. 每個舊顏色(中文名)對到官網同名商品的某個顏色(用「站上已經有獨立單色卡」的中英對照學翻譯)。
   2. 對得到、而且站上沒有獨立卡的顏色 -> 留在這張卡,改用官網自己的圖/尺寸/庫存。
   3. 站上已經有獨立單色卡的顏色 -> 從合併卡拿掉(每個顏色只出現一次)。
-  4. 留不下任何顏色的卡 -> 標 hidden(不刪)。
-  5. 對不到官網的舊顏色 -> 列在報告裡,套用時丟掉(資料本來就是錯的)。
+  4. 官網還在賣的東西不能隱藏:整張卡只剩重複色時把重複色放回來。
+  5. 對不到官網的舊顏色:客人買過的保留並標缺貨(庫存 0),其餘丟掉。
+  6. 只有「全部官網已下架、也沒有客人買過」的卡才標 hidden(不刪)。
 """
 import json, os, re, sys, time, urllib.request
 from collections import defaultdict
 
-from sync_stock import load_products, merge_and_save, fix_size_key
+from firebase_admin import db
+from sync_stock import firebase_app, load_products, merge_and_save, fix_size_key
 
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
@@ -55,6 +57,16 @@ def main():
         by_title[norm(p["title"])].append(p)
 
     cards = [p for p in load_products() if p.get("brand") == "Salomon"]
+    # 客人買過的 (商品ID, 顏色):就算官網下架也要留著,庫存標 0(缺貨)
+    firebase_app()
+    raw = db.reference("daigou-orders-v1").get() or {}
+    orders = list(raw.values()) if isinstance(raw, dict) else [o for o in raw if o]
+    ordered = set()
+    for o in orders:
+        for it in (o.get("items") or []):
+            if it.get("productId") and it.get("color"):
+                ordered.add((it["productId"], it["color"]))
+    print("訂單數", len(orders), "買過的(商品,顏色)組合", len(ordered))
     handle_of = lambda c: (c.get("link") or "").rsplit("/", 1)[-1]
     bad = [c for c in cards if len(c.get("colors", [])) > 1 and
            len({(x.get("image") or "").split("?")[0] for x in c["colors"]}) == 1]
@@ -140,48 +152,68 @@ def main():
     print("學到的顏色詞(英->中)", len(tr))
 
     rows, changed, near_miss = [], [], []
-    tot = dict(cards=0, old=0, kept=0, dup_removed=0, unmatched=0, hidden=0, ambiguous=0)
+    tot = dict(cards=0, old=0, kept=0, dup_removed=0, dup_restored=0, ordered_oos=0,
+               unmatched=0, hidden=0, ambiguous=0)
+
+    def build_colour(old, p):
+        sizes, stock = [], {}
+        for v in p["variants"]:
+            s_ = fix_size_key((v.get("option2") or v.get("option1") or "").strip())
+            if not s_ or s_ in stock:
+                continue
+            sizes.append(s_)
+            stock[s_] = 5 if v.get("available") else 0
+        img = (p.get("images") or [{}])[0].get("src") or old.get("image")
+        return {"name": old["name"], "image": img, "sizes": sizes, "stock": stock,
+                "handle": p["handle"], "price": p["variants"][0].get("price")}
+
     for c in bad:
-        kept, dups, unmatched, amb = [], [], [], 0
+        kept, dups, oos, unmatched, amb = [], [], [], [], 0
         for old, p, namb in match_card(c):
             if namb:
                 amb += 1
             if p is None:
-                unmatched.append(old["name"])
-                near_miss.append((c["name"], old["name"], f"同標題官網商品 {len(by_title.get(norm(c['name']), []))} 個"))
+                if (c["id"], old["name"]) in ordered:
+                    # 客人買過、官網已找不到:保留,全部尺寸標缺貨
+                    szs = list(old.get("sizes") or [])
+                    oos.append({"name": old["name"], "image": old.get("image"), "sizes": szs,
+                                "stock": {s_: 0 for s_ in szs}})
+                else:
+                    unmatched.append(old["name"])
+                    near_miss.append((c["name"], old["name"], f"同標題官網商品 {len(by_title.get(norm(c['name']), []))} 個"))
                 continue
+            entry = build_colour(old, p)
             if p["handle"] in standalone_handles and p["handle"] != handle_of(c):
-                dups.append(old["name"])
+                dups.append(entry)
                 continue
-            sizes, stock = [], {}
-            for v in p["variants"]:
-                s = fix_size_key((v.get("option2") or v.get("option1") or "").strip())
-                if not s or s in stock:
-                    continue
-                sizes.append(s)
-                stock[s] = 5 if v.get("available") else 0
-            img = (p.get("images") or [{}])[0].get("src") or old.get("image")
-            kept.append({"name": old["name"], "image": img, "sizes": sizes, "stock": stock,
-                         "handle": p["handle"], "price": p["variants"][0].get("price")})
+            kept.append(entry)
+        restored = 0
+        if not kept and not oos and dups:
+            # 官網還在賣的商品不能因為合併卡而被隱藏:整張卡只剩重複色時,把重複色放回來
+            kept, restored, dups = dups, len(dups), []
+        final = kept + oos
         tot["cards"] += 1; tot["old"] += len(c["colors"]); tot["kept"] += len(kept)
-        tot["dup_removed"] += len(dups); tot["unmatched"] += len(unmatched); tot["ambiguous"] += amb
-        hide = not kept
+        tot["dup_removed"] += len(dups); tot["dup_restored"] += restored
+        tot["ordered_oos"] += len(oos); tot["unmatched"] += len(unmatched); tot["ambiguous"] += amb
+        hide = not final
         tot["hidden"] += hide
-        rows.append((c["id"], c["name"], len(c["colors"]), len(kept), len(dups), len(unmatched), amb, hide))
+        rows.append((c["id"], c["name"], len(c["colors"]), len(kept), restored, len(oos),
+                     len(dups), len(unmatched), amb, hide))
         if APPLY:
-            if kept:
-                c["colors"] = [{k: v for k, v in k_.items() if k not in ("handle", "price")} for k_ in kept]
-                c["image"] = kept[0]["image"]
-                c["link"] = "https://salomon.jp/products/" + kept[0]["handle"]
-                try:
-                    c["jpy"] = int(float(kept[0]["price"]))
-                except (TypeError, ValueError):
-                    pass
+            if final:
+                c["colors"] = [{k: v for k, v in k_.items() if k not in ("handle", "price")} for k_ in final]
+                c["image"] = final[0]["image"]
+                if kept:
+                    c["link"] = "https://salomon.jp/products/" + kept[0]["handle"]
+                    try:
+                        c["jpy"] = int(float(kept[0]["price"]))
+                    except (TypeError, ValueError):
+                        pass
             else:
                 c["hidden"] = True
             changed.append(c)
 
-    print("ID\tNAME\tOLD\tKEPT\tDUP_REMOVED\tUNMATCHED\tAMBIG\tHIDE")
+    print("ID\tNAME\tOLD\tKEPT\tDUP_RESTORED\tORDERED_OOS\tDUP_REMOVED\tUNMATCHED\tAMBIG\tHIDE")
     for r in rows:
         print("\t".join(str(x) for x in r))
     print("TOTAL", tot)
