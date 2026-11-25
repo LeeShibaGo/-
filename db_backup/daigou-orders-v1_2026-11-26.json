@@ -1,0 +1,92 @@
+{
+  "QNWFDG": {
+    "code": "QNWFDG",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 391.5,
+    "device": "手機",
+    "email": "jenny0979292@gmail.com",
+    "id": "ord_1795522545288",
+    "items": [
+      {
+        "color": "BROWN",
+        "country": "JP",
+        "jpy": 2990,
+        "name": "バギーバレルレッグジーンズ Baggy 桶狀牛仔褲",
+        "productId": "p_uniqlokss_1795141602918_23",
+        "purchased": false,
+        "qty": 1,
+        "size": "25",
+        "weight": 0.55
+      }
+    ],
+    "name": "王郁涵",
+    "note": "卡其色/25/正常版型",
+    "phone": "0968906958",
+    "shipping": 0,
+    "status": "已收訂金",
+    "statusTimestamps": {
+      "已收訂金": 1795524589481,
+      "待確認訂金": 1795524588187
+    },
+    "subtotal": 745,
+    "time": 1795522545288,
+    "total": 783
+  },
+  "V788ZB": {
+    "code": "V788ZB",
+    "deliveryFee": 38,
+    "deliveryMethod": "賣貨便",
+    "deposit": 693,
+    "device": "手機",
+    "email": "xuann155laa@gmail.com",
+    "id": "ord_1795614949121",
+    "items": [
+      {
+        "color": "BLACK",
+        "country": "JP",
+        "jpy": 1990,
+        "name": "極暖ヒートテックカシミヤブレンドタートルネックT HEATTECH 極暖 喀什米爾混紡高領T恤",
+        "productId": "p_uniqlo2_1785401293930_661",
+        "purchased": false,
+        "qty": 1,
+        "size": "S",
+        "weight": 0.31
+      },
+      {
+        "color": "NATURAL",
+        "country": "JP",
+        "jpy": 1990,
+        "name": "極暖ヒートテックカシミヤブレンドタートルネックT HEATTECH 極暖 喀什米爾混紡高領T恤",
+        "productId": "p_uniqlo2_1785401293930_661",
+        "purchased": false,
+        "qty": 1,
+        "size": "S",
+        "weight": 0.31
+      },
+      {
+        "color": "BLACK",
+        "country": "JP",
+        "jpy": 1290,
+        "name": "極暖ヒートテックボアタイツ HEATTECH 極暖 毛絨緊身褲(女款)",
+        "productId": "p_uniqlokss_1795141602918_82",
+        "purchased": false,
+        "qty": 1,
+        "size": "M",
+        "weight": 0.2
+      }
+    ],
+    "name": "康芳瑄",
+    "note": "",
+    "phone": "0976862453",
+    "shipping": 0,
+    "status": "已收訂金",
+    "statusTimestamps": {
+      "已收訂金": 1795615045223,
+      "待確認訂金": 1795614949123
+    },
+    "subtotal": 1348,
+    "time": 1795614949123,
+    "total": 1386
+  }
+}
