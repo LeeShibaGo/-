@@ -152,6 +152,7 @@ def main():
     print("學到的顏色詞(英->中)", len(tr))
 
     rows, changed, near_miss = [], [], []
+    covered = set(standalone_handles)
     tot = dict(cards=0, old=0, kept=0, dup_removed=0, dup_restored=0, ordered_oos=0,
                unmatched=0, hidden=0, ambiguous=0)
 
@@ -183,6 +184,7 @@ def main():
                     near_miss.append((c["name"], old["name"], f"同標題官網商品 {len(by_title.get(norm(c['name']), []))} 個"))
                 continue
             entry = build_colour(old, p)
+            covered.add(p["handle"])
             if p["handle"] in standalone_handles and p["handle"] != handle_of(c):
                 dups.append(entry)
                 continue
@@ -195,7 +197,11 @@ def main():
         tot["cards"] += 1; tot["old"] += len(c["colors"]); tot["kept"] += len(kept)
         tot["dup_removed"] += len(dups); tot["dup_restored"] += restored
         tot["ordered_oos"] += len(oos); tot["unmatched"] += len(unmatched); tot["ambiguous"] += amb
-        hide = not final
+        # 官網還有同名商品 => 不隱藏、也不動這張卡(只隱藏官網整個系列都已下架的)
+        protected = (not final) and bool(by_title.get(norm(c["name"])))
+        hide = (not final) and not protected
+        if protected:
+            print("PROTECTED(官網同標題還有商品,這張卡不動)", c["id"], c["name"])
         if hide:
             print("HIDDEN_CHECK", c["id"], c["name"], "官網同標題商品數", len(by_title.get(norm(c["name"]), [])), "link還在官網", handle_of(c) in by_handle)
         tot["hidden"] += hide
@@ -211,10 +217,16 @@ def main():
                         c["jpy"] = int(float(kept[0]["price"]))
                     except (TypeError, ValueError):
                         pass
-            else:
+            elif hide:
                 c["hidden"] = True
+            else:
+                continue
             changed.append(c)
 
+    uncovered = [q for h, q in by_handle.items() if h not in covered]
+    print("UNCOVERED 官網有、但站上沒有任何卡片的商品數", len(uncovered))
+    for q in uncovered[:40]:
+        print("UNCOV", q["handle"], q["title"], en_colour(q))
     print("ID\tNAME\tOLD\tKEPT\tDUP_RESTORED\tORDERED_OOS\tDUP_REMOVED\tUNMATCHED\tAMBIG\tHIDE")
     for r in rows:
         print("\t".join(str(x) for x in r))
