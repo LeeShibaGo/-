@@ -227,6 +227,18 @@ def main():
     print("UNCOVERED 官網有、但站上沒有任何卡片的商品數", len(uncovered))
     for q in uncovered[:40]:
         print("UNCOV", q["handle"], q["title"], en_colour(q))
+    # 風險檢查:有「對不到的舊顏色」的卡,官網同標題是否還有「站上沒有任何卡片」的商品(可能是對錯字漏掉的活商品)
+    unc_by_title = defaultdict(list)
+    for q in uncovered:
+        unc_by_title[norm(q["title"])].append(q)
+    risk_cards = risk_cols = 0
+    for r in rows:
+        if r[7] > 0:
+            n_unc = len(unc_by_title.get(norm(r[1]), []))
+            if n_unc:
+                risk_cards += 1; risk_cols += r[7]
+                print("RISK", r[0], r[1], "對不到", r[7], "官網同標題但站上沒卡", n_unc)
+    print("RISK_TOTAL cards", risk_cards, "colours", risk_cols)
     print("ID\tNAME\tOLD\tKEPT\tDUP_RESTORED\tORDERED_OOS\tDUP_REMOVED\tUNMATCHED\tAMBIG\tHIDE")
     for r in rows:
         print("\t".join(str(x) for x in r))
