@@ -196,6 +196,8 @@ def main():
         tot["dup_removed"] += len(dups); tot["dup_restored"] += restored
         tot["ordered_oos"] += len(oos); tot["unmatched"] += len(unmatched); tot["ambiguous"] += amb
         hide = not final
+        if hide:
+            print("HIDDEN_CHECK", c["id"], c["name"], "官網同標題商品數", len(by_title.get(norm(c["name"]), [])), "link還在官網", handle_of(c) in by_handle)
         tot["hidden"] += hide
         rows.append((c["id"], c["name"], len(c["colors"]), len(kept), restored, len(oos),
                      len(dups), len(unmatched), amb, hide))
